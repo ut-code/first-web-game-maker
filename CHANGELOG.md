@@ -1,6 +1,6 @@
 # Change Log
 
-All notable changes to the "first-web-app" extension will be documented in this file.
+All notable changes to the "first-web-app-maker" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 

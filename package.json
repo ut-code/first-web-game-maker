@@ -1,6 +1,6 @@
 {
-  "name": "first-web-app",
-  "displayName": "First Web App",
+  "name": "first-web-app-maker",
+  "displayName": "First Web App Maker",
   "description": "First Web App Maker",
   "version": "0.0.1",
   "engines": {
@@ -14,7 +14,7 @@
   "contributes": {
     "commands": [
       {
-        "command": "first-web-app.helloWorld",
+        "command": "first-web-app-maker.helloWorld",
         "title": "Hello World"
       }
     ]
