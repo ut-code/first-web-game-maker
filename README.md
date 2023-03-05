@@ -1,71 +1,75 @@
-# first-web-app README
+# First Web App Maker
 
-This is the README for your extension "first-web-app". After writing up a brief description, we recommend including the following sections.
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC.svg?logo=typescript&logoColor=white)](https://github.com/microsoft/TypeScript)
+![license](https://img.shields.io/badge/license-MIT-informational.svg)
+![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
 
-## Features
+[English README is here.](README-en.md)
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+これは、はじめての Web アプリケーションを作るのをサポートするための VS Code 拡張機能です。
 
-For example if there is an image subfolder under your extension project workspace:
+## 目次
 
-\!\[feature X\]\(images/feature-x.png\)
+- [概要](#概要)
+- [機能](#機能)
+- [要件](#要件)
+- [拡張機能の設定](#拡張機能の設定)
+- [既存の Issues](#既存の Issues)
+- [リリースノート](#リリースノート)
+- [開発](#開発)
+  - [開発時の要件](#開発時の要件)
+  - [環境構築](#環境構築)
+  - [開発環境の立ち上げ](#開発環境の立ち上げ)
+- [ライセンス](#ライセンス)
+- [貢献](#貢献)
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+## 概要
 
-## Requirements
+これは、はじめての Web アプリケーションを作るのをサポートするための VS Code 拡張機能です。
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+## 機能
 
-## Extension Settings
+なし
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+## 要件
 
-For example:
+なし
 
-This extension contributes the following settings:
+## 拡張機能の設定
 
-- `myExtension.enable`: Enable/disable this extension.
-- `myExtension.thing`: Set to `blah` to do something.
+なし
 
-## Known Issues
+## 既存の Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+なし
 
-## Release Notes
+## リリースノート
 
-Users appreciate release notes as you update your extension.
+なし
 
-### 1.0.0
+## 開発
 
-Initial release of ...
+### 開発時の要件
 
-### 1.0.1
+- [VS Code](https://github.com/microsoft/vscode)
+- [npm](https://github.com/npm/cli)
 
-Fixed issue #.
+### 環境構築
 
-### 1.1.0
+```shell
+npm ci
+```
 
-Added features X, Y, and Z.
+### 開発環境の立ち上げ
 
----
+`F5` を押すことで、開発している拡張機能がインストールされた新しいウインドウが開きます。
 
-## Following extension guidelines
+## ライセンス
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+このソフトウェアは [MIT](LICENSE) ライセンスのもとで公開されています。
 
-- [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+Copyright © 2023 ut.code();.
 
-## Working with Markdown
+## 貢献
 
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-- Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-- Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-- Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-- [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-- [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Issue や PR などはいつでも歓迎します。
