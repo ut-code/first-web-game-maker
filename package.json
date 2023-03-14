@@ -1,5 +1,5 @@
 {
-  "name": "first-web-app-maker",
+  "name": "first-web-game-maker",
   "displayName": "First Web App Maker",
   "description": "First Web App Maker",
   "version": "0.0.1",
@@ -14,7 +14,7 @@
   "contributes": {
     "commands": [
       {
-        "command": "first-web-app-maker.helloWorld",
+        "command": "first-web-game-maker.helloWorld",
         "title": "Hello World"
       }
     ]
