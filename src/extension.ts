@@ -5,29 +5,49 @@ import * as vscode from "vscode";
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  let disposable = vscode.commands.registerCommand(
-    "first-web-game-maker.paperFortune",
-    () => {
-      const randomNumber = Math.random();
-      if (randomNumber < 0.2) {
-        vscode.window.showInformationMessage("大吉");
-      } else if (randomNumber < 0.7) {
-        vscode.window.showInformationMessage("吉");
-      } else {
-        vscode.window.showInformationMessage("凶");
-      }
+  const panel = vscode.window.createWebviewPanel(
+    "first-web-game-maker",
+    "First Web Game Maker",
+    vscode.ViewColumn.Two,
+    {
+      enableScripts: true,
     }
   );
 
-  context.subscriptions.push(disposable);
+  panel.webview.html = `
+    <!DOCTYPE html>
+    <html lang="ja">
+      <head>
+        <meta charset="utf-8" />
+        <title>Title</title>
+      </head>
+      <body>
+        <button id="omikuji-button" type="button">おみくじを引く</button>
+        <div id="result"></div>
+        <script>
+          let omikujiButton = document.getElementById("omikuji-button");
+          let result = document.getElementById("result");
 
-  const button = vscode.window.createStatusBarItem(
-    vscode.StatusBarAlignment.Left
-  );
-  button.text = "おみくじを引く";
-  button.command = "first-web-game-maker.paperFortune";
-  context.subscriptions.push(button);
-  button.show();
+          function omikuji() {
+            let r = Math.random();
+            if (r < 0.2) {
+              result.textContent = "大吉";
+              result.style.color = "red";
+            } else if (r < 0.7) {
+              result.textContent = "吉";
+              result.style.color = "black";
+            } else {
+              result.textContent = "凶";
+              result.style.color = "blue";
+            }
+          }
+          omikujiButton.onclick = omikuji;
+        </script>
+      </body>
+    </html>
+  `;
+
+  context.subscriptions.push(panel);
 }
 
 // This method is called when your extension is deactivated
