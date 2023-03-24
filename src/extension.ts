@@ -5,19 +5,29 @@ import * as vscode from "vscode";
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  // The command has been defined in the package.json file
-  // Now provide the implementation of the command with registerCommand
-  // The commandId parameter must match the command field in package.json
   let disposable = vscode.commands.registerCommand(
-    "first-web-game-maker.helloWorld",
+    "first-web-game-maker.paperFortune",
     () => {
-      // The code you place here will be executed every time your command is executed
-      // Display a message box to the user
-      vscode.window.showInformationMessage("Hello VS Code");
+      const randomNumber = Math.random();
+      if (randomNumber < 0.2) {
+        vscode.window.showInformationMessage("大吉");
+      } else if (randomNumber < 0.7) {
+        vscode.window.showInformationMessage("吉");
+      } else {
+        vscode.window.showInformationMessage("凶");
+      }
     }
   );
 
   context.subscriptions.push(disposable);
+
+  const button = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Left
+  );
+  button.text = "おみくじを引く";
+  button.command = "first-web-game-maker.paperFortune";
+  context.subscriptions.push(button);
+  button.show();
 }
 
 // This method is called when your extension is deactivated

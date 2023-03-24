@@ -9,13 +9,15 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "*"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "first-web-game-maker.helloWorld",
-        "title": "Hello World"
+        "command": "first-web-game-maker.paperFortune",
+        "title": "おみくじ"
       }
     ]
   },
