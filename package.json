@@ -1,7 +1,7 @@
 {
   "name": "first-web-game-maker",
-  "displayName": "First Web App Maker",
-  "description": "First Web App Maker",
+  "displayName": "First Web Game Maker",
+  "description": "First Web Game Maker",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.76.0"
