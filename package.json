@@ -18,6 +18,10 @@
       {
         "command": "first-web-game-maker.paperFortune",
         "title": "おみくじ"
+      },
+      {
+        "command": "first-web-game-maker.insertHelloWorld",
+        "title": "挿入"
       }
     ]
   },

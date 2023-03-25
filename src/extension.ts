@@ -5,6 +5,26 @@ import * as vscode from "vscode";
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+  const insertHelloWorld = () => {
+    const activeEditor = vscode.window.activeTextEditor;
+    if (!activeEditor) {
+      return;
+    }
+    const position = new vscode.Position(0, 0);
+    activeEditor.edit((edit) => {
+      edit.insert(position, "Hello VS Code!\n");
+    });
+  };
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "first-web-game-maker.insertHelloWorld",
+      () => {
+        insertHelloWorld();
+      }
+    )
+  );
+
   const panel = vscode.window.createWebviewPanel(
     "first-web-game-maker",
     "First Web Game Maker",
@@ -27,7 +47,6 @@ export function activate(context: vscode.ExtensionContext) {
         <script>
           let omikujiButton = document.getElementById("omikuji-button");
           let result = document.getElementById("result");
-
           function omikuji() {
             let r = Math.random();
             if (r < 0.2) {
