@@ -31,7 +31,7 @@ export function activate(context: vscode.ExtensionContext) {
     });
   };
 
-  const insertTextAtCursor = (text: string) => {
+  const insertAtCursor = (text: string) => {
     const activeEditor = vscode.window.activeTextEditor;
     if (!activeEditor) {
       return;
@@ -66,12 +66,12 @@ export function activate(context: vscode.ExtensionContext) {
       }
     ),
     vscode.commands.registerCommand(
-      "first-web-game-maker.insertTextAtCursor",
+      "first-web-game-maker.insertAtCursor",
       async () => {
         const input = await vscode.window.showInputBox({
           prompt: "挿入する文字列を入力してください",
         });
-        insertTextAtCursor(input || "");
+        insertAtCursor(input || "");
       }
     ),
     vscode.commands.registerCommand(

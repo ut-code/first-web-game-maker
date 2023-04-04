@@ -24,8 +24,8 @@
         "title": "insert hello world at top"
       },
       {
-        "command": "first-web-game-maker.insertTextAtCursor",
-        "title": "insert text at cursor"
+        "command": "first-web-game-maker.insertAtCursor",
+        "title": "insert at cursor"
       },
       {
         "command": "first-web-game-maker.deleteAfterCursor",
