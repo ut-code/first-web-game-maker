@@ -20,8 +20,16 @@
         "title": "おみくじ"
       },
       {
-        "command": "first-web-game-maker.insertHelloWorld",
-        "title": "挿入"
+        "command": "first-web-game-maker.insertHelloWorldAtTop",
+        "title": "insert hello world at top"
+      },
+      {
+        "command": "first-web-game-maker.insertTextAtCursor",
+        "title": "insert text at cursor"
+      },
+      {
+        "command": "first-web-game-maker.deleteAfterCursor",
+        "title": "delete after cursor"
       }
     ]
   },
