@@ -18,6 +18,18 @@
       {
         "command": "first-web-game-maker.paperFortune",
         "title": "おみくじ"
+      },
+      {
+        "command": "first-web-game-maker.insertHelloWorldAtTop",
+        "title": "insert hello world at top"
+      },
+      {
+        "command": "first-web-game-maker.insertAtCursor",
+        "title": "insert at cursor"
+      },
+      {
+        "command": "first-web-game-maker.deleteAfterCursor",
+        "title": "delete after cursor"
       }
     ]
   },
