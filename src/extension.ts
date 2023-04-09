@@ -76,6 +76,17 @@ export function activate(context: vscode.ExtensionContext) {
     });
   };
 
+  const insertInputElementAtCursor = (idName: string) => {
+    const activeEditor = vscode.window.activeTextEditor;
+    if (!activeEditor) {
+      return;
+    }
+    const position = activeEditor.selection.active;
+    activeEditor.edit((edit) => {
+      edit.insert(position, `<input id="${idName}" />`);
+    });
+  };
+
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "first-web-game-maker.insertHelloWorldAtTop",
@@ -119,6 +130,15 @@ export function activate(context: vscode.ExtensionContext) {
         });
         insertButtonElementAtCursor(input || "");
       }
+    ),
+    vscode.commands.registerCommand(
+      "first-web-game-maker.insertInputElementAtCursor",
+      async () => {
+        const input = await vscode.window.showInputBox({
+          prompt: "挿入する `input` 要素の `id` 属性を入力してください",
+        });
+        insertInputElementAtCursor(input || "");
+      }
     )
   );
 
@@ -161,6 +181,10 @@ export function activate(context: vscode.ExtensionContext) {
           }),
           new TreeItem("ボタンを挿入", vscode.TreeItemCollapsibleState.None, {
             command: "first-web-game-maker.insertButtonElementAtCursor",
+            title: "",
+          }),
+          new TreeItem("入力欄を挿入", vscode.TreeItemCollapsibleState.None, {
+            command: "first-web-game-maker.insertInputElementAtCursor",
             title: "",
           }),
         ]);
