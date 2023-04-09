@@ -92,35 +92,22 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   panel.webview.html = `
-    <!DOCTYPE html>
-    <html lang="ja">
-      <head>
-        <meta charset="utf-8" />
-        <title>おみくじアプリ</title>
-      </head>
-      <body>
-        <button id="omikuji-button" type="button">おみくじを引く</button>
-        <script>
-          const vscode = acquireVsCodeApi();
-          document.getElementById("omikuji-button").onclick = () => {
-            const r = Math.random();
-            if (r < 0.2) {
-              vscode.postMessage({ type: "omikuji", result: "大吉" });
-            } else if (r < 0.7) {
-              vscode.postMessage({ type: "omikuji", result: "吉" });
-            } else {
-              vscode.postMessage({ type: "omikuji", result: "凶" });
-            }
-          }
-        </script>
-      </body>
-    </html>
+    箱
+    <input id="box-name" placeholder="箱の名前" />
+    <button id="add-box" type="button">追加</button>
+    <script>
+      const vscode = acquireVsCodeApi();
+      document.getElementById("add-box").onclick = () => {
+        vscode.postMessage({ type: "add-box", id: document.getElementById("box-name").value });
+      }
+    </script>
   `;
 
   panel.webview.onDidReceiveMessage(
     (message) => {
-      if (message.type === "omikuji") {
-        vscode.window.showInformationMessage(message.result);
+      if (message.type === "add-box") {
+        vscode.window.showInformationMessage("箱を追加しました");
+        insertAtCursor(`<div id="${message.id}"></div>`);
       }
     },
     undefined,
