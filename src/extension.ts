@@ -135,7 +135,7 @@ export function activate(context: vscode.ExtensionContext) {
         return Promise.resolve([]);
       } else {
         return Promise.resolve([
-          new TreeItem("箱を作る", vscode.TreeItemCollapsibleState.None, {
+          new TreeItem("箱を挿入", vscode.TreeItemCollapsibleState.None, {
             command: "first-web-game-maker.insertDivElementAtCursor",
             title: "",
           }),
