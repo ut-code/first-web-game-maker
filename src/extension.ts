@@ -1,9 +1,5 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   // const files = vscode.workspace.textDocuments;
   // const paths = { scriptJs: "", indexHtml: "" };
@@ -100,34 +96,38 @@ export function activate(context: vscode.ExtensionContext) {
     <html lang="ja">
       <head>
         <meta charset="utf-8" />
-        <title>Title</title>
+        <title>おみくじアプリ</title>
       </head>
       <body>
         <button id="omikuji-button" type="button">おみくじを引く</button>
-        <div id="result"></div>
         <script>
-          let omikujiButton = document.getElementById("omikuji-button");
-          let result = document.getElementById("result");
-          function omikuji() {
-            let r = Math.random();
+          const vscode = acquireVsCodeApi();
+          document.getElementById("omikuji-button").onclick = () => {
+            const r = Math.random();
             if (r < 0.2) {
-              result.textContent = "大吉";
-              result.style.color = "red";
+              vscode.postMessage({ type: "omikuji", result: "大吉" });
             } else if (r < 0.7) {
-              result.textContent = "吉";
-              result.style.color = "black";
+              vscode.postMessage({ type: "omikuji", result: "吉" });
             } else {
-              result.textContent = "凶";
-              result.style.color = "blue";
+              vscode.postMessage({ type: "omikuji", result: "凶" });
             }
           }
-          omikujiButton.onclick = omikuji;
         </script>
       </body>
     </html>
   `;
+
+  panel.webview.onDidReceiveMessage(
+    (message) => {
+      if (message.type === "omikuji") {
+        vscode.window.showInformationMessage(message.result);
+      }
+    },
+    undefined,
+    context.subscriptions
+  );
+
   context.subscriptions.push(panel);
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}
