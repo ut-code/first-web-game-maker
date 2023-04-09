@@ -54,6 +54,17 @@ export function activate(context: vscode.ExtensionContext) {
     });
   };
 
+  const insertDivElementAtCursor = (idName: string) => {
+    const activeEditor = vscode.window.activeTextEditor;
+    if (!activeEditor) {
+      return;
+    }
+    const position = activeEditor.selection.active;
+    activeEditor.edit((edit) => {
+      edit.insert(position, `<div id="${idName}"></div>`);
+    });
+  };
+
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "first-web-game-maker.insertHelloWorldAtTop",
@@ -79,42 +90,65 @@ export function activate(context: vscode.ExtensionContext) {
         });
         deleteAfterCursor(parseInt(input || "1"));
       }
+    ),
+    vscode.commands.registerCommand(
+      "first-web-game-maker.insertDivElementAtCursor",
+      async () => {
+        const input = await vscode.window.showInputBox({
+          prompt: "挿入する `div` 要素の `id` 属性を入力してください",
+        });
+        insertDivElementAtCursor(input || "");
+      }
     )
   );
 
-  const panel = vscode.window.createWebviewPanel(
-    "first-web-game-maker",
-    "First Web Game Maker",
-    vscode.ViewColumn.Two,
-    {
-      enableScripts: true,
+  // これはよくわかりません。
+  class TreeItem extends vscode.TreeItem {
+    constructor(
+      public readonly label: string,
+      public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+      public readonly command?: vscode.Command
+    ) {
+      super(label, collapsibleState);
     }
-  );
+  }
 
-  panel.webview.html = `
-    箱
-    <input id="box-name" placeholder="箱の名前" />
-    <button id="add-box" type="button">追加</button>
-    <script>
-      const vscode = acquireVsCodeApi();
-      document.getElementById("add-box").onclick = () => {
-        vscode.postMessage({ type: "add-box", id: document.getElementById("box-name").value });
+  // これもよくわかりません。
+  class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
+    private _onDidChangeTreeData: vscode.EventEmitter<
+      TreeItem | undefined | void
+    > = new vscode.EventEmitter<TreeItem | undefined | void>();
+    readonly onDidChangeTreeData: vscode.Event<TreeItem | undefined | void> =
+      this._onDidChangeTreeData.event;
+
+    refresh(): void {
+      this._onDidChangeTreeData.fire();
+    }
+
+    getTreeItem(element: TreeItem): vscode.TreeItem {
+      return element;
+    }
+
+    // この中に TreeView に表示する要素を返す処理を書くらしい。
+    getChildren(element?: TreeItem): Thenable<TreeItem[]> {
+      if (element) {
+        return Promise.resolve([]);
+      } else {
+        return Promise.resolve([
+          new TreeItem("箱を作る", vscode.TreeItemCollapsibleState.None, {
+            command: "first-web-game-maker.insertDivElementAtCursor",
+            title: "",
+          }),
+        ]);
       }
-    </script>
-  `;
+    }
+  }
 
-  panel.webview.onDidReceiveMessage(
-    (message) => {
-      if (message.type === "add-box") {
-        vscode.window.showInformationMessage("箱を追加しました");
-        insertAtCursor(`<div id="${message.id}"></div>`);
-      }
-    },
-    undefined,
-    context.subscriptions
-  );
-
-  context.subscriptions.push(panel);
+  const treeDataProvider = new TreeDataProvider();
+  const treeView = vscode.window.createTreeView("first-web-game-maker", {
+    treeDataProvider,
+  });
+  context.subscriptions.push(treeView);
 }
 
 export function deactivate() {}

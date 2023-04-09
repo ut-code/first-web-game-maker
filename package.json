@@ -31,7 +31,24 @@
         "command": "first-web-game-maker.deleteAfterCursor",
         "title": "delete after cursor"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "first-web-game-maker",
+          "title": "First Web Game Maker",
+          "icon": "/src/assets/favicon.svg"
+        }
+      ]
+    },
+    "views": {
+      "first-web-game-maker": [
+        {
+          "id": "first-web-game-maker",
+          "name": "First Web Game Maker"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
