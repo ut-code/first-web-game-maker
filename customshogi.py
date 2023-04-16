@@ -17,85 +17,21 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from collections import Counter
-from collections.abc import Mapping, Container, Callable
+from collections import Counter, defaultdict
+from collections.abc import Container
 from enum import Enum, auto
-from typing import Any, NamedTuple, Optional, Literal, TypeAlias
-
-# 暫定的な駒の動きの制限(obsolete):
-#     1. 走る方向は45°刻みの8方向のみで、距離の制限はなく、飛び越しはできない
-#     2? 跳ぶ先はチェビシェフ距離2(その駒を中心とする5*5の正方形領域)の升に限る
-#     3. 二段移動不可(ライノセラス, ライオン等)
-#     4. 駒を取るときと取らないときで動き方は同一
-#     5. 全ての駒は、コントロールするプレイヤーが異なる全ての駒に取られ得る
-#     6. 相手の駒のいるマスに移動することによってのみ、その駒を取ることができる
-#     7. 全ての駒について、その駒を駒台から打つことができるか否かは斉一
-#     8. 駒を打つときは生駒として打つ
-#     9. 駒を打つことができるのは、盤面のうち他の駒がいないマスのみである
+from typing import Any, Optional, Literal
 
 
-# 二段行動の実装について
-# -> 各駒(?)に残り行動回数的な内部状態を持たせ、それがゼロになった段階で動作を終了させる
-
-
-# TODO: どう考えても、「ユーザーに選択肢を表示し、選択を行わせる」関数が必要
-
-
-# Board?に以下の情報を持たせておく...
-# - 持ち駒使用可否
-#     - 使用可(駒定義上書き)
-#     - 使用可(駒定義上書き)
-
-
-# 「成る(駒の種類を変化させる)条件」を表すオブジェクトが必要っぽい...
-# - 条件
-#     - (指定の)駒を取ったとき
-#     - 取られたとき
-#     - 盤上の指定の領域に入ったとき
-#     - 動作後
-# - オプション
-#     - 任意/強制
-
-
-# TODO: そもそも色々な判定のチェックポイント(タイミング)はどうするのか
-
-# - ターン毎自動処理(e.g. 勝利/敗北判定)
-# - ステップ毎自動処理(e.g. 焼く)
-# - 成り判定
-# - 取りを含む二段行動の各段
-
-# 
-# 流れとしては
-# - ターン開始
-# - 駒取りを起こし得る各段について...
-#     - 動かす(動き -> 取り / 打ち)
-#     - 成り判定/処理(成り)
-#     - ステップ毎自動処理
-# を繰り返す
-# - ターン毎自動処理(王駒)
-
-
-# そもそも各表現(定義?)クラスは何を管轄しているのか?
-# - MOVE
-#     - 駒の座標の変更
-# - CHANGE
-#     - 駒の取り替え(削除/追加)
-# - DROP
-#     - 駒の座標の変更(self[None -> AbsCoord])
-# - CAPTURE
-#     - 駒を取る際にそれが適当かを判断する
-
-
-# 棋譜: 何を表すべきか?
-#     - 移動前の駒の座標
-#     - 移動後の駒の座標
-#     - 取られた駒のリスト
-
-
-# 駒を取ったときの情報:
-# - 何が取ったか
-# - 何が取られたか
-# - 殺した/射た
+def choose_by_user(option: set[str]):
+    """ユーザーに選択肢を表示し、選択を行わせる"""
+    while True:
+        print("choose from the below")
+        print(*option, sep=", ")
+        choice = input()
+        if choice in option:
+            return choice
+        print(f"invalid choice: {choice}")
 
 
 # 盤について課す制限
@@ -105,29 +41,17 @@ from typing import Any, NamedTuple, Optional, Literal, TypeAlias
 #     - 走り駒は原則、盤の欠けの上を走ることはできない
 
 
-# とりあえず実装しない機能
-#     - 棋譜
-#     - プレイグラウンド
-#     - 盤反転
-#     - 二段行動: Lion, Rhinoceros
-#     - 他の駒を飛び越えることで動く・駒を取る駒: Grasshopper, Bow, Cannon
-#     - 他の駒の利きを参照して動きが変化する駒: Joker, Orphan, Friend
-#     - 他の駒の動きを変化させる駒: Immovilizer, Ala, Hia
-#     - 他の駒を、その升に移動することなく取る駒: 仏狼機, 神機車
-#     - 他の駒の状態に影響する駒: 記室, 聖燈, 鼓
-
-
 # """盤[行][列]"""
-# 盤の欠けは専用の駒で表現する?
 # 何もないマスはNone?
-# とりあえず簡単な計算(現在の盤面を変えずに逐次探索すれば目的地が見つかる)ものについてだけ考える(これでも相当広い)
-
-# TODO: Squareのfieldを分割する
-# TODO: catchability vs approachability vs accessibility
 
 
 class Coordinate(ABC):
     """二次元座標の基底クラス"""
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}{self.y, self.x}"
+
+    __repr__ = __str__
+
     def __init__(self, y: int, x: int) -> None:
         if not isinstance(y, int):
             raise TypeError("y must be an interger")
@@ -152,22 +76,49 @@ class Coordinate(ABC):
     def __copy__(self):
         return type(self)(self.y, self.x)
 
+    # TODO: なんかhashがおかしいが__eq__で動いた
     def __hash__(self) -> int:
-        return hash((self.y, self.x, type(self)))
+        return hash((self.y, self.x))#, type(self)))
+
+    def __eq__(self, __value: object) -> bool:
+        if type(__value) != type(self):
+            return False
+        return (self.x==__value.x) and (self.y==__value.y)
 
 class AbsoluteCoordinate(Coordinate):
-    """盤面の座標を表すクラス"""
-    def __init__(self, y: int, x: int) -> None:
-        if y < 0 or x < 0:
-            raise ValueError("absolute coordinate must be non-negative")
-        super().__init__(y, x)
-
+    """盤面の座標を表すクラス
+    負の値は、負のインデックスとして解釈される。
+    """
     def __add__(self, __o: object):
         if isinstance(__o, AbsoluteCoordinate):
             raise TypeError("cannot add two absolute coordinates")
         return super().__add__(__o)
 
     __radd__ = __add__
+
+    @property
+    def x_inverted(self):
+        return type(self)(self.y, ~self.x)
+
+    @property
+    def y_inverted(self):
+        return type(self)(~self.y, self.x)
+
+    def __neg__(self):
+        return type(self)(~self.y, ~self.x)
+
+    __invert__ = __neg__
+
+    def __pos__(self):
+        return super().__copy__
+
+    @property
+    def upside_right(self):
+        return type(self)(self.x, self.y)
+
+    @property
+    def upside_left(self):
+        return type(self)(~self.x, ~self.y)
 
 class RelativeCoordinate(Coordinate):
     """盤面における相対座標を表すクラス"""
@@ -193,7 +144,7 @@ class RelativeCoordinate(Coordinate):
     __invert__ = __neg__
 
     def __pos__(self):
-        return super().__copy__
+        return super().__copy__()
 
     @property
     def upside_right(self):
@@ -204,18 +155,8 @@ class RelativeCoordinate(Coordinate):
         return type(self)(-self.x, -self.y)
 
 
-class IMoveDefinition(ABC):
-    @abstractmethod
-    def valid_destinations(self, board: IBoard, my_coordinate: tuple[int, int]): ...
-
-
-class MoveMixin(ABC):
-    def reverse(self):
-        ...
-
-
 class Controller2P(Enum):
-    """駒のコントローラーを示す
+    """駒・ターンのコントローラーを示す
 
     ABSENT: 空きマス
     WHITE: 先手
@@ -237,6 +178,14 @@ class Controller2P(Enum):
         if self is __o:
             return Relation.FRIEND
         return Relation.ENEMY
+
+    def next_player(self):
+        """ターン順で次のプレイヤー"""
+        if self is Controller2P.WHITE:
+            return Controller2P.BLACK
+        if self is Controller2P.BLACK:
+            return Controller2P.WHITE
+        raise NotImplementedError("next turn of absent")
 
 
 class Relation(Enum):
@@ -284,32 +233,37 @@ class Approachability(Enum):
         return self.__can_go_over
 
 
-class LogUnit(NamedTuple):
-    move_unit: RelativeCoordinate
-    move_managing_class: type[IMoveDefinition]
-    additional_information: dict
+class IMoveDefinition(ABC):
+    """"""
+    @abstractmethod
+    def valid_destination(
+            self,
+            board: IBoard,
+            controller: Controller2P,
+            my_coordinate: AbsoluteCoordinate,
+        ) -> set[AbsoluteCoordinate]:
+        """諸々から、有効な移動先を返す"""
+
+    @abstractmethod
+    def coordinates(self, controller: Controller2P) -> set[RelativeCoordinate]:
+        """駒がそのコントローラーの下で動けるマスを示す"""
+
+    @abstractmethod
+    def approachability(
+            self,
+            relation: Relation,
+        ) -> Approachability:
+        """移動先のマスの駒のコントローラーを参照し、そこに対する挙動を返す"""
 
 
-class InTurnLog(list[LogUnit]):
-    pass
-
-
-_NotImplementedType: TypeAlias = Any
-
-class LeaperMove():
+class LeaperMove(IMoveDefinition):
     """Leaper(跳び駒)の動きの実装"""
-    SIMPLE_CALC = True
-    # 全駒捕獲できるようにしておくが、後々変えるかもしれない
-    # catchability: 移動先のマスの駒のコントローラーを参照し、そこに対する挙動を返す
     def __init__(
             self,
             coordinates: Container[RelativeCoordinate],
             *,
             symmetry: Literal['none', 'h', 'vh', 'oct'] = 'none',
-            catchability_categolized: Mapping[Relation, Approachability] = ...,
-            catchability_detail: Callable[[Relation, IPiece], Approachability | _NotImplementedType] = ...,
         ) -> None:
-        # とりあえずcatchability_functionは駒の種類のみ参照するが、そのうちIBoardとかも参照するように改修するかもしれない...やりたくねえ...
         self.__coordinates: set[RelativeCoordinate] = set(coordinates)
         if symmetry in ('h', 'vh', 'oct'):
             self.__coordinates.update({coord.x_inverted for coord in self.__coordinates})
@@ -318,25 +272,17 @@ class LeaperMove():
                 if symmetry == 'oct':
                     self.__coordinates.update({coord.upside_left for coord in self.__coordinates})
 
-        self.catchability_mapping = {
+        self.approachability_mapping = {
             Relation.FRIEND: Approachability.REJECT,
             Relation.ENEMY: Approachability.END,
             Relation.TO_BLANK: Approachability.CONTINUE,
         }
-        if catchability_categolized is not ...:
-            self.catchability_mapping.update(catchability_categolized)
-
-        self.catchability_detail = catchability_detail
-        if catchability_detail is ...:
-            self.catchability_detail = lambda relation, piece: NotImplemented
 
     def derive_to(
             self,
             coordinates: Container[RelativeCoordinate] = ...,
             *,
             symmetry: Literal['none', 'h', 'vh', 'oct'] = 'none',
-            catchability_categolized: Optional[Mapping[Relation, Approachability]] = ...,
-            catchability_detail: Optional[Callable[[Relation, IPiece], Approachability | NotImplemented]] = ...,
         ) -> None:
         """自身をコピーしたものを返す
         ただし、引数が与えられたものについては上書きし、
@@ -344,36 +290,18 @@ class LeaperMove():
         """
         if coordinates is ...:
             coordinates = self.__coordinates
-
-        if catchability_categolized is ...:
-            catchability_categolized = self.catchability_mapping
-        elif catchability_categolized is None:
-            catchability_categolized = ...
-
-        if catchability_detail is ...:
-            catchability_detail = self.catchability_detail
-        elif catchability_detail is None:
-            catchability_detail = ...
-
         return self.__class__(
             coordinates,
             symmetry=symmetry,
-            catchability_categolized=catchability_categolized,
-            catchability_detail=catchability_detail
         )
 
     def approachability(
             self,
             relation: Relation,
-            piece: IPiece,
-        ) -> Approachability | _NotImplementedType:
-        catchability = self.catchability_detail(relation, piece)
-        if catchability is not NotImplemented:
-            return catchability
-        return self.catchability_mapping[relation]
+        ) -> Approachability:
+        return self.approachability_mapping[relation]
 
     def coordinates(self, controller: Controller2P) -> set[RelativeCoordinate]:
-        """駒がそのコントローラーの下で動けるマスを示す"""
         if controller is Controller2P.WHITE:
             return self.__coordinates
         if controller is Controller2P.BLACK:
@@ -385,17 +313,22 @@ class LeaperMove():
             board: IBoard,
             controller: Controller2P,
             my_coordinate: AbsoluteCoordinate,
-            in_turn_log: InTurnLog,
-        ) -> set:
+        ) -> set[AbsoluteCoordinate]:
         destinations: set[AbsoluteCoordinate] = set()
         for movement in self.coordinates(controller):
             new_coordinate = my_coordinate + movement
+            # TODO: 修正
+            # if not (0 <= new_coordinate.y < board.height and 0 <= new_coordinate.x <= board.width):
+            #     break
             target_square = board[new_coordinate]
-
-
-# class MoveSerialJoint():
-#     def __init__(self) -> None:
-#         pass
+            if not target_square.is_lack:
+                if target_square.piece:
+                    relation = controller @ target_square.piece.controller
+                else:
+                    relation = Relation.TO_BLANK
+                if self.approachability(relation).can_land:
+                    destinations.add(new_coordinate)
+        return destinations
 
 
 # class MoveParallelJoint():
@@ -404,6 +337,12 @@ class LeaperMove():
 
 
 class IPiece(ABC):
+    """コマの抽象クラス"""
+    def __str__(self) -> str:
+        return self.NAME
+
+    __repr__ = __str__
+
     @property
     @abstractmethod
     def NAME(self) -> str:
@@ -416,86 +355,200 @@ class IPiece(ABC):
 
     @property
     @abstractmethod
-    def CHANGE(self) -> IMoveDefinition:
-        """change definition of piece"""
+    def ROYALTY(self) -> bool:
+        """if True, this piece is royal"""
 
     @property
     @abstractmethod
-    def DROP(self) -> IMoveDefinition:
-        """droppable place definition of piece"""
-
-    @classmethod
-    def generate(cls, class_name: str, name: str, move: IMoveDefinition, royalty: int = 0):
-        if class_name in globals():
-            raise ValueError(f"name collision: name {class_name} is already used")
-        return type(class_name, (cls,), {"NAME": name, "MOVE": move})
+    def SYMBOL(self) -> str:
+        """a character that represents this piece"""
 
     def __init__(
             self,
             coordinate: Optional[AbsoluteCoordinate],
-            controller: int,
+            controller: Controller2P,
         ) -> None:
         self.coordinate = coordinate
         self.controller = controller
-        self.is_untouched = True
 
-    def move(self):
-        ...
+    def valid_destination(
+            self,
+            board: IBoard,
+            my_coordinate: AbsoluteCoordinate
+        ) -> set[AbsoluteCoordinate]:
+        """諸々から、有効な移動先を返す"""
+        return self.MOVE.valid_destination(board, self.controller, my_coordinate)
+        # 以下、もともとの構想
         # cls.MOVEに従って動ける場所を表示する
         # -> クリックでそこに移動し、(駒を取ることを含む段数が)二段以上だったら次の入力を受け付ける
         # このとき、キャンセルボタンで巻き戻せるようにする
         # 諸々正常に完了したら、
 
 
-class IPieceWrapper:
-    def __init__(self, piece: IPiece) -> None:
-        self.piece: Optional[IPiece] = None
-
-    def __setattr__(self, __name: str, __value: Any) -> None:
-        pass
-
-
-class NullPiece(IPiece):
-    NAME = "Null"
-    MOVE = ...
-    CHANGE = ...
-    DROP = ...
-
-
 class Square:
+    """盤の中のマス"""
     def __init__(
             self,
-            piece: IPiece = NullPiece,
-            field: Callable[[IPiece], IPiece] = lambda x: x,
+            piece: Optional[IPiece] = None,
             *,
-            accessibility: Callable[[IPiece], Approachability],
+            is_lack: bool = False,
         ) -> None:
         self.piece = piece
-        self.field = field
-        self.accessibility = accessibility
+        self.is_lack = is_lack
 
 
 class IBoard(ABC):
+    height: int
+    width: int
     board: list[list[Square]]
-    piece_index: dict[type[IPiece], list[AbsoluteCoordinate]]
-    piece_stands: Counter[type[IPiece]]
+    piece_in_board_index: dict[Controller2P, dict[type[IPiece], set[AbsoluteCoordinate]]]
+    piece_stands: dict[Controller2P, Counter[type[IPiece]]]
     def __getitem__(self, __key: AbsoluteCoordinate) -> Square:
         return self.board[__key.y][__key.x]
+    def __setitem__(self, __key: AbsoluteCoordinate, __value: Any):
+        self.board[__key.y][__key.x] = __value
 
 
 class MatchBoard(IBoard):
     def __init__(self, initial_position: list[list[Square]]) -> None:
-        self.player = Controller2P.WHITE
+        self.turn_player = Controller2P.WHITE
         self.height = len(initial_position)
         self.width = len(initial_position[0])
-        self.board = initial_position
-        # 先手が0, 後手が1
-        self.piece_stands = Counter()
+        self.board = []
+        for h in range(self.height):
+            self.board.append([])
+            for w in range(self.width):
+                self.board[h].append(Square(initial_position[h][w]))
+        self.piece_stands = {Controller2P.WHITE: Counter(), Controller2P.BLACK: Counter()}
+        self.piece_in_board_index = {Controller2P.WHITE: defaultdict(set), Controller2P.BLACK: defaultdict(set)}
+        for h in range(self.height):
+            for w in range(self.width):
+                coord = AbsoluteCoordinate(h, w)
+                piece = self[coord].piece
+                if piece:
+                    self.piece_in_board_index[piece.controller][type(piece)].add(coord)
 
-    def valid_destination(self, coordinate: AbsoluteCoordinate):
-        target_square = self[coordinate]
-        if target_square is None:
-            return None
+    @property
+    def coords_iterator(self):
+        """座標の一覧のイテレータ"""
+        return (AbsoluteCoordinate(h, w) for h in range(self.height) for w in range(self.width))
 
-    def drop_destination(self, piece_type: type[IPiece]):
-        ...
+    def show_console(self):
+        """コンソールに盤面を表示する"""
+        for h in range(self.height):
+            print('-'*(self.width*2+1))
+            print('|'+'|'.join((' ' if not self[AbsoluteCoordinate(h, w)].piece else self[AbsoluteCoordinate(h, w)].piece.SYMBOL) for w in range(self.width))+'|')
+        print('-'*(self.width*2+1))
+
+    def is_game_terminated(self) -> tuple[bool, Controller2P]:
+        """(ゲームが終了したか, 勝者)"""
+        loser = set()
+        for controller in (Controller2P.WHITE, Controller2P.BLACK):
+            if not any(len(v) for (k, v) in self.piece_in_board_index[controller].items() if k.ROYALTY):
+                loser.add(controller)
+        if not loser:
+            return (False, Controller2P.ABSENT)
+        if len(loser) == 2:
+            return (True, Controller2P.ABSENT)
+        if Controller2P.WHITE in loser:
+            return (True, Controller2P.BLACK)
+        if Controller2P.BLACK in loser:
+            return (True, Controller2P.WHITE)
+        raise ValueError("something occured")
+
+    def add_piece_to_stand(self, kind: type[IPiece], controller: Controller2P):
+        """駒台にコマを置く"""
+        self.piece_stands[controller][kind] += 1
+
+    def add_piece_to_board(self, kind: type[IPiece], controller: Controller2P, coord: AbsoluteCoordinate):
+        """盤面にコマを置く"""
+        if self[coord].piece is not None:
+            raise ValueError(f"piece is already in {coord}")
+        self[coord].piece = kind(coord, controller)
+        self.piece_in_board_index[controller][kind].add(coord)
+
+    def remove_piece_from_stand(self, kind: type[IPiece], controller: Controller2P):
+        """駒台からコマを取り除く"""
+        active_piece_stand = self.piece_stands[controller]
+        if active_piece_stand[kind] == 0:
+            raise ValueError(f"{kind} is not in piece stand")
+        active_piece_stand[kind] -= 1
+
+    def remove_piece_from_board(self, coord: AbsoluteCoordinate):
+        """盤面からコマを取り除く"""
+        piece = self[coord].piece
+        if not piece:
+            raise ValueError("removing piece is None")
+        self[coord].piece = None
+        h = self.piece_in_board_index[piece.controller][type(piece)]
+        self.piece_in_board_index[piece.controller][type(piece)].remove(coord)
+
+    def move_destination_from(self, coordinate: AbsoluteCoordinate) -> set[AbsoluteCoordinate]:
+        """移動元の座標から、有効な移動先を返す"""
+        target_piece = self[coordinate].piece
+        if target_piece is None:
+            return set()
+        return target_piece.valid_destination(self, coordinate)
+
+    def drop_destination(self):
+        """有効な駒を打つ先を返す"""
+        return set(filter(lambda coord: (not self[coord].is_lack) and (self[coord].piece is None), self.coords_iterator))
+
+    def move(self, depart_coord: AbsoluteCoordinate, arrive_coord: AbsoluteCoordinate):
+        """コマを実際に動かす"""
+        moving_piece = self[depart_coord].piece
+        captured_piece = self[arrive_coord].piece
+        if captured_piece:
+            self.add_piece_to_stand(type(captured_piece), moving_piece.controller)
+            self.remove_piece_from_board(arrive_coord)
+        self.add_piece_to_board(type(moving_piece), moving_piece.controller, arrive_coord)
+        self.remove_piece_from_board(depart_coord)
+
+    def drop(self, kind: type[IPiece], coord: AbsoluteCoordinate):
+        """コマを打つ"""
+        self.add_piece_to_board(kind, self.turn_player, coord)
+        self.remove_piece_from_stand(kind, self.turn_player)
+        
+
+    def game(self):
+        while not self.is_game_terminated()[0]:
+            starting_coord = set.union(*({square_referer_to_str(k) for k in i} for i in self.piece_in_board_index[self.turn_player].values()))
+            while True:
+                depart_coord_str = choose_by_user(starting_coord.union({'cancel'}))
+                if depart_coord_str != 'cancel':
+                    depart_coord = square_referer_from_str(depart_coord_str)
+                    destination = {square_referer_to_str(j) for j in self.move_destination_from(depart_coord)}
+                    arrive_coord_str = choose_by_user(destination.union({'cancel'}))
+                    if arrive_coord_str != 'cancel':
+                        arrive_coord = square_referer_from_str(arrive_coord_str)
+                        self.move(depart_coord, arrive_coord)
+                        break
+                    print("re-selecting...")
+            self.show_console()
+            self.turn_player = self.turn_player.next_player()
+        print(f"game end: winner is {self.is_game_terminated()[1]}")
+
+
+king_move = LeaperMove([RelativeCoordinate(0, 1), RelativeCoordinate(1, 1)], symmetry='oct')
+
+
+class King(IPiece):
+    NAME = "King"
+    MOVE = king_move
+    ROYALTY = True
+    SYMBOL = "k"
+
+
+
+def square_referer_from_str(referer_str: str) -> AbsoluteCoordinate:
+    return AbsoluteCoordinate(*(int(i) for i in referer_str.split('_')))
+
+def square_referer_to_str(coord: AbsoluteCoordinate) -> str:
+    return f"{coord.y}_{coord.x}"
+
+
+if __name__ == '__main__':
+    p = [[None, King(AbsoluteCoordinate(2, 1), Controller2P.WHITE), None], [None, None, None], [None, King(AbsoluteCoordinate(0, 1), Controller2P.BLACK), None]]
+    board = MatchBoard(initial_position=p)
+    board.game()
+
