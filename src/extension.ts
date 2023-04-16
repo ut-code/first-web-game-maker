@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import * as MarkdownIt from "markdown-it";
+const md = new MarkdownIt({ html: true, linkify: true, typographer: true });
 
 export function activate(context: vscode.ExtensionContext) {
   // const files = vscode.workspace.textDocuments;
@@ -273,6 +275,41 @@ export function activate(context: vscode.ExtensionContext) {
     treeDataProvider,
   });
   context.subscriptions.push(treeView);
+
+  const panel = vscode.window.createWebviewPanel(
+    "first-web-game-maker",
+    "First Web Game Maker",
+    vscode.ViewColumn.Two,
+    {
+      enableScripts: true,
+    }
+  );
+
+  panel.webview.html = md.render(`\
+# First Web Game Maker
+\`\`\`js
+document.write("Hello, World!");
+\`\`\`
+<button id="alert">alert</button>
+<script>
+  const vscode = acquireVsCodeApi();
+  document.getElementById("alert").onclick = () =>{
+    vscode.postMessage({type: "alert", message: "Hello, World!"});
+  }
+</script>
+`);
+
+  panel.webview.onDidReceiveMessage(
+    (message) => {
+      if (message.type === "alert") {
+        vscode.window.showInformationMessage(message.message);
+      }
+    },
+    undefined,
+    context.subscriptions
+  );
+
+  context.subscriptions.push(panel);
 }
 
 export function deactivate() {}
