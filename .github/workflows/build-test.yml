@@ -24,7 +24,7 @@ jobs:
         shell: bash
 
       - name: Install vsce
-        run: npm install -g @vsce/vsce
+        run: npm install -g @vscode/vsce
         shell: bash
 
       - name: Build Test
