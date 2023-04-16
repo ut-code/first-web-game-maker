@@ -3,6 +3,10 @@
   "displayName": "First Web Game Maker",
   "description": "First Web Game Maker",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ut-code/first-web-game-maker.git"
+  },
   "engines": {
     "vscode": "^1.76.0"
   },

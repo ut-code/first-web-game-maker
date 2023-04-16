@@ -1,0 +1,32 @@
+name: Build Test
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  build-test:
+    name: Build Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: latest
+          cache: npm
+
+      - name: Install npm packages
+        run: npm ci
+        shell: bash
+
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
+        shell: bash
+
+      - name: Build Test
+        run: vsce package
+        shell: bash
