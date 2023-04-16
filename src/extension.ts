@@ -1,6 +1,26 @@
 import * as vscode from "vscode";
 import * as MarkdownIt from "markdown-it";
-const md = new MarkdownIt({ html: true, linkify: true, typographer: true });
+import hljs from "highlight.js";
+const md = new MarkdownIt({
+  html: true,
+  linkify: true,
+  typographer: true,
+  highlight: (str, lang) => {
+    if (lang && hljs.getLanguage(lang)) {
+      try {
+        return hljs.highlight(str, { language: lang }).value;
+      } catch (__) {}
+    }
+    return "";
+  },
+});
+
+function renderMd(text: string) {
+  return (
+    md.render(text) +
+    `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">`
+  );
+}
 
 export function activate(context: vscode.ExtensionContext) {
   // const files = vscode.workspace.textDocuments;
@@ -285,7 +305,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  panel.webview.html = md.render(`\
+  panel.webview.html = renderMd(`\
 # First Web Game Maker
 \`\`\`js
 document.write("Hello, World!");
