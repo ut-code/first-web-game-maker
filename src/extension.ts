@@ -208,7 +208,6 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  // これはよくわかりません。
   class TreeItem extends vscode.TreeItem {
     constructor(
       public readonly label: string,
@@ -219,7 +218,6 @@ export function activate(context: vscode.ExtensionContext) {
     }
   }
 
-  // これもよくわかりません。
   class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<
       TreeItem | undefined | void
