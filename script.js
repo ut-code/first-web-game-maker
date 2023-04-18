@@ -173,12 +173,13 @@ function indexY(y) {
 
 // ここでいい感じに端点をはんていすればいい
 function canMoveFrom() {
+  const minusMargin = 1;
   // まだ境界
   const [northBorder, southBorder, eastBorder, westBorder] = [
-    indexY(pacmanPosition.y + 1 - roadWidth / 2),
-    indexY(pacmanPosition.y - 1 + roadWidth / 2),
-    indexX(pacmanPosition.x - 1 + roadWidth / 2),
-    indexX(pacmanPosition.x + 1 - roadWidth / 2),
+    indexY(pacmanPosition.y + minusMargin - roadWidth / 2),
+    indexY(pacmanPosition.y - minusMargin + roadWidth / 2),
+    indexX(pacmanPosition.x - minusMargin + roadWidth / 2),
+    indexX(pacmanPosition.x + minusMargin - roadWidth / 2),
   ];
 
   const centerX = indexX(pacmanPosition.x);
@@ -193,32 +194,42 @@ function canMoveFrom() {
     centerX
   );
 
-  // const isMovingNorthSouth =
+  const isMovingEastWest = northBorder === centerY && southBorder === centerY;
+  const isMovingNorthSouth = eastBorder === centerX && westBorder === centerX;
 
-  if (northBorder === centerY && southBorder === centerY) {
+  console.log(
+    `isMovingEastWest: ${isMovingEastWest}, isMovingNorthSouth: ${isMovingNorthSouth}`
+  );
+
+  // 明らかに冗長なのでなおす
+  if (isMovingEastWest) {
+    result.east = true;
+    result.west = true;
     if (wall[centerY][centerX + 1] === 0) {
       result.east = true;
-    } else if (eastBorder === centerX && westBorder === centerX) {
+    } else if (isMovingNorthSouth) {
       result.east = false;
     }
     if (wall[centerY][centerX - 1] === 0) {
       result.west = true;
-    } else if (eastBorder === centerX && westBorder === centerX) {
+    } else if (isMovingNorthSouth) {
       result.west = false;
     }
   } else {
     result.east = false;
     result.west = false;
   }
-  if (eastBorder === centerX && westBorder === centerX) {
+  if (isMovingNorthSouth) {
+    result.north = true;
+    result.south = true;
     if (wall[centerY - 1][centerX] === 0) {
       result.north = true;
-    } else if (northBorder === centerY && southBorder === centerY) {
+    } else if (isMovingEastWest) {
       result.north = false;
     }
     if (wall[centerY + 1][centerX] === 0) {
       result.south = true;
-    } else if (northBorder === centerY && southBorder === centerY) {
+    } else if (isMovingEastWest) {
       result.south = false;
     }
   } else {
