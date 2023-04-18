@@ -1,14 +1,16 @@
-name: Prettier
+name: Build Test
 
 on:
+  push:
+    branches: [main, master]
   pull_request:
 
 jobs:
-  prettier:
-    name: Prettier
+  build-test:
+    name: Build Test
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v3
 
       - name: Setup Node.js
@@ -21,6 +23,10 @@ jobs:
         run: npm ci
         shell: bash
 
-      - name: Run Prettier
-        run: npm run format
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
+        shell: bash
+
+      - name: Build Test
+        run: vsce package
         shell: bash
