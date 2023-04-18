@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { hoverContents } from "./hoverContents";
 
 export function activate(context: vscode.ExtensionContext) {
   // const files = vscode.workspace.textDocuments;
@@ -128,6 +129,21 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(panel);
+
+  class GoHoverProvider implements vscode.HoverProvider {
+    public provideHover(
+      document: vscode.TextDocument,
+      position: vscode.Position
+    ): vscode.ProviderResult<vscode.Hover> {
+      const range = document.getWordRangeAtPosition(position);
+      const word = document.getText(range);
+      return new vscode.Hover(hoverContents.get(word) || "");
+    }
+  }
+
+  context.subscriptions.push(
+    vscode.languages.registerHoverProvider("javascript", new GoHoverProvider())
+  );
 }
 
 export function deactivate() {}
