@@ -155,31 +155,39 @@ function canMoveFrom(x, y) {
   };
 }
 
-// 4端点を見る必要がある。
+// console.log(x + roadWidth / 2);
+// console.log(`north=${northBorder}, east=${eastBorder}, west=${westBorder}`);
+// console.log(
+//   `${wall[northBorder - 1][eastBorder]}、${wall[northBorder - 1][westBorder]}`
+// );
+// console.log(x - roadWidth / 2);
+// console.log(wall[northBorder - 1][eastBorder]);
+// console.log(wall[northBorder - 1][westBorder]);
 
+// 4端点を見る必要がある。
 function canMoveNorth(x, y) {
   [northBorder, southBorder, eastBorder, westBorder] = [
+    indexY(y - 1 - roadWidth / 2),
     indexY(y + roadWidth / 2),
-    indexY(y - roadWidth / 2),
     indexX(x - 1 + roadWidth / 2),
     indexX(x + 1 - roadWidth / 2),
   ];
-  console.log(x + roadWidth / 2);
-  console.log(`north=${northBorder}, east=${eastBorder}, west=${westBorder}`);
-  console.log(
-    `${wall[northBorder - 1][eastBorder]}、${wall[northBorder - 1][westBorder]}`
-  );
-  // console.log(x - roadWidth / 2);
-  console.log(wall[northBorder - 1][eastBorder]);
-  console.log(wall[northBorder - 1][westBorder]);
 
-  // const indexX = Math.floor((x / canvas.width) * wall[0].length);
-  // const indexY = Math.floor((northBorder / canvas.height) * wall.length);
+  console.log(x + roadWidth / 2);
+  console.log(
+    `north=${northBorder}, south=${southBorder}, east=${eastBorder}, west=${westBorder}`
+  );
+  console.log(
+    `${wall[northBorder][eastBorder]}、${wall[northBorder][westBorder]}`
+  );
+  console.log(x - roadWidth / 2);
+  console.log(wall[northBorder][eastBorder]);
+  console.log(wall[northBorder][westBorder]);
 
   if (northBorder > 0) {
     if (
-      wall[northBorder - 1][eastBorder] === 0 &&
-      wall[northBorder - 1][westBorder] === 0
+      wall[northBorder][eastBorder] === 0 &&
+      wall[northBorder][westBorder] === 0
     ) {
       return true;
     }
@@ -188,17 +196,36 @@ function canMoveNorth(x, y) {
 }
 
 function canMoveSouth(x, y) {
-  southBorder = y - roadWidth / 2;
-  const indexX = Math.floor((x / canvas.width) * wall[0].length);
-  const indexY = Math.floor((southBorder / canvas.height) * wall.length);
+  [northBorder, southBorder, eastBorder, westBorder] = [
+    indexY(y + roadWidth / 2),
+    indexY(y - roadWidth / 2),
+    indexX(x - 1 + roadWidth / 2),
+    indexX(x + 1 - roadWidth / 2),
+  ];
 
-  if (indexY < wall.length - 1) {
-    if (wall[indexY + 1][indexX] === 0) {
+  if (southBorder < wall.length - 1) {
+    if (
+      wall[southBorder + 1][eastBorder] === 0 &&
+      wall[southBorder + 1][westBorder] === 0
+    ) {
       return true;
     }
   }
   return false;
 }
+
+// function canMoveSouth(x, y) {
+//   southBorder = y - roadWidth / 2;
+//   const indexX = Math.floor((x / canvas.width) * wall[0].length);
+//   const indexY = Math.floor((southBorder / canvas.height) * wall.length);
+
+//   if (indexY < wall.length - 1) {
+//     if (wall[indexY + 1][indexX] === 0) {
+//       return true;
+//     }
+//   }
+//   return false;
+// }
 
 function canMoveEast(x, y) {
   eastBorder = x - roadWidth / 2;
