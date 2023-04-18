@@ -1,0 +1,51 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="11.8333" y="7" width="7" height="0.944444" fill="#FF0000"/>
+<rect x="9.5" y="7.94444" width="3.5" height="0.944444" fill="#FF0000"/>
+<rect x="8.33331" y="8.88889" width="1.16667" height="0.944444" fill="#FF0000"/>
+<rect x="7.16663" y="9.83333" width="1.16667" height="1.88889" fill="#FF0000"/>
+<rect x="6" y="11.7222" width="1.16667" height="12.2778" fill="#FF0000"/>
+<rect x="8.33331" y="22.1111" width="1.16667" height="0.944444" fill="#FF0000"/>
+<rect x="7.16663" y="22.1111" width="1.16667" height="1.88889" fill="#FF0000"/>
+<rect x="9.5" y="21.1667" width="1.16667" height="0.944444" fill="#FF0000"/>
+<rect x="10.6667" y="22.1111" width="1.16667" height="0.944444" fill="#FF0000"/>
+<rect width="3.5" height="0.944444" transform="matrix(-1 0 0 1 21.1666 7.94444)" fill="#FF0000"/>
+<rect width="1.16667" height="0.944444" transform="matrix(-1 0 0 1 22.3333 8.88889)" fill="#FF0000"/>
+<rect width="1.16667" height="1.88889" transform="matrix(-1 0 0 1 23.5 9.83333)" fill="#FF0000"/>
+<rect width="1.16667" height="12.2778" transform="matrix(-1 0 0 1 24.6666 11.7222)" fill="#FF0000"/>
+<rect width="1.16667" height="0.944444" transform="matrix(-1 0 0 1 22.3333 22.1111)" fill="#FF0000"/>
+<rect width="1.16667" height="1.88889" transform="matrix(-1 0 0 1 23.5 22.1111)" fill="#FF0000"/>
+<rect width="1.16667" height="0.944444" transform="matrix(-1 0 0 1 21.1666 21.1667)" fill="#FF0000"/>
+<rect width="1.16667" height="0.944444" transform="matrix(-1 0 0 1 20 22.1111)" fill="#FF0000"/>
+<rect x="11.8333" y="23.0556" width="2.33333" height="0.944444" fill="#FF0000"/>
+<rect x="13" y="21.1667" width="1.16667" height="1.88889" fill="#FF0000"/>
+<rect x="13" y="20.2222" width="4.66667" height="0.944444" fill="#FF0000"/>
+<rect x="16.5001" y="21.1667" width="1.16667" height="2.83333" fill="#FF0000"/>
+<rect x="17.6666" y="23.0556" width="1.16667" height="0.944444" fill="#FF0000"/>
+<rect x="7.16663" y="11.7222" width="1.16667" height="10.3889" fill="#FF0000"/>
+<rect x="8.33331" y="9.83333" width="1.16667" height="12.2778" fill="#FF0000"/>
+<rect x="9.5" y="8.88889" width="1.16667" height="12.2778" fill="#FF0000"/>
+<rect x="10.6667" y="8.88889" width="1.16667" height="13.2222" fill="#FF0000"/>
+<rect x="7.16663" y="11.7222" width="1.16667" height="10.3889" fill="#FF0000"/>
+<rect x="8.33331" y="9.83333" width="1.16667" height="12.2778" fill="#FF0000"/>
+<rect x="9.5" y="8.88889" width="1.16667" height="12.2778" fill="#FF0000"/>
+<rect x="10.6666" y="8.88889" width="1.16667" height="13.2222" fill="#FF0000"/>
+<rect width="1.16667" height="10.3889" transform="matrix(-1 0 0 1 23.5 11.7222)" fill="#FF0000"/>
+<rect width="1.16667" height="12.2778" transform="matrix(-1 0 0 1 22.3333 9.83333)" fill="#FF0000"/>
+<rect width="1.16667" height="12.2778" transform="matrix(-1 0 0 1 21.1666 8.88889)" fill="#FF0000"/>
+<rect width="1.16667" height="13.2222" transform="matrix(-1 0 0 1 20 8.88889)" fill="#FF0000"/>
+<rect x="11.8333" y="8.88889" width="1.16667" height="14.1667" fill="#FF0000"/>
+<rect x="13" y="7.94444" width="4.66667" height="12.2778" fill="#FF0000"/>
+<rect x="17.6666" y="8.88889" width="1.16667" height="14.1667" fill="#FF0000"/>
+<rect x="18.8333" y="11.2" width="4.66667" height="1.2" fill="#F8F8F8"/>
+<rect x="20" y="10" width="2.33333" height="1.2" fill="white"/>
+<rect x="18.8333" y="12.4" width="1.16667" height="2.4" fill="white"/>
+<rect x="20" y="14.8" width="2.33333" height="1.2" fill="white"/>
+<rect x="20" y="12.4" width="1.16667" height="2.4" fill="white"/>
+<rect x="21.1666" y="12.4" width="2.33333" height="2.4" fill="#0000FF"/>
+<rect x="11.8333" y="11.2" width="4.66667" height="1.2" fill="#F8F8F8"/>
+<rect x="13" y="10" width="2.33333" height="1.2" fill="white"/>
+<rect x="11.8333" y="12.4" width="1.16667" height="2.4" fill="white"/>
+<rect x="13" y="14.8" width="2.33333" height="1.2" fill="white"/>
+<rect x="13" y="12.4" width="1.16667" height="2.4" fill="white"/>
+<rect x="14.1666" y="12.4" width="2.33333" height="2.4" fill="#0000FF"/>
+</svg>
