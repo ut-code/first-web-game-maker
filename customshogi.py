@@ -7,7 +7,6 @@ TODO: (モジュールの)ドキュメントをまとめる
 # TODO: 成りの追加(設定可能にする)
 # TODO: 持ち駒機能の追加(切り替え可能にする)
 # TODO: 初手の動きの追加(設定可能にする)
-# TODO: 盤面の欠けを設定できるようにする
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
@@ -124,7 +123,7 @@ class AbsoluteCoordinate(Coordinate):
     def __pos__(self):
         return super().__copy__
 
-    def normalize(self, board: IBoard):
+    def normalized_by(self, board: IBoard):
         """盤面の大きさに合わせて、負のインデックスを標準形に直す"""
         return type(self)(self._normalizer(self.y, board.height), self._normalizer(self.x, board.width))
 
@@ -350,7 +349,7 @@ class LeaperMove(IMove, IElementalMove):
             if not board.includes(new_coordinate):
                 continue
             target_square = board[new_coordinate]
-            if target_square.is_lack:
+            if target_square.is_excluded:
                 continue
             if target_square.piece:
                 relation = controller @ target_square.piece.controller
@@ -440,7 +439,7 @@ class RiderMove(IMove, IElementalMove):
                 if not board.includes(new_coordinate):
                     break
                 target_square = board[new_coordinate]
-                if target_square.is_lack:
+                if target_square.is_excluded:
                     break
                 if target_square.piece:
                     relation = controller @ target_square.piece.controller
@@ -533,10 +532,18 @@ class Square:
             self,
             piece: Optional[IPiece] = None,
             *,
-            is_lack: bool = False,
+            is_excluded: bool = False,
         ) -> None:
         self.piece = piece
-        self.is_lack = is_lack
+        self.is_excluded = is_excluded
+
+    def show_to_console(self) -> str:
+        """マスの状態をコンソールに1文字で表示する"""
+        if self.is_excluded:
+            return '#'
+        if self.piece is None:
+            return ' '
+        return self.piece.SYMBOL_COLORED
 
 
 class IBoard(ABC):
@@ -575,10 +582,17 @@ class MatchBoard(IBoard):
             height: int,
             width: int,
             initial_position: Mapping[AbsoluteCoordinate, IPiece],
+            excluded_square: Iterable[AbsoluteCoordinate] = (),
             *,
             lr_symmetry: bool = False,
             wb_symmetry: Literal['none', 'face', 'cross'] = 'none',
         ) -> None:
+        if not isinstance(height, int):
+            raise TypeError("height must be an positive interger")
+        if not isinstance(width, int):
+            raise TypeError("width must be an positive interger")
+        if wb_symmetry not in ('none', 'face', 'cross'):
+            raise TypeError(f"{wb_symmetry} is improper value for wb_symmetry")
         self.turn_player = Controller2P.WHITE
         self.height = height
         self.width = width
@@ -590,31 +604,36 @@ class MatchBoard(IBoard):
             Controller2P.BLACK: defaultdict(set),
         }
         # initial_piecesを元に盤面に駒を置いていく
+        excluded_square = {position.normalized_by(self) for position in excluded_square}
         if lr_symmetry:
             initial_position_x_inverted = {
-                position.x_inverted.normalize(self): piece for position, piece in initial_position.items()
+                position.x_inverted.normalized_by(self): piece for position, piece in initial_position.items()
             }
             initial_position = initial_position_x_inverted | initial_position
+            excluded_square |= {position.x_inverted.normalized_by(self) for position in excluded_square}
         if wb_symmetry == 'face':
             initial_position_face = {
-                position.y_inverted.normalize(self): type(piece)(piece.controller.next_player()) for position, piece in initial_position.items()
+                position.y_inverted.normalized_by(self): type(piece)(piece.controller.next_player()) for position, piece in initial_position.items()
             }
             initial_position = initial_position_face | initial_position
+            excluded_square |= {position.y_inverted.normalized_by(self) for position in excluded_square}
         elif wb_symmetry == 'cross':
             initial_position_cross = {
-                (~position).normalize(self): type(piece)(piece.controller.next_player()) for position, piece in initial_position.items()
+                (~position).normalized_by(self): type(piece)(piece.controller.next_player()) for position, piece in initial_position.items()
             }
             initial_position = initial_position_cross | initial_position
+            excluded_square |= {(~position).normalized_by(self) for position in excluded_square}
+        for square in excluded_square:
+            self[square].is_excluded = True
         for position, piece in initial_position.items():
             self.add_piece_to_board(type(piece), piece.controller, position)
-        
 
     @property
     def coords_iterator(self):
         """座標の一覧のイテレータ"""
         return (AbsoluteCoordinate(h, w) for h in range(self.height) for w in range(self.width))
 
-    def show_console(self):
+    def show_to_console(self):
         """コンソールに盤面を表示する"""
         h_digit = len(str(self.height+1))
         horizontal_line = '-' * (h_digit-1) + '-+' * (self.width+1)
@@ -624,9 +643,8 @@ class MatchBoard(IBoard):
         for h in range(self.height-1, -1, -1):
             print(horizontal_line)
             print(format(h+1, f'#{h_digit}')+'|'+'|'.join((
-                ' ' if not self[AbsoluteCoordinate(h, w)].piece
-                else self[AbsoluteCoordinate(h, w)].piece.SYMBOL_COLORED
-            )for w in range(self.width))+'|')
+                self[AbsoluteCoordinate(h, w)].show_to_console()
+            ) for w in range(self.width))+'|')
         print(horizontal_line)
 
     def is_game_terminated(self) -> tuple[bool, Controller2P]:
@@ -658,14 +676,15 @@ class MatchBoard(IBoard):
             collision: Literal['raise', 'overwrite', 'skip'] = 'raise',
         ) -> None:
         """盤面に駒を置く"""
+        if self[coord].is_excluded and collision != 'skip':
+            raise ValueError("cannot set a piece to excluded square")
         if self[coord].piece is not None:
             if collision == 'raise':
                 raise ValueError(f"piece is already in {coord}")
             if collision == 'skip':
-                return None
+                return
         self[coord].piece = kind(controller)
         self.piece_in_board_index[controller][kind].add(coord)
-        return None
 
     def remove_piece_from_stand(self, kind: type[IPiece], controller: Controller2P):
         """駒台から駒を取り除く"""
@@ -692,7 +711,7 @@ class MatchBoard(IBoard):
     def drop_destination(self) -> set[AbsoluteCoordinate]:
         """駒を打つ先として有効な座標を返す"""
         return set(filter(
-            lambda coord: (not self[coord].is_lack) and (self[coord].piece is None),
+            lambda coord: (not self[coord].is_excluded) and (self[coord].piece is None),
             self.coords_iterator,
         ))
 
@@ -721,7 +740,7 @@ class MatchBoard(IBoard):
     def game(self):
         """試合を行う"""
         while not self.is_game_terminated()[0]:
-            self.show_console()
+            self.show_to_console()
             starting_coord = set.union(*({self.square_referer_to_str(k) for k in i} for i in self.piece_in_board_index[self.turn_player].values()))
             while True:
                 depart_coord_str = choose_by_user(starting_coord.union({'r'}))
@@ -735,7 +754,7 @@ class MatchBoard(IBoard):
                         break
                     print("re-selecting...")
             self.turn_player = self.turn_player.next_player()
-        self.show_console()
+        self.show_to_console()
         print(f"game end: winner is {self.is_game_terminated()[1]}")
 
 
@@ -778,7 +797,7 @@ class Pawn(IPiece):
 
 
 if __name__ == '__main__':
-    p = {
+    initial_piece_position = {
         AbsoluteCoordinate(0, 3): King(Controller2P.WHITE),
         AbsoluteCoordinate(0, 4): Qween(Controller2P.WHITE),
         AbsoluteCoordinate(0, 0): Rook(Controller2P.WHITE),
@@ -789,7 +808,7 @@ if __name__ == '__main__':
     play_board = MatchBoard(
         height=8,
         width=8,
-        initial_position=p,
+        initial_position=initial_piece_position,
         lr_symmetry=True,
         wb_symmetry='face',
     )
