@@ -1,13 +1,12 @@
 // canvasの座標を反転させてから扱ってもいいかも
 
-// 壁の位置を定義
-// 通路を広くする
-wall = [
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+const wall = [
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
+  [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ];
 
 const result = {
@@ -17,19 +16,24 @@ const result = {
   west: true,
 };
 
+const nowDirectionDiv = document.getElementById("now-direction");
+const nextDirectionDiv = document.getElementById("next-direction");
+
 const pacmanImage = new Image();
 pacmanImage.src = "./img/pacman.svg";
 
 // canvas領域を定義
 const canvas = document.getElementById("canvas");
-canvas.width = "500";
+canvas.width = "600";
 canvas.height = canvas.width * 0.5; // とりあえず縦横比1:2
 const ctx = canvas.getContext("2d");
 const roadWidth = canvas.width / wall[0].length;
 
 // let lastTime = performance.now();
 const pacmanPosition = { x: 75, y: 75 }; //最初の出現位置を動的に指定するように修正の必要あり
-const nextDirection = { x: 0, y: 0 };
+// const nextDirection = { x: 0, y: 0 };
+let nextDirection;
+let nowDirection;
 
 // 開始
 drawContext();
@@ -102,23 +106,34 @@ function drawPacman(x, y) {
 // パックマンの移動・再描画
 function movePacman() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const canMove = canMoveFrom(pacmanPosition.x, pacmanPosition.y);
-  if (canMove.north && nextDirection.y === -1) {
+  const canMove = canMoveFrom();
+
+  if (nextDirection === "north" && canMove.north) {
+    nowDirection = "north";
+  } else if (nextDirection === "south" && canMove.south) {
+    nowDirection = "south";
+  } else if (nextDirection === "east" && canMove.east) {
+    nowDirection = "east";
+  } else if (nextDirection === "west" && canMove.west) {
+    nowDirection = "west";
+  }
+  if (nowDirection === "north" && canMove.north) {
     pacmanPosition.y -= 1;
-  }
-  if (canMove.south && nextDirection.y === 1) {
+  } else if (nowDirection === "south" && canMove.south) {
     pacmanPosition.y += 1;
-  }
-  if (canMove.east && nextDirection.x === 1) {
+  } else if (nowDirection === "east" && canMove.east) {
     pacmanPosition.x += 1;
-  }
-  if (canMove.west && nextDirection.x === -1) {
+  } else if (nowDirection === "west" && canMove.west) {
     pacmanPosition.x -= 1;
   }
 
   drawContext();
   drawWall();
   drawPacman(pacmanPosition.x, pacmanPosition.y);
+
+  // debug
+  nowDirectionDiv.textContent = `now: ${nowDirection}`;
+  nextDirectionDiv.textContent = `next: ${nextDirection}`;
 
   setTimeout(() => {
     movePacman();
@@ -132,24 +147,20 @@ function movePacman() {
 // 矢印キーで移動
 function onKeyDown(e) {
   if (e.keyCode === 37) {
-    // left
-    nextDirection.x = -1;
-    nextDirection.y = 0;
+    // west
+    nextDirection = "west";
   }
   if (e.keyCode === 38) {
-    // up
-    nextDirection.x = 0;
-    nextDirection.y = -1;
+    // north
+    nextDirection = "north";
   }
   if (e.keyCode === 39) {
-    // right
-    nextDirection.x = 1;
-    nextDirection.y = 0;
+    // east
+    nextDirection = "east";
   }
   if (e.keyCode === 40) {
-    // down
-    nextDirection.x = 0;
-    nextDirection.y = 1;
+    // south
+    nextDirection = "south";
   }
 }
 
