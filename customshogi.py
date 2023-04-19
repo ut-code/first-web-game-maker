@@ -1,12 +1,12 @@
 """
 動作環境: Python3.10以上
-
-TODO: (モジュールの)ドキュメントをまとめる
 """
 
+# TODO: (モジュールの)ドキュメントをまとめる
 # TODO: 成りの追加(設定可能にする)
 # TODO: 持ち駒機能の追加(切り替え可能にする)
 # TODO: 初手の動きの追加(設定可能にする)
+# TODO: 駒を取る際の動きの追加(設定可能にする)
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
@@ -43,9 +43,10 @@ class Coordinate(ABC):
         x: +は右, -は左
     """
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}{self.y, self.x}"
+        return f"{self.__class__.__name__}{self.__y, self.__x}"
 
-    __str__ = __repr__
+    def __str__(self) -> str:
+        return f"{self.__y, self.__x}"
 
     def __init__(self, y: int, x: int) -> None:
         if not isinstance(y, int):
@@ -72,10 +73,10 @@ class Coordinate(ABC):
     def __add__(self, __o: object):
         if not isinstance(__o, Coordinate):
             raise TypeError
-        return type(self)(self.y+__o.y, self.x+__o.x)
+        return type(self)(self.__y+__o.y, self.__x+__o.x)
 
     def __copy__(self):
-        return type(self)(self.y, self.x)
+        return type(self)(self.__y, self.__x)
 
     def __hash__(self) -> int:
         return hash((self.__y, self.__x, type(self)))
@@ -83,7 +84,7 @@ class Coordinate(ABC):
     def __eq__(self, __value: object) -> bool:
         if type(__value) != type(self):
             return False
-        return (self.x==__value.x) and (self.y==__value.y)
+        return (self.__x==__value.x) and (self.__y==__value.y)
 
 class AbsoluteCoordinate(Coordinate):
     """盤面の座標を表すクラス
@@ -125,7 +126,10 @@ class AbsoluteCoordinate(Coordinate):
 
     def normalized_by(self, board: IBoard):
         """盤面の大きさに合わせて、負のインデックスを標準形に直す"""
-        return type(self)(self._normalizer(self.y, board.height), self._normalizer(self.x, board.width))
+        return type(self)(
+            self._normalizer(self.y, board.height),
+            self._normalizer(self.x, board.width),
+        )
 
     @staticmethod
     def _normalizer(target: int, standard: int) -> int:
@@ -368,13 +372,15 @@ class RiderMove(IMove, IElementalMove):
             *,
             symmetry: Literal['none', 'lr', 'fblr', 'oct'] = 'none',
         ) -> None:
-        self.__coordinate_to_dist: dict[RelativeCoordinate, int] = defaultdict(int, coordinate_to_dist)
+        self.__coordinate_to_dist: dict[RelativeCoordinate, int] \
+            = defaultdict(int, coordinate_to_dist)
 
         if symmetry in ('lr', 'fblr', 'oct'):
-            def adopt_dist(a: int, b: int):
-                if a < 0 or b < 0:
+            def adopt_dist(dist_a: int, dist_b: int):
+                """同じ方向に移動できる回数を示す2つの値について、他方を包含するものを返す"""
+                if dist_a < 0 or dist_b < 0:
                     return -1
-                return max(a, b)
+                return max(dist_a, dist_b)
             for coord, dist in set(self.__coordinate_to_dist.items()):
                 self.__coordinate_to_dist[coord.x_inverted] \
                     = adopt_dist(self.__coordinate_to_dist[coord.x_inverted], dist)
@@ -458,7 +464,10 @@ class MoveParallelJoint(IMove):
         self.move = move
 
     def coordinates_in_controller(self, controller: Controller2P) -> set[RelativeCoordinate]:
-        return set().union(*(move_element.coordinates_in_controller(controller) for move_element in self.move))
+        return set().union(
+            *(move_element.coordinates_in_controller(controller)
+              for move_element in self.move)
+        )
 
     def valid_destination(
             self,
@@ -466,20 +475,22 @@ class MoveParallelJoint(IMove):
             controller: Controller2P,
             current_coordinate: AbsoluteCoordinate
         ) -> set[AbsoluteCoordinate]:
-        return set().union(*(move_element.valid_destination(board, controller, current_coordinate) for move_element in self.move))
-
+        return set().union(
+            *(move_element.valid_destination(board, controller, current_coordinate)
+              for move_element in self.move)
+        )
 
 
 class IPiece(ABC):
     """駒の抽象クラス"""
-    def __str__(self) -> str:
-        return f"{self.NAME}({self.controller})"
-
     def __init__(
             self,
             controller: Controller2P,
         ) -> None:
         self.controller = controller
+
+    def __repr__(self) -> str:
+        return f"{self.NAME}({self.controller})"
 
     @property
     def SYMBOL_COLORED(self):
@@ -515,7 +526,7 @@ class IPiece(ABC):
     def valid_destination(
             self,
             board: IBoard,
-            my_coordinate: AbsoluteCoordinate
+            my_coordinate: AbsoluteCoordinate,
         ) -> set[AbsoluteCoordinate]:
         """諸々から、有効な移動先を返す"""
         return self.MOVE.valid_destination(board, self.controller, my_coordinate)
@@ -607,22 +618,28 @@ class MatchBoard(IBoard):
         excluded_square = {position.normalized_by(self) for position in excluded_square}
         if lr_symmetry:
             initial_position_x_inverted = {
-                position.x_inverted.normalized_by(self): piece for position, piece in initial_position.items()
+                position.x_inverted.normalized_by(self): piece
+                for position, piece in initial_position.items()
             }
             initial_position = initial_position_x_inverted | initial_position
-            excluded_square |= {position.x_inverted.normalized_by(self) for position in excluded_square}
+            excluded_square |= {position.x_inverted.normalized_by(self)
+                                for position in excluded_square}
         if wb_symmetry == 'face':
             initial_position_face = {
-                position.y_inverted.normalized_by(self): type(piece)(piece.controller.next_player()) for position, piece in initial_position.items()
+                position.y_inverted.normalized_by(self): type(piece)(piece.controller.next_player())
+                for position, piece in initial_position.items()
             }
             initial_position = initial_position_face | initial_position
-            excluded_square |= {position.y_inverted.normalized_by(self) for position in excluded_square}
+            excluded_square |= {position.y_inverted.normalized_by(self)
+                                for position in excluded_square}
         elif wb_symmetry == 'cross':
             initial_position_cross = {
-                (~position).normalized_by(self): type(piece)(piece.controller.next_player()) for position, piece in initial_position.items()
+                (~position).normalized_by(self): type(piece)(piece.controller.next_player())
+                for position, piece in initial_position.items()
             }
             initial_position = initial_position_cross | initial_position
-            excluded_square |= {(~position).normalized_by(self) for position in excluded_square}
+            excluded_square |= {(~position).normalized_by(self)
+                                for position in excluded_square}
         for square in excluded_square:
             self[square].is_excluded = True
         for position, piece in initial_position.items():
@@ -646,12 +663,13 @@ class MatchBoard(IBoard):
                 self[AbsoluteCoordinate(h, w)].show_to_console()
             ) for w in range(self.width))+'|')
         print(horizontal_line)
+        print()
 
     def is_game_terminated(self) -> tuple[bool, Controller2P]:
         """(ゲームが終了したかの真偽値, 勝者)"""
         loser = set()
         for controller in (Controller2P.WHITE, Controller2P.BLACK):
-            if not any(len(v) for (k, v) in self.piece_in_board_index[controller].items() if k.ROYALTY):
+            if not any(v for (k, v) in self.piece_in_board_index[controller].items() if k.ROYALTY):
                 loser.add(controller)
         if not loser:
             return (False, Controller2P.INDEPENDENT)
@@ -741,12 +759,16 @@ class MatchBoard(IBoard):
         """試合を行う"""
         while not self.is_game_terminated()[0]:
             self.show_to_console()
-            starting_coord = set.union(*({self.square_referer_to_str(k) for k in i} for i in self.piece_in_board_index[self.turn_player].values()))
+            starting_coord = set.union(
+                *({self.square_referer_to_str(k) for k in i}
+                  for i in self.piece_in_board_index[self.turn_player].values())
+            )
             while True:
                 depart_coord_str = choose_by_user(starting_coord.union({'r'}))
                 if depart_coord_str != 'r':
                     depart_coord = self.square_referer_from_str(depart_coord_str)
-                    destination = {self.square_referer_to_str(j) for j in self.move_destination_from(depart_coord)}
+                    destination = {self.square_referer_to_str(j)
+                                   for j in self.move_destination_from(depart_coord)}
                     arrive_coord_str = choose_by_user(destination.union({'r'}))
                     if arrive_coord_str != 'r':
                         arrive_coord = self.square_referer_from_str(arrive_coord_str)
