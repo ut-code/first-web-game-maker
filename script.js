@@ -1,13 +1,26 @@
 // canvasの座標を反転させてから扱ってもいいかも
 
-const wall = [
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-  [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
-  [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1],
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-];
+// const wall = [
+//   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+//   [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+//   [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
+//   [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+//   [1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1],
+//   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+// ];
+
+// 迷路のサイズ
+const size = 12;
+
+// 壁の初期設定（もっと綺麗に書けるはず）
+const wall = new Array(size / 2);
+wall[0] = new Array(size).fill(1);
+for (let i = 1; i < size / 2 - 1; i++) {
+  wall[i] = new Array(size).fill(0);
+  wall[i][0] = 1;
+  wall[i][size - 1] = 1;
+}
+wall[size / 2 - 1] = new Array(size).fill(1);
 
 const result = {
   north: true,
@@ -16,6 +29,7 @@ const result = {
   west: true,
 };
 
+const tableDiv = document.getElementById("table");
 const nowDirectionDiv = document.getElementById("now-direction");
 const nextDirectionDiv = document.getElementById("next-direction");
 
@@ -24,8 +38,8 @@ pacmanImage.src = "./img/pacman.svg";
 
 // canvas領域を定義
 const canvas = document.getElementById("canvas");
-canvas.width = "600";
-canvas.height = canvas.width * 0.5; // とりあえず縦横比1:2
+canvas.width = size * 50;
+canvas.height = size * 25; // とりあえず縦横比1:2
 const ctx = canvas.getContext("2d");
 const roadWidth = canvas.width / wall[0].length;
 
@@ -36,6 +50,7 @@ let nextDirection;
 let nowDirection;
 
 // 開始
+createWall();
 drawContext();
 drawWall();
 drawPacman(pacmanPosition.x, pacmanPosition.y);
@@ -43,6 +58,32 @@ movePacman();
 
 // キーボード操作を取得
 document.onkeydown = onKeyDown;
+
+// 入力を元に壁を生成
+function createWall() {
+  tableDiv.innerHTML = "";
+  const table = document.createElement("table");
+  for (let i = 0; i < size / 2; i++) {
+    const tr = document.createElement("tr");
+    for (let j = 0; j < size; j++) {
+      const td = document.createElement("td");
+      td.style.width = "40px";
+      td.style.height = "40px";
+      if (wall[i][j] === 0) {
+        td.style.backgroundColor = "black";
+      } else {
+        td.style.backgroundColor = "blue";
+      }
+      td.onclick = () => {
+        wall[i][j] = wall[i][j] === 0 ? 1 : 0;
+        createWall();
+      };
+      tr.appendChild(td);
+    }
+    table.appendChild(tr);
+  }
+  tableDiv.appendChild(table);
+}
 
 // 背景描画
 function drawContext() {
