@@ -1,3 +1,5 @@
+//モジュール化
+
 // canvasの座標を反転させてから扱ってもいいかも
 
 // const wall = [
@@ -12,15 +14,19 @@
 // 迷路のサイズ
 const size = 12;
 
+let cookiePoint = 0;
+
 // 壁の初期設定（もっと綺麗に書けるはず）
+// "x"は壁、"o"はクッキー、"-"は空白
+
 const wall = new Array(size / 2);
-wall[0] = new Array(size).fill(1);
+wall[0] = new Array(size).fill("x");
 for (let i = 1; i < size / 2 - 1; i++) {
-  wall[i] = new Array(size).fill(0);
-  wall[i][0] = 1;
-  wall[i][size - 1] = 1;
+  wall[i] = new Array(size).fill("o");
+  wall[i][0] = "x";
+  wall[i][size - 1] = "x";
 }
-wall[size / 2 - 1] = new Array(size).fill(1);
+wall[size / 2 - 1] = new Array(size).fill("x");
 
 const result = {
   north: true,
@@ -32,6 +38,7 @@ const result = {
 const tableDiv = document.getElementById("table");
 const nowDirectionDiv = document.getElementById("now-direction");
 const nextDirectionDiv = document.getElementById("next-direction");
+const cookiePointSpan = document.getElementById("cookie-point");
 
 const pacmanImage = new Image();
 pacmanImage.src = "./img/pacman.svg";
@@ -69,13 +76,13 @@ function createWall() {
       const td = document.createElement("td");
       td.style.width = "40px";
       td.style.height = "40px";
-      if (wall[i][j] === 0) {
-        td.style.backgroundColor = "black";
-      } else {
+      if (wall[i][j] === "x") {
         td.style.backgroundColor = "blue";
+      } else {
+        td.style.backgroundColor = "black";
       }
       td.onclick = () => {
-        wall[i][j] = wall[i][j] === 0 ? 1 : 0;
+        wall[i][j] = wall[i][j] === "o" ? "x" : "o";
         createWall();
       };
       tr.appendChild(td);
@@ -99,8 +106,12 @@ function drawWall() {
 
   for (let i = 0; i < wall.length; i++) {
     for (let j = 0; j < wall[i].length; j++) {
-      if (wall[i][j] === 1) {
+      if (wall[i][j] === "x") {
         ctx.strokeRect(roadWidth * j, roadWidth * i, roadWidth, roadWidth);
+      } else if (wall[i][j] === "o") {
+        drawCookie(i, j);
+      } else if (wall[i][j] === "-") {
+        // empty
       }
     }
   }
@@ -131,13 +142,20 @@ function drawPacman(x, y) {
 //   ctx.fill();
 // }
 
-// function drawCookie(x, y) {
-//   ctx.fillStyle = "white";
-//   ctx.beginPath();
-//   ctx.arc(x, y, 5, 0, Math.PI * 2, true);
-//   ctx.closePath();
-//   ctx.fill();
-// }
+function drawCookie(i, j) {
+  ctx.fillStyle = "white";
+  ctx.beginPath();
+  ctx.arc(
+    roadWidth * j + roadWidth / 2,
+    roadWidth * i + roadWidth / 2,
+    5,
+    0,
+    Math.PI * 2,
+    true
+  );
+  ctx.closePath();
+  ctx.fill();
+}
 
 // function removeCookie(x, y) {
 //   ctx.fillStyle = "black";
@@ -168,6 +186,8 @@ function movePacman() {
     pacmanPosition.x -= 1;
   }
 
+  eraseCookie();
+
   drawContext();
   drawWall();
   drawPacman(pacmanPosition.x, pacmanPosition.y);
@@ -175,6 +195,8 @@ function movePacman() {
   // debug
   nowDirectionDiv.textContent = `now: ${nowDirection}`;
   nextDirectionDiv.textContent = `next: ${nextDirection}`;
+
+  cookiePointSpan.textContent = cookiePoint;
 
   setTimeout(() => {
     movePacman();
@@ -248,12 +270,12 @@ function canMoveFrom() {
   if (isMovingEastWest) {
     result.east = true;
     result.west = true;
-    if (wall[centerY][centerX + 1] === 0) {
+    if (wall[centerY][centerX + 1] !== "x") {
       result.east = true;
     } else if (isMovingNorthSouth) {
       result.east = false;
     }
-    if (wall[centerY][centerX - 1] === 0) {
+    if (wall[centerY][centerX - 1] !== "x") {
       result.west = true;
     } else if (isMovingNorthSouth) {
       result.west = false;
@@ -265,12 +287,12 @@ function canMoveFrom() {
   if (isMovingNorthSouth) {
     result.north = true;
     result.south = true;
-    if (wall[centerY - 1][centerX] === 0) {
+    if (wall[centerY - 1][centerX] !== "x") {
       result.north = true;
     } else if (isMovingEastWest) {
       result.north = false;
     }
-    if (wall[centerY + 1][centerX] === 0) {
+    if (wall[centerY + 1][centerX] !== "x") {
       result.south = true;
     } else if (isMovingEastWest) {
       result.south = false;
@@ -281,4 +303,14 @@ function canMoveFrom() {
   }
   console.log(result);
   return result;
+}
+
+function eraseCookie() {
+  // pacmanの大きさが相まっていい感じだが、本来ちゃんと当たり判定をやる必要がある
+  const centerX = indexX(pacmanPosition.x);
+  const centerY = indexY(pacmanPosition.y);
+  if (wall[centerY][centerX] === "o") {
+    wall[centerY][centerX] = "-";
+    cookiePoint += 1;
+  }
 }
