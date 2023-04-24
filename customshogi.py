@@ -7,8 +7,6 @@
 # TODO: 持ち駒機能の追加(切り替え可能にする)
     # TODO: 打牌
 # 入力受付について、{表示名: 実行関数 | None}にする。
-# TODO: 初手の動きの追加(設定可能にする)
-# TODO: 駒を取る際の動きの追加(設定可能にする)
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
@@ -73,7 +71,7 @@ class Coordinate(ABC):
         return hash((self.__y, self.__x, type(self)))
 
     def __eq__(self, __value: object) -> bool:
-        if type(__value) != type(self):
+        if type(__value) is not type(self):
             return False
         return (self.__x==__value.x) and (self.__y==__value.y)
 
@@ -261,8 +259,48 @@ class Approachability(Enum):
         return self.__can_go_over
 
 
+class InteractionTemplate:
+    # pylint: disable=C0103
+    # 上記はクラス定数に対する警告の抑制を目的としている
+    """Interactionのテンプレートを定数の形で提供するクラス"""
+    @classmethod
+    @property
+    def NORMAL(cls):
+        """通常の駒の移動"""
+        return {
+            Relation.FRIEND: Approachability.REJECT,
+            Relation.ENEMY: Approachability.END,
+            Relation.TO_BLANK: Approachability.CONTINUE,
+        }.copy()
+
+    @classmethod
+    @property
+    def NO_CAPTURE(cls):
+        """駒を取らない移動"""
+        return {
+            Relation.FRIEND: Approachability.REJECT,
+            Relation.ENEMY: Approachability.REJECT,
+            Relation.TO_BLANK: Approachability.CONTINUE,
+        }.copy()
+
+    @classmethod
+    @property
+    def ONLY_CAPTURE(cls):
+        """敵の駒を取らなければいけない移動"""
+        return {
+            Relation.FRIEND: Approachability.REJECT,
+            Relation.ENEMY: Approachability.END,
+            Relation.TO_BLANK: Approachability.ONLY_PASS,
+        }.copy()
+
+
 class IMove(ABC):
     """駒の動きの静的な定義の表現のインタフェース"""
+    def __add__(self, __o: object) -> MoveParallelJoint:
+        if not isinstance(__o, IMove):
+            raise TypeError
+        return MoveParallelJoint(self, __o)
+
     @abstractmethod
     def coordinates_in_controller(self, controller: Controller2P) -> Any:
         """駒がそのコントローラーの下で動ける方向を示す"""
@@ -278,13 +316,21 @@ class IMove(ABC):
 
 
 class IElementalMove(ABC):
-    """IMoveDefinitionの子のうち、それらによって初期化しないもの"""
-    @abstractmethod
+    """IMoveDefinitionの子のうち、他のIMoveの合成ではないもののインタフェース"""
+    interaction: dict[Relation, Approachability]
+
+    # FIXME: 協調的多重継承
+    def __init__(self, interaction: Mapping[Relation, Approachability] = ...) -> None:
+        self.interaction = InteractionTemplate.NORMAL
+        if interaction is not ...:
+            self.interaction.update(interaction)
+
     def approachability(
             self,
             relation: Relation,
         ) -> Approachability:
         """移動先のマスの駒のコントローラーを参照し、そこに対する挙動を返す"""
+        return self.interaction[relation]
 
 
 class LeaperMove(IMove, IElementalMove):
@@ -294,7 +340,10 @@ class LeaperMove(IMove, IElementalMove):
             coordinates: Iterable[RelativeCoordinate],
             *,
             symmetry: Literal['none', 'lr', 'fblr', 'oct'] = 'none',
+            interaction: Mapping[Relation, Approachability] = ...,
         ) -> None:
+        super().__init__(interaction)
+
         self.__coordinates: set[RelativeCoordinate] = set(coordinates)
         if symmetry in ('lr', 'fblr', 'oct'):
             self.__coordinates.update({coord.x_inverted for coord in self.__coordinates})
@@ -303,17 +352,12 @@ class LeaperMove(IMove, IElementalMove):
                 if symmetry == 'oct':
                     self.__coordinates.update({coord.upside_left for coord in self.__coordinates})
 
-        self.approachability_mapping = {
-            Relation.FRIEND: Approachability.REJECT,
-            Relation.ENEMY: Approachability.END,
-            Relation.TO_BLANK: Approachability.CONTINUE,
-        }
-
     def derive(
             self,
             coordinates: Iterable[RelativeCoordinate] = ...,
             *,
             symmetry: Literal['none', 'lr', 'fblr', 'oct'] = 'none',
+            interaction: Optional[Mapping[Relation, Approachability]] = ...,
         ) -> None:
         """自身をコピーしたものを返す
         ただし、引数が与えられたものについては上書きし、
@@ -321,16 +365,15 @@ class LeaperMove(IMove, IElementalMove):
         """
         if coordinates is ...:
             coordinates = self.__coordinates
+        if interaction is ...:
+            interaction = self.interaction
+        elif interaction is None:
+            interaction = ...
         return self.__class__(
             coordinates,
             symmetry=symmetry,
+            interaction=interaction,
         )
-
-    def approachability(
-            self,
-            relation: Relation,
-        ) -> Approachability:
-        return self.approachability_mapping[relation]
 
     def coordinates_in_controller(self, controller: Controller2P) -> set[RelativeCoordinate]:
         if controller is Controller2P.WHITE:
@@ -369,10 +412,12 @@ class RiderMove(IMove, IElementalMove):
             coordinate_to_dist: Mapping[RelativeCoordinate, int],
             *,
             symmetry: Literal['none', 'lr', 'fblr', 'oct'] = 'none',
+            interaction: Mapping[Relation, Approachability] = ...,
         ) -> None:
+        super().__init__(interaction)
+
         self.__coordinate_to_dist: dict[RelativeCoordinate, int] \
             = defaultdict(int, coordinate_to_dist)
-
         if symmetry in ('lr', 'fblr', 'oct'):
             def adopt_dist(dist_a: int, dist_b: int):
                 """同じ方向に移動できる回数を示す2つの値について、他方を包含するものを返す"""
@@ -391,17 +436,12 @@ class RiderMove(IMove, IElementalMove):
                         self.__coordinate_to_dist[coord.upside_left] \
                             = adopt_dist(self.__coordinate_to_dist[coord.x_inverted], dist)
 
-        self.approachability_mapping = {
-            Relation.FRIEND: Approachability.REJECT,
-            Relation.ENEMY: Approachability.END,
-            Relation.TO_BLANK: Approachability.CONTINUE,
-        }
-
     def derive(
             self,
             coordinate_to_dist: Mapping[RelativeCoordinate, int],
             *,
             symmetry: Literal['none', 'lr', 'fblr', 'oct'] = 'none',
+            interaction: Optional[Mapping[Relation, Approachability]] = ...,
         ) -> None:
         """自身をコピーしたものを返す
         ただし、引数が与えられたものについては上書きし、
@@ -409,16 +449,15 @@ class RiderMove(IMove, IElementalMove):
         """
         if coordinate_to_dist is ...:
             coordinate_to_dist = self.__coordinate_to_dist
+        if interaction is ...:
+            interaction = self.interaction
+        elif interaction is None:
+            interaction = ...
         return self.__class__(
             coordinate_to_dist,
             symmetry=symmetry,
+            interaction=interaction,
         )
-
-    def approachability(
-            self,
-            relation: Relation,
-        ) -> Approachability:
-        return self.approachability_mapping[relation]
 
     def coordinates_in_controller(self, controller: Controller2P) -> dict[RelativeCoordinate, int]:
         if controller is Controller2P.WHITE:
@@ -461,6 +500,15 @@ class MoveParallelJoint(IMove):
     def __init__(self, *move: IMove) -> None:
         self.move = move
 
+    def __add__(self, __o: object) -> MoveParallelJoint:
+        if not isinstance(__o, IMove):
+            raise TypeError
+        if isinstance(__o, MoveParallelJoint):
+            return MoveParallelJoint(*self.move, *__o.move)
+        return MoveParallelJoint(*self.move, __o)
+
+    __radd__ = __add__
+
     def coordinates_in_controller(self, controller: Controller2P) -> set[RelativeCoordinate]:
         return set().union(
             *(move_element.coordinates_in_controller(controller)
@@ -486,11 +534,17 @@ class IPiece(ABC):
     def __init__(
             self,
             controller: Controller2P,
+            *,
+            is_untouched: bool = False,
         ) -> None:
         self.controller = controller
+        self.is_untouched = is_untouched
 
     def __repr__(self) -> str:
-        return f"{self.NAME}({self.controller})"
+        return (
+            f"{self.__class__.__name__}"
+            f"(controller={self.controller}, is_untouched={self.is_untouched})"
+        )
 
     @property
     def SYMBOL_COLORED(self):
@@ -518,8 +572,14 @@ class IPiece(ABC):
 
     @classmethod
     @property
+    def INITIAL_MOVE(cls) -> IMove:
+        """move definition of piece, but only appried to the first move"""
+        return cls.MOVE
+
+    @classmethod
+    @property
     def ROYALTY(cls) -> bool:
-        """if True, this piece is royal"""
+        """if True, this piece is royal (Player who lost all royal pieces loses the game.)"""
         return False
 
     @classmethod
@@ -538,7 +598,7 @@ class IPiece(ABC):
     @classmethod
     @property
     def ORIGINAL_PIECE(cls) -> type[IPiece]:
-        """取られた時に何として持ち駒に加わるか"""
+        """取られた時に何の駒として持ち駒に加わるか"""
         return cls
 
     def valid_destination(
@@ -547,7 +607,11 @@ class IPiece(ABC):
             my_coordinate: AbsoluteCoordinate,
         ) -> set[AbsoluteCoordinate]:
         """諸々から、有効な移動先を返す"""
-        return self.MOVE.valid_destination(board, self.controller, my_coordinate)
+        if self.is_untouched:
+            referent_move = self.INITIAL_MOVE
+        else:
+            referent_move = self.MOVE
+        return referent_move.valid_destination(board, self.controller, my_coordinate)
         # 以下、もともとの構想
         # cls.MOVEに従って動ける場所を表示する
         # -> クリックでそこに移動し、(駒を取ることを含む段数が)二段以上だったら次の入力を受け付ける
@@ -661,7 +725,7 @@ class MatchBoard(IBoard):
         for square in excluded_square:
             self[square].is_excluded = True
         for position, piece in initial_position.items():
-            self.add_piece_to_board(type(piece), piece.controller, position)
+            self.add_piece_to_board(type(piece), piece.controller, position, as_untouched=True)
 
     @property
     def coords_iterator(self):
@@ -671,7 +735,7 @@ class MatchBoard(IBoard):
     def visualize_piece_stand(self, player: Controller2P) -> None:
         """コンソールに駒台を表示する"""
         print(f"{str(player)}'s piece stand: ", end='')
-        print(', '.join(f"{piece.SYMBOL}: {num}"
+        print(', '.join(f"{piece.SYMBOL}-{num}"
                         for piece, num in self.piece_stands[player].items()) or "[no piece]")
 
     def show_to_console(self) -> None:
@@ -723,6 +787,7 @@ class MatchBoard(IBoard):
             controller: Controller2P,
             coord: AbsoluteCoordinate,
             *,
+            as_untouched: bool = False,
             collision: Literal['raise', 'overwrite', 'skip'] = 'raise',
         ) -> None:
         """盤面に駒を置く"""
@@ -733,7 +798,7 @@ class MatchBoard(IBoard):
                 raise ValueError(f"piece is already in {coord}")
             if collision == 'skip':
                 return
-        self[coord].piece = kind(controller)
+        self[coord].piece = kind(controller, is_untouched=as_untouched)
         self.piece_in_board_index[controller][kind].add(coord)
 
     def remove_piece_from_stand(self, kind: type[IPiece], controller: Controller2P):
@@ -865,14 +930,43 @@ class Rook(IPiece):
     SYMBOL = 'r'
 
 class Knight(IPiece):
+    """チェスのナイト
+    動き: 途中の駒を飛び越えて、縦か横に2マス進んでから、それと垂直な方向に1マス進んだマスに進める
+    """
     NAME = "Knight"
     MOVE = LeaperMove([RelativeCoordinate(2, 1)], symmetry='oct')
     ROYALTY = False
     SYMBOL = "n"
 
 class Pawn(IPiece):
+    """チェスのポーン
+    動き: とりあえず省略
+    """
     NAME = "Pawn"
-    MOVE = LeaperMove([RelativeCoordinate(1, 0)], symmetry='none')
+    MOVE = MoveParallelJoint(
+        LeaperMove(
+            [RelativeCoordinate(1, 0)],
+            symmetry='none',
+            interaction=InteractionTemplate.NO_CAPTURE
+        ),
+        LeaperMove(
+            [RelativeCoordinate(1, 1)],
+            symmetry='lr',
+            interaction=InteractionTemplate.ONLY_CAPTURE
+        ),
+    )
+    INITIAL_MOVE = MoveParallelJoint(
+        RiderMove(
+            {RelativeCoordinate(1, 0): 2},
+            symmetry='none',
+            interaction=InteractionTemplate.NO_CAPTURE
+        ),
+        LeaperMove(
+            [RelativeCoordinate(1, 1)],
+            symmetry='lr',
+            interaction=InteractionTemplate.ONLY_CAPTURE
+        ),
+    )
     ROYALTY = False
     SYMBOL = "p"
 
@@ -887,7 +981,7 @@ if __name__ == '__main__':
         **{AbsoluteCoordinate(1, n): Pawn(Controller2P.WHITE) for n in range(4)},
     }
     play_board = MatchBoard(
-        height=4, # 8,
+        height=6, # 8,
         width=5, # 8,
         initial_position=initial_piece_position,
         lr_symmetry=True,
