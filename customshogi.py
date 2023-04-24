@@ -5,6 +5,8 @@
 # TODO: (モジュールの)ドキュメントをまとめる
 # TODO: 成りの追加(設定可能にする)
 # TODO: 持ち駒機能の追加(切り替え可能にする)
+    # TODO: 打牌
+# 入力受付について、{表示名: 実行関数 | None}にする。
 # TODO: 初手の動きの追加(設定可能にする)
 # TODO: 駒を取る際の動きの追加(設定可能にする)
 
@@ -14,17 +16,6 @@ from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping
 from enum import Enum, auto
 from typing import Any, Optional, Literal
-
-
-def choose_by_user(option: set[str], *, msg="choose from following choises: "):
-    """ユーザーに選択肢を表示し、選択を行わせる"""
-    while True:
-        print(msg, end='')
-        print(*sorted(option), sep=", ")
-        choice = input()
-        if choice in option:
-            return choice
-        print(f"invalid input: {choice}")
 
 
 # 盤についての前提条件
@@ -208,6 +199,13 @@ class Controller2P(Enum):
         if self is __o:
             return Relation.FRIEND
         return Relation.ENEMY
+
+    def __str__(self) -> str:
+        if self is Controller2P.WHITE:
+            return 'White'
+        if self is Controller2P.BLACK:
+            return 'Black'
+        return 'independent'
 
     def next_player(self):
         """ターン順で次のプレイヤー"""
@@ -482,6 +480,8 @@ class MoveParallelJoint(IMove):
 
 
 class IPiece(ABC):
+    # pylint: disable=C0103
+    # 上記はクラス定数に対する警告の抑制を目的としている
     """駒の抽象クラス"""
     def __init__(
             self,
@@ -501,27 +501,45 @@ class IPiece(ABC):
             return self.SYMBOL.upper()
         if self.controller is Controller2P.BLACK:
             return self.SYMBOL.lower()
-        return self.SYMBOL
+        return f"\033[33m{self.SYMBOL}\033[0m"  # とりあえず黄色にしている
 
+    @classmethod
     @property
-    def NAME(self) -> str:
+    def NAME(cls) -> str:
         """name of piece"""
-        return self.__class__.__name__
+        return cls.__name__
 
+    @classmethod
     @property
     @abstractmethod
-    def MOVE(self) -> IMove:
+    def MOVE(cls) -> IMove:
         """move definition of piece"""
+        raise NotImplementedError
 
+    @classmethod
     @property
-    def ROYALTY(self) -> bool:
+    def ROYALTY(cls) -> bool:
         """if True, this piece is royal"""
         return False
 
+    @classmethod
     @property
     @abstractmethod
-    def SYMBOL(self) -> str:
+    def SYMBOL(cls) -> str:
         """a character that represents this piece"""
+        raise NotImplementedError
+
+    @classmethod
+    @property
+    def PROMOTE_DEFAULT(cls) -> Optional[type[IPiece]]:
+        """デフォルトの成り先(ない場合はNone)"""
+        return None
+
+    @classmethod
+    @property
+    def ORIGINAL_PIECE(cls) -> type[IPiece]:
+        """取られた時に何として持ち駒に加わるか"""
+        return cls
 
     def valid_destination(
             self,
@@ -650,19 +668,33 @@ class MatchBoard(IBoard):
         """座標の一覧のイテレータ"""
         return (AbsoluteCoordinate(h, w) for h in range(self.height) for w in range(self.width))
 
-    def show_to_console(self):
+    def visualize_piece_stand(self, player: Controller2P) -> None:
+        """コンソールに駒台を表示する"""
+        print(f"{str(player)}'s piece stand: ", end='')
+        print(', '.join(f"{piece.SYMBOL}: {num}"
+                        for piece, num in self.piece_stands[player].items()) or "[no piece]")
+
+    def show_to_console(self) -> None:
         """コンソールに盤面を表示する"""
         h_digit = len(str(self.height+1))
         horizontal_line = '-' * (h_digit-1) + '-+' * (self.width+1)
-        column_indicator = ' '*h_digit + '|' + '|'.join(chr(97+w) for w in range(self.width)) + '|'
+        horizontal_sep = '=' * (h_digit-1) + '=‡' * (self.width+1)
+        column_indicator = '\\'*h_digit + '|' + '|'.join(chr(97+w) for w in range(self.width)) + '|'
         print()
-        print(column_indicator)
-        for h in range(self.height-1, -1, -1):
-            print(horizontal_line)
-            print(format(h+1, f'#{h_digit}')+'|'+'|'.join((
-                self[AbsoluteCoordinate(h, w)].show_to_console()
-            ) for w in range(self.width))+'|')
+        self.visualize_piece_stand(Controller2P.BLACK)
         print(horizontal_line)
+        print(column_indicator)
+        print(horizontal_sep)
+        for h in range(self.height-1, -1, -1):
+            print(
+                format(h+1, f'#{h_digit}')
+                + '|'
+                + '|'.join((self[AbsoluteCoordinate(h, w)].show_to_console())
+                           for w in range(self.width))
+                + '|'
+            )
+            print(horizontal_line)
+        self.visualize_piece_stand(Controller2P.WHITE)
         print()
 
     def is_game_terminated(self) -> tuple[bool, Controller2P]:
@@ -710,20 +742,22 @@ class MatchBoard(IBoard):
         if active_piece_stand[kind] == 0:
             raise ValueError(f"{kind} is not in piece stand")
         active_piece_stand[kind] -= 1
+        if active_piece_stand[kind] == 0:
+            del active_piece_stand[kind]
 
-    def remove_piece_from_board(self, coord: AbsoluteCoordinate) -> None:
+    def remove_piece_from_board(self, coordinate: AbsoluteCoordinate) -> None:
         """盤面から駒を取り除く"""
-        piece = self[coord].piece
-        if not piece:
-            raise ValueError("removing piece from None")
-        self[coord].piece = None
-        self.piece_in_board_index[piece.controller][type(piece)].remove(coord)
+        piece = self[coordinate].piece
+        if piece is None:
+            raise ValueError(f"removing piece from None (in {coordinate})")
+        self[coordinate].piece = None
+        self.piece_in_board_index[piece.controller][type(piece)].remove(coordinate)
 
     def move_destination_from(self, coordinate: AbsoluteCoordinate) -> set[AbsoluteCoordinate]:
         """移動元の座標から、移動先として有効な座標を返す"""
         target_piece = self[coordinate].piece
         if target_piece is None:
-            return set()
+            raise ValueError(f"cannot move None (in {coordinate})")
         return target_piece.valid_destination(self, coordinate)
 
     def drop_destination(self) -> set[AbsoluteCoordinate]:
@@ -738,7 +772,7 @@ class MatchBoard(IBoard):
         moving_piece = self[depart_coord].piece
         captured_piece = self[arrive_coord].piece
         if captured_piece:
-            self.add_piece_to_stand(type(captured_piece), moving_piece.controller)
+            self.add_piece_to_stand(captured_piece.ORIGINAL_PIECE, moving_piece.controller)
             self.remove_piece_from_board(arrive_coord)
         self.add_piece_to_board(type(moving_piece), moving_piece.controller, arrive_coord)
         self.remove_piece_from_board(depart_coord)
@@ -748,18 +782,20 @@ class MatchBoard(IBoard):
         self.add_piece_to_board(kind, self.turn_player, coord)
         self.remove_piece_from_stand(kind, self.turn_player)
 
-    def promote(self, kind: type[IPiece], coord: AbsoluteCoordinate) -> None:
+    def promote(self, coord: AbsoluteCoordinate) -> None:
         """[coord]の駒が[kind]の駒に成る"""
-        controller = self[coord].piece.controller
+        piece = self[coord].piece
+        controller = piece.controller
+        promote_to = piece.PROMOTE_DEFAULT
         self.remove_piece_from_board(coord)
-        self.add_piece_to_board(kind, controller, coord)
+        self.add_piece_to_board(promote_to, controller, coord)
 
 
     def game(self):
         """試合を行う"""
         while not self.is_game_terminated()[0]:
             self.show_to_console()
-            starting_coord = set.union(
+            starting_coord = set().union(
                 *({self.square_referer_to_str(k) for k in i}
                   for i in self.piece_in_board_index[self.turn_player].values())
             )
@@ -780,26 +816,49 @@ class MatchBoard(IBoard):
         print(f"game end: winner is {self.is_game_terminated()[1]}")
 
 
+def choose_by_user(option: set[str], *, msg="choose from following choises: "):
+    """ユーザーに選択肢を表示し、選択を行わせる"""
+    while True:
+        print(msg, end='')
+        print(*sorted(option), sep=", ")
+        choice = input()
+        if choice in option:
+            return choice
+        print(f"invalid input: {choice}")
+
 
 class King(IPiece):
+    """チェスのキング
+    取られたら負けになる
+    動き: 周囲1マスに進める
+    """
     NAME = "King"
     MOVE = LeaperMove([RelativeCoordinate(1, 0), RelativeCoordinate(1, 1)], symmetry='oct')
     ROYALTY = True
     SYMBOL = 'k'
 
 class Qween(IPiece):
+    """チェスのクイーン
+    動き: 周囲8方向に、味方の駒の手前まで、もしくは敵の駒を取るまで進める
+    """
     NAME = "Qween"
     MOVE = RiderMove({RelativeCoordinate(1, 0): -1, RelativeCoordinate(1, 1): -1}, symmetry='oct')
     ROYALTY = False
     SYMBOL = 'q'
 
 class Bishop(IPiece):
+    """チェスのビショップ
+    動き: 斜め方向に、味方の駒の手前まで、もしくは敵の駒を取るまで進める
+    """
     NAME = "Bishop"
     MOVE = RiderMove({RelativeCoordinate(1, 1): -1}, symmetry='fblr')
     ROYALTY = False
     SYMBOL = 'b'
 
 class Rook(IPiece):
+    """チェスのルーク
+    動き: 縦横に、味方の駒の手前まで、もしくは敵の駒を取るまで進める
+    """
     NAME = "Rook"
     MOVE = RiderMove({RelativeCoordinate(1, 0): -1}, symmetry='oct')
     ROYALTY = False
@@ -819,7 +878,7 @@ class Pawn(IPiece):
 
 
 if __name__ == '__main__':
-    initial_piece_position = {
+    initial_piece_position: dict[AbsoluteCoordinate, IPiece] = {
         AbsoluteCoordinate(0, 3): King(Controller2P.WHITE),
         AbsoluteCoordinate(0, 4): Qween(Controller2P.WHITE),
         AbsoluteCoordinate(0, 0): Rook(Controller2P.WHITE),
@@ -828,8 +887,8 @@ if __name__ == '__main__':
         **{AbsoluteCoordinate(1, n): Pawn(Controller2P.WHITE) for n in range(4)},
     }
     play_board = MatchBoard(
-        height=8,
-        width=8,
+        height=4, # 8,
+        width=5, # 8,
         initial_position=initial_piece_position,
         lr_symmetry=True,
         wb_symmetry='face',
