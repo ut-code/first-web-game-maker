@@ -6,14 +6,15 @@
 # TODO: 成りの追加(設定可能にする)
 # TODO: 持ち駒機能の追加(切り替え可能にする)
     # TODO: 打牌
-# 入力受付について、{表示名: 実行関数 | None}にする。
+    # TODO: 打牌制限(二歩とか)
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Callable
 from enum import Enum, auto
-from typing import Any, Optional, Literal
+from typing import Any, NamedTuple, Optional, Literal, TypeVar, overload
+from pprint import pprint
 
 
 # 盤についての前提条件
@@ -59,10 +60,10 @@ class Coordinate(ABC):
         """
         return self.__x
 
-    def __add__(self, __o: object):
-        if not isinstance(__o, Coordinate):
+    def __add__(self, __value: Coordinate):
+        if not isinstance(__value, Coordinate):
             raise TypeError
-        return type(self)(self.__y+__o.y, self.__x+__o.x)
+        return type(self)(self.__y+__value.y, self.__x+__value.x)
 
     def __copy__(self):
         return type(self)(self.__y, self.__x)
@@ -83,10 +84,10 @@ class AbsoluteCoordinate(Coordinate):
         y: +は前, -は後ろ
         x: +は右, -は左
     """
-    def __add__(self, __o: object):
-        if isinstance(__o, AbsoluteCoordinate):
+    def __add__(self, __value: Coordinate):
+        if isinstance(__value, AbsoluteCoordinate):
             raise TypeError("cannot add two absolute coordinates")
-        return super().__add__(__o)
+        return super().__add__(__value)
 
     __radd__ = __add__
 
@@ -111,7 +112,19 @@ class AbsoluteCoordinate(Coordinate):
         return -self
 
     def __pos__(self):
-        return super().__copy__
+        return self
+
+    @overload
+    def __sub__(self, __value: AbsoluteCoordinate) -> RelativeCoordinate: ...
+    @overload
+    def __sub__(self, __value: RelativeCoordinate) -> AbsoluteCoordinate: ...
+
+    def __sub__(self, __value) -> Coordinate:
+        if isinstance(__value, AbsoluteCoordinate):
+            return RelativeCoordinate(self.y, self.x) - RelativeCoordinate(__value.y, __value.x)
+        if isinstance(__value, RelativeCoordinate):
+            return self + (-__value)
+        return NotImplemented
 
     def normalized_by(self, board: IBoard):
         """盤面の大きさに合わせて、負のインデックスを標準形に直す"""
@@ -133,9 +146,9 @@ class RelativeCoordinate(Coordinate):
     def __abs__(self) -> int:
         return max(abs(self.y), abs(self.x))
 
-    def __add__(self, __o: object):
-        if isinstance(__o, RelativeCoordinate):
-            return super().__add__(__o)
+    def __add__(self, __value: object):
+        if isinstance(__value, RelativeCoordinate):
+            return super().__add__(__value)
         return NotImplemented
 
     @property
@@ -159,7 +172,7 @@ class RelativeCoordinate(Coordinate):
         return -self
 
     def __pos__(self):
-        return super().__copy__()
+        return self
 
     @property
     def upside_right(self):
@@ -185,16 +198,16 @@ class Controller2P(Enum):
     WHITE = auto()
     BLACK = auto()
 
-    def __matmul__(self, __o: object) -> Relation:
+    def __matmul__(self, __value: Optional[Controller2P]) -> Relation:
         if self is Controller2P.INDEPENDENT:
             raise NotImplementedError("moving independent piece is not implemented yet")
-        if __o is None:
+        if __value is None:
             return Relation.TO_BLANK
-        if not isinstance(__o, Controller2P):
+        if not isinstance(__value, Controller2P):
             raise TypeError
-        if __o is Controller2P.INDEPENDENT:
+        if __value is Controller2P.INDEPENDENT:
             raise NotImplementedError("moving independent piece is not implemented yet")
-        if self is __o:
+        if self is __value:
             return Relation.FRIEND
         return Relation.ENEMY
 
@@ -597,6 +610,12 @@ class IPiece(ABC):
 
     @classmethod
     @property
+    def FORCE_PROMOTE(cls) -> bool:
+        """成りが存在する場合、強制か否か"""
+        return False
+
+    @classmethod
+    @property
     def ORIGINAL_PIECE(cls) -> type[IPiece]:
         """取られた時に何の駒として持ち駒に加わるか"""
         return cls
@@ -639,6 +658,24 @@ class Square:
         return self.piece.SYMBOL_COLORED
 
 
+class PlayLogUnit(NamedTuple):
+    """1ターン内のログ(駒の動きなど)の記録単位"""
+    total_step_count: int
+    chess_turn_count: int
+    step_in_turn: int
+    turn_player: Controller2P
+    moving_piece: type[IPiece]
+    before_coord: Optional[AbsoluteCoordinate]
+    after_coord: AbsoluteCoordinate
+    captured_piece: Optional[type[IPiece]] = None
+    @property
+    def move_vector(self) -> Optional[RelativeCoordinate]:
+        """移動による座標の差分"""
+        if self.before_coord is None:
+            return None
+        return self.after_coord - self.before_coord
+
+
 class IBoard(ABC):
     """盤の抽象クラス"""
     height: int
@@ -649,7 +686,7 @@ class IBoard(ABC):
 
     def __getitem__(self, __key: AbsoluteCoordinate) -> Square:
         return self.board[__key.y][__key.x]
-    def __setitem__(self, __key: AbsoluteCoordinate, __value: Any):
+    def __setitem__(self, __key: AbsoluteCoordinate, __value: Square):
         self.board[__key.y][__key.x] = __value
 
     def includes(self, coord: AbsoluteCoordinate) -> bool:
@@ -741,8 +778,8 @@ class MatchBoard(IBoard):
     def show_to_console(self) -> None:
         """コンソールに盤面を表示する"""
         h_digit = len(str(self.height+1))
-        horizontal_line = '-' * (h_digit-1) + '-+' * (self.width+1)
-        horizontal_sep = '=' * (h_digit-1) + '=‡' * (self.width+1)
+        horizontal_line = '-'*(h_digit-1) + '-+'*(self.width+1)
+        horizontal_sep = '='*(h_digit-1) + '=‡'*(self.width+1)
         column_indicator = '\\'*h_digit + '|' + '|'.join(chr(97+w) for w in range(self.width)) + '|'
         print()
         self.visualize_piece_stand(Controller2P.BLACK)
@@ -848,47 +885,77 @@ class MatchBoard(IBoard):
         self.remove_piece_from_stand(kind, self.turn_player)
 
     def promote(self, coord: AbsoluteCoordinate) -> None:
-        """[coord]の駒が[kind]の駒に成る"""
+        """[coord]にいる駒が成る"""
         piece = self[coord].piece
         controller = piece.controller
         promote_to = piece.PROMOTE_DEFAULT
         self.remove_piece_from_board(coord)
         self.add_piece_to_board(promote_to, controller, coord)
 
-
     def game(self):
-        """試合を行う"""
+        """対局を行う"""
+        # どちらかのプレイヤーが王駒を全て失うまで対局を続ける
         while not self.is_game_terminated()[0]:
             self.show_to_console()
-            starting_coord = set().union(
-                *({self.square_referer_to_str(k) for k in i}
-                  for i in self.piece_in_board_index[self.turn_player].values())
-            )
+            movable_piece_mapping = self.movable_piece_mapping()
             while True:
-                depart_coord_str = choose_by_user(starting_coord.union({'r'}))
-                if depart_coord_str != 'r':
-                    depart_coord = self.square_referer_from_str(depart_coord_str)
-                    destination = {self.square_referer_to_str(j)
-                                   for j in self.move_destination_from(depart_coord)}
-                    arrive_coord_str = choose_by_user(destination.union({'r'}))
-                    if arrive_coord_str != 'r':
-                        arrive_coord = self.square_referer_from_str(arrive_coord_str)
-                        self.move(depart_coord, arrive_coord)
-                        break
-                    print("re-selecting...")
+                depart_coord = choose_by_user(
+                    (set(movable_piece_mapping), self.square_referer_to_str),
+                    message="select your piece to move by coordinate:"
+                )
+                if depart_coord is None:
+                    print("This game was called off.")
+                    return
+                arrive_coord = choose_by_user(
+                    (movable_piece_mapping[depart_coord], self.square_referer_to_str),
+                    message="select the place you want the selected piece to move in by coordinate:"
+                )
+                if arrive_coord is not None:
+                    self.move(depart_coord, arrive_coord)
+                    break
+                print("re-selecting...")
             self.turn_player = self.turn_player.next_player()
         self.show_to_console()
         print(f"game end: winner is {self.is_game_terminated()[1]}")
 
+    def movable_piece_mapping(self) -> dict[AbsoluteCoordinate, set[AbsoluteCoordinate]]:
+        """ターンプレイヤーの駒のうち、動かせるものについて、dict[今いる位置, set[移動可能な位置]]を返す"""
+        dominating_coord = {
+            k for i in self.piece_in_board_index[self.turn_player].values() for k in i
+        }
+        dominating_piece_mapping = {
+            depart_coord: self.move_destination_from(depart_coord)
+            for depart_coord in dominating_coord
+        }
+        return {
+            depart_coord: destination_coords for depart_coord, destination_coords
+            in dominating_piece_mapping.items() if destination_coords
+        }
 
-def choose_by_user(option: set[str], *, msg="choose from following choises: "):
+T = TypeVar('T')
+def choose_by_user(
+        *option_and_stringifier: tuple[set[T], Callable[[T], str]],
+        message: str = "select from following options: ",
+        cancel: str = "esc",
+    ) -> Optional[T]:
     """ユーザーに選択肢を表示し、選択を行わせる"""
+    str_to_option: dict[str, Optional[T]] = {cancel: None}
+    for option_group, stringifier in option_and_stringifier:
+        for option in option_group:
+            option_str_original = stringifier(option)
+            option_str = option_str_original
+            i = 1
+            while option_str in str_to_option:
+                i += 1
+                option_str = f'{option_str_original}_{i}'
+                print(option_str)
+            str_to_option[option_str] = option
     while True:
-        print(msg, end='')
-        print(*sorted(option), sep=", ")
+        print(message)
+        pprint(sorted(str_to_option))
         choice = input()
-        if choice in option:
-            return choice
+        if choice in str_to_option:
+            return str_to_option[choice]
         print(f"invalid input: {choice}")
 
 
