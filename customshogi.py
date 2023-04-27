@@ -3,19 +3,21 @@
 """
 
 # TODO: (モジュールの)ドキュメントをまとめる
-# TODO: 成りの追加(設定可能にする)
-# TODO: 持ち駒機能の追加(切り替え可能にする)
-    # TODO: 打牌
-    # TODO: 打牌制限(二歩とか)
+# TODO: 成り条件の個別設定を可能にする
+# TODO: 打牌制限(二歩とか)
 
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
-from collections.abc import Iterable, Mapping, Callable
+from collections.abc import Callable, Iterable, Mapping
+from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any, NamedTuple, Optional, Literal, TypeVar, overload
 from pprint import pprint
+from typing import Any, ClassVar, Literal, Optional, TypeVar, overload
 
+
+T = TypeVar('T')
 
 # 盤についての前提条件
 #     - マスは正方形であり、頂点が集まるように敷き詰められている
@@ -126,18 +128,30 @@ class AbsoluteCoordinate(Coordinate):
             return self + (-__value)
         return NotImplemented
 
-    def normalized_by(self, board: IBoard):
-        """盤面の大きさに合わせて、負のインデックスを標準形に直す"""
+    def is_inside(self, board: IBoard, *, strict: bool = True) -> bool:
+        """座標が盤面の中に入っているかを判定する
+        
+        strict=Trueの場合、負のインデックスに対しFalseを返す
+        """
+        if strict:
+            return (0 <= self.y < board.height) and (0 <= self.x < board.width)
+        return (-board.height <= self.y < board.height) and (-board.width <= self.x < board.width)
+
+    def normalized_by(self, board: IBoard, *, negative: bool = False):
+        """盤面の大きさに合わせて、インデックスを標準形に直す"""
+        if not self.is_inside(board, strict=False):
+            raise ValueError(f"{self} is out of the board {board.height, board.width}")
         return type(self)(
-            self._normalizer(self.y, board.height),
-            self._normalizer(self.x, board.width),
+            self._normalizer(self.y, board.height, negative),
+            self._normalizer(self.x, board.width, negative),
         )
 
     @staticmethod
-    def _normalizer(target: int, standard: int) -> int:
-        if target < -standard or standard <= target:
-            raise ValueError(f"target coordinate {target} is out of range{-standard, standard}")
-        if target < 0:
+    def _normalizer(target: int, standard: int, negative: bool = False) -> int:
+        if negative:
+            if target >= 0:
+                return target - standard
+        elif target < 0:
             return target + standard
         return target
 
@@ -272,7 +286,7 @@ class Approachability(Enum):
         return self.__can_go_over
 
 
-class InteractionTemplate:
+class TInteraction:
     # pylint: disable=C0103
     # 上記はクラス定数に対する警告の抑制を目的としている
     """Interactionのテンプレートを定数の形で提供するクラス"""
@@ -334,7 +348,7 @@ class IElementalMove(ABC):
 
     # FIXME: 協調的多重継承
     def __init__(self, interaction: Mapping[Relation, Approachability] = ...) -> None:
-        self.interaction = InteractionTemplate.NORMAL
+        self.interaction = TInteraction.NORMAL
         if interaction is not ...:
             self.interaction.update(interaction)
 
@@ -404,7 +418,7 @@ class LeaperMove(IMove, IElementalMove):
         destinations: set[AbsoluteCoordinate] = set()
         for movement in self.coordinates_in_controller(controller):
             new_coordinate = current_coordinate + movement
-            if not board.includes(new_coordinate):
+            if not new_coordinate.is_inside(board):
                 continue
             target_square = board[new_coordinate]
             if target_square.is_excluded:
@@ -492,7 +506,7 @@ class RiderMove(IMove, IElementalMove):
                 max_dist = max(board.height, board.width)
             for _ in range(max_dist):
                 new_coordinate += movement
-                if not board.includes(new_coordinate):
+                if not new_coordinate.is_inside(board):
                     break
                 target_square = board[new_coordinate]
                 if target_square.is_excluded:
@@ -604,9 +618,9 @@ class IPiece(ABC):
 
     @classmethod
     @property
-    def PROMOTE_DEFAULT(cls) -> Optional[type[IPiece]]:
+    def PROMOTE_DEFAULT(cls) -> set[type[IPiece]]:
         """デフォルトの成り先(ない場合はNone)"""
-        return None
+        return set()
 
     @classmethod
     @property
@@ -617,7 +631,7 @@ class IPiece(ABC):
     @classmethod
     @property
     def ORIGINAL_PIECE(cls) -> type[IPiece]:
-        """取られた時に何の駒として持ち駒に加わるか"""
+        """取られた時に何の駒として持ち駒に加わるか(駒のオモテ面)"""
         return cls
 
     def valid_destination(
@@ -636,6 +650,25 @@ class IPiece(ABC):
         # -> クリックでそこに移動し、(駒を取ることを含む段数が)二段以上だったら次の入力を受け付ける
         # このとき、キャンセルボタンで巻き戻せるようにする
         # 諸々正常に完了したら、それを全体に反映し、確定する
+
+    @classmethod
+    def as_promotion_of(
+            cls,
+            original: type[IPiece],
+            name: str = ...,
+            symbol: str = ...,
+        ) -> type[IPiece]:
+        """originalが成った状態としてのこの駒を、新たなクラスの形で返す"""
+        new_class_name = f"{cls.__name__}From{original.__name__}"
+        new_namespace: dict[str, Any] = {}
+        if name is ...:
+            name = new_class_name
+        new_namespace['NAME'] = name
+        if symbol is not ...:
+            new_namespace['SYMBOL'] = symbol
+        new_namespace['PROMOTE_DEFAULT'] = set()
+        new_namespace['ORIGINAL_PIECE'] = original
+        return type(new_class_name, (cls,), new_namespace)
 
 
 class Square:
@@ -658,16 +691,20 @@ class Square:
         return self.piece.SYMBOL_COLORED
 
 
-class PlayLogUnit(NamedTuple):
+@dataclass
+class PlayLogUnit:
     """1ターン内のログ(駒の動きなど)の記録単位"""
-    total_step_count: int
-    chess_turn_count: int
-    step_in_turn: int
-    turn_player: Controller2P
-    moving_piece: type[IPiece]
-    before_coord: Optional[AbsoluteCoordinate]
-    after_coord: AbsoluteCoordinate
-    captured_piece: Optional[type[IPiece]] = None
+    board: ClassVar[IBoard] = ...
+    total_step_count: int = ...
+    chess_turn_count: int = ...
+    turn_player: Controller2P = ...
+    before_coord: Optional[AbsoluteCoordinate] = ...
+    after_coord: AbsoluteCoordinate = ...
+    moving_piece: type[IPiece] = ...
+    captured_piece: Optional[type[IPiece]] = ...
+    promote_to: Optional[type[IPiece]] = None
+    # step_in_turn: int = 0
+    # serial_number_in_step: int = 0
     @property
     def move_vector(self) -> Optional[RelativeCoordinate]:
         """移動による座標の差分"""
@@ -689,9 +726,23 @@ class IBoard(ABC):
     def __setitem__(self, __key: AbsoluteCoordinate, __value: Square):
         self.board[__key.y][__key.x] = __value
 
-    def includes(self, coord: AbsoluteCoordinate) -> bool:
-        """座標が盤面の中に入っているかを判定する"""
-        return (0 <= coord.y < self.height) and (0 <= coord.x < self.width)
+    def balance_of(
+            self,
+            coord: AbsoluteCoordinate,
+            controller: Controller2P,
+        ) -> tuple[AbsoluteCoordinate, AbsoluteCoordinate]:
+        """(下/左からの距離(0始まり), 上/右からの距離(-1始まり))"""
+        if controller is Controller2P.WHITE:
+            return (
+                coord.normalized_by(self, negative=False),
+                coord.normalized_by(self, negative=True),
+            )
+        if controller is Controller2P.BLACK:
+            return (
+                (-coord).normalized_by(self, negative=False),
+                (-coord).normalized_by(self, negative=True),
+            )
+        raise ValueError(f"unknown controller {controller}")
 
     @staticmethod
     def square_referer_from_str(referer_str: str) -> AbsoluteCoordinate:
@@ -705,6 +756,37 @@ class IBoard(ABC):
         return f"{chr(97+coord.x)}{coord.y+1}"
 
 
+class TPromotionCondition:
+    """promotion_condition(成る条件を表す関数)のテンプレートを提供するクラス"""
+    @staticmethod
+    def oppornent_field(
+            row: int,
+            allow_inside: bool = True,
+            allow_escape: bool = True,
+            allow_enter: bool = True,
+            allow_outside: bool = False,
+        ) -> Callable[[PlayLogUnit], bool]:
+        """敵陣row段目を成りの基準とする"""
+        def condition(log: PlayLogUnit) -> bool:
+            is_before_in = row >= -log.board.balance_of(log.before_coord, log.turn_player)[1].y
+            is_after_in = row >= -log.board.balance_of(log.after_coord, log.turn_player)[1].y
+            if is_after_in:
+                if is_before_in:
+                    return allow_inside
+                return allow_enter
+            if is_before_in:
+                return allow_escape
+            return allow_outside
+        return condition
+
+    @staticmethod
+    def captured_piece() -> Callable[[PlayLogUnit], bool]:
+        """このターン中に駒を取っていたら成る"""
+        def condition(log: PlayLogUnit) -> bool:
+            return log.captured_piece is not None
+        return condition
+
+
 class MatchBoard(IBoard):
     """試合用のボード"""
     def __init__(
@@ -713,19 +795,33 @@ class MatchBoard(IBoard):
             width: int,
             initial_position: Mapping[AbsoluteCoordinate, IPiece],
             excluded_square: Iterable[AbsoluteCoordinate] = (),
+            can_use_captured_piece: bool = False,
+            promotion_condition: Callable[[PlayLogUnit], bool] = ...,
             *,
             lr_symmetry: bool = False,
             wb_symmetry: Literal['none', 'face', 'cross'] = 'none',
         ) -> None:
+        # 簡単に型チェック
         if not isinstance(height, int):
             raise TypeError("height must be an positive interger")
         if not isinstance(width, int):
             raise TypeError("width must be an positive interger")
         if wb_symmetry not in ('none', 'face', 'cross'):
             raise TypeError(f"{wb_symmetry} is improper value for wb_symmetry")
+        # 棋譜の設定
+        self.play_log: list[PlayLogUnit] = []
+        PlayLogUnit.board = self
+        # ターン数のカウント
+        self.chess_turn_count = 0
         self.turn_player = Controller2P.WHITE
+        # 盤の状態の設定
+        self.can_use_captured_piece = can_use_captured_piece
+        self.promotion_condition = promotion_condition
         self.height = height
         self.width = width
+        # 成りの条件が指定されなかったときのデフォルトとして、敵陣(プレイヤー視点盤面の上1/3)に入ったときに成るようにする
+        if promotion_condition is ...:
+            self.promotion_condition = TPromotionCondition.oppornent_field(self.height//3)
         # 駒がない状態の盤面を生成
         self.board = [[Square(None) for _ in range(self.width)] for _ in range(self.height)]
         self.piece_stands = {Controller2P.WHITE: Counter(), Controller2P.BLACK: Counter()}
@@ -798,21 +894,17 @@ class MatchBoard(IBoard):
         self.visualize_piece_stand(Controller2P.WHITE)
         print()
 
-    def is_game_terminated(self) -> tuple[bool, Controller2P]:
+    def is_game_terminated(self) -> tuple[bool, Optional[Controller2P]]:
         """(ゲームが終了したかの真偽値, 勝者)"""
-        loser = set()
-        for controller in (Controller2P.WHITE, Controller2P.BLACK):
-            if not any(v for (k, v) in self.piece_in_board_index[controller].items() if k.ROYALTY):
-                loser.add(controller)
-        if not loser:
-            return (False, Controller2P.INDEPENDENT)
-        if len(loser) == 2:
-            return (True, Controller2P.INDEPENDENT)
-        if Controller2P.WHITE in loser:
-            return (True, Controller2P.BLACK)
-        if Controller2P.BLACK in loser:
-            return (True, Controller2P.WHITE)
-        raise ValueError("something unexpected occured")
+        remaining_player: set[Controller2P] = {
+            player for player in (Controller2P.WHITE, Controller2P.BLACK)
+            if any(v for (k, v) in self.piece_in_board_index[player].items() if k.ROYALTY)
+        }
+        if len(remaining_player) > 1:
+            return (False, None)
+        if remaining_player:
+            return (True, remaining_player.pop())
+        return (True, None)
 
     def add_piece_to_stand(self, kind: type[IPiece], controller: Controller2P) -> None:
         """駒台に駒を置く"""
@@ -869,55 +961,6 @@ class MatchBoard(IBoard):
             self.coords_iterator,
         ))
 
-    def move(self, depart_coord: AbsoluteCoordinate, arrive_coord: AbsoluteCoordinate):
-        """駒を実際に動かす"""
-        moving_piece = self[depart_coord].piece
-        captured_piece = self[arrive_coord].piece
-        if captured_piece:
-            self.add_piece_to_stand(captured_piece.ORIGINAL_PIECE, moving_piece.controller)
-            self.remove_piece_from_board(arrive_coord)
-        self.add_piece_to_board(type(moving_piece), moving_piece.controller, arrive_coord)
-        self.remove_piece_from_board(depart_coord)
-
-    def drop(self, kind: type[IPiece], coord: AbsoluteCoordinate):
-        """駒を打つ"""
-        self.add_piece_to_board(kind, self.turn_player, coord)
-        self.remove_piece_from_stand(kind, self.turn_player)
-
-    def promote(self, coord: AbsoluteCoordinate) -> None:
-        """[coord]にいる駒が成る"""
-        piece = self[coord].piece
-        controller = piece.controller
-        promote_to = piece.PROMOTE_DEFAULT
-        self.remove_piece_from_board(coord)
-        self.add_piece_to_board(promote_to, controller, coord)
-
-    def game(self):
-        """対局を行う"""
-        # どちらかのプレイヤーが王駒を全て失うまで対局を続ける
-        while not self.is_game_terminated()[0]:
-            self.show_to_console()
-            movable_piece_mapping = self.movable_piece_mapping()
-            while True:
-                depart_coord = choose_by_user(
-                    (set(movable_piece_mapping), self.square_referer_to_str),
-                    message="select your piece to move by coordinate:"
-                )
-                if depart_coord is None:
-                    print("This game was called off.")
-                    return
-                arrive_coord = choose_by_user(
-                    (movable_piece_mapping[depart_coord], self.square_referer_to_str),
-                    message="select the place you want the selected piece to move in by coordinate:"
-                )
-                if arrive_coord is not None:
-                    self.move(depart_coord, arrive_coord)
-                    break
-                print("re-selecting...")
-            self.turn_player = self.turn_player.next_player()
-        self.show_to_console()
-        print(f"game end: winner is {self.is_game_terminated()[1]}")
-
     def movable_piece_mapping(self) -> dict[AbsoluteCoordinate, set[AbsoluteCoordinate]]:
         """ターンプレイヤーの駒のうち、動かせるものについて、dict[今いる位置, set[移動可能な位置]]を返す"""
         dominating_coord = {
@@ -932,14 +975,128 @@ class MatchBoard(IBoard):
             in dominating_piece_mapping.items() if destination_coords
         }
 
-T = TypeVar('T')
-def choose_by_user(
-        *option_and_stringifier: tuple[set[T], Callable[[T], str]],
+    def move(
+            self,
+            before_coord: AbsoluteCoordinate,
+            after_coord: AbsoluteCoordinate,
+            *,
+            log: PlayLogUnit,
+        ) -> None:
+        """駒を実際に動かす"""
+        moving_piece = self[before_coord].piece
+        captured_piece = self[after_coord].piece
+        if captured_piece:
+            self.add_piece_to_stand(captured_piece.ORIGINAL_PIECE, moving_piece.controller)
+            self.remove_piece_from_board(after_coord)
+        self.add_piece_to_board(type(moving_piece), moving_piece.controller, after_coord)
+        self.remove_piece_from_board(before_coord)
+        log.before_coord = before_coord
+        log.after_coord = after_coord
+        log.moving_piece = moving_piece
+        log.captured_piece = captured_piece
+
+    def drop(self, kind: type[IPiece], coord: AbsoluteCoordinate, *, log: PlayLogUnit) -> None:
+        """駒を打つ"""
+        self.add_piece_to_board(kind, self.turn_player, coord)
+        self.remove_piece_from_stand(kind, self.turn_player)
+        log.before_coord = None
+        log.after_coord = coord
+        log.moving_piece = kind
+        log.captured_piece = None
+
+    def promote(self, kind: type[IPiece], coord: AbsoluteCoordinate, *, log: PlayLogUnit) -> None:
+        """[coord]にいる駒が[kind]に成る"""
+        piece = self[coord].piece
+        controller = piece.controller
+        self.remove_piece_from_board(coord)
+        self.add_piece_to_board(kind, controller, coord)
+        log.promote_to = kind
+
+    def game(self):
+        """対局を行う"""
+        # どちらかのプレイヤーが王駒を全て失うまで対局を続ける
+        while not self.is_game_terminated()[0]:
+            self.show_to_console()
+            movable_piece_mapping = self.movable_piece_mapping()
+            play_log_of_this_turn = PlayLogUnit(
+                total_step_count=len(self.play_log),
+                chess_turn_count=self.chess_turn_count,
+                turn_player=self.turn_player,
+            )
+            # TODO: ループロジック見直し: whileをどう使う?
+            # TODO: ステイルメイト対応?
+            while True:
+                # 駒を動かすか打つかを選択する
+                if self.can_use_captured_piece and self.piece_stands[self.turn_player]:
+                    mode = select_by_user(({'move', 'drop'}, str), message="select move or drop")
+                    if mode is None:
+                        print("This game was called off.")
+                        return
+                else:
+                    mode = 'move'
+                # 先の選択に従い、実際の処理を行う
+                if mode == 'move':
+                    before_coord = select_by_user(
+                        (movable_piece_mapping, self.square_referer_to_str),
+                        message="select your piece to move by coordinate:"
+                    )
+                    if before_coord is None:
+                        continue
+                    after_coord = select_by_user(
+                        (movable_piece_mapping[before_coord], self.square_referer_to_str),
+                        message="select the place you want the selected piece to move in:"
+                    )
+                    if after_coord is not None:
+                        self.move(before_coord, after_coord, log=play_log_of_this_turn)
+                        if self.promotion_condition(play_log_of_this_turn):
+                            promote_to = select_by_user(
+                                (self[after_coord].piece.PROMOTE_DEFAULT, lambda kind: kind.SYMBOL),
+                                cancel=None,
+                                auto_cancel=True,
+                                auto_cancel_message="",
+                                abbrebiate_single=True,
+                                abbrebiate_single_message="",
+                            )
+                            if promote_to is not None:
+                                self.promote(promote_to, after_coord, log=play_log_of_this_turn)
+                        break
+                elif mode == 'drop':
+                    drop_piece = select_by_user(
+                        (self.piece_stands[self.turn_player], lambda piece: piece.SYMBOL),
+                        message="select piece to drop from your piece stand:",
+                    )
+                    if drop_piece is None:
+                        continue
+                    drop_coord = select_by_user(
+                        (self.drop_destination(), self.square_referer_to_str),
+                        message="select the place you want the selected piece to move in:",
+                    )
+                    if drop_coord is not None:
+                        self.drop(drop_piece, drop_coord, log=play_log_of_this_turn)
+                        break
+            self.turn_player = self.turn_player.next_player()
+            if self.turn_player == Controller2P.WHITE:
+                self.chess_turn_count += 1
+        self.show_to_console()
+        print(f"Game end: the winner is {self.is_game_terminated()[1]}")
+
+
+def select_by_user(
+        *option_and_stringifier: tuple[Iterable[T], Callable[[T], str]],
         message: str = "select from following options: ",
-        cancel: str = "esc",
+        cancel: Optional[str] = '_c',
+        auto_cancel: bool = True,
+        auto_cancel_message: str = "Automatically canceled due to no other option is available",
+        abbrebiate_single: bool = False,
+        abbrebiate_single_message: str = (
+            "Automatically selected {} "
+            "due to no other option is available"
+        ),
     ) -> Optional[T]:
     """ユーザーに選択肢を表示し、選択を行わせる"""
-    str_to_option: dict[str, Optional[T]] = {cancel: None}
+    str_to_option: dict[str, Optional[T]] = {}
+    str_to_option[cancel] = None
+    # 選択肢と表示形式に変換する関数から、表示, 選択に用いる辞書を生成
     for option_group, stringifier in option_and_stringifier:
         for option in option_group:
             option_str_original = stringifier(option)
@@ -950,8 +1107,21 @@ def choose_by_user(
                 option_str = f'{option_str_original}_{i}'
                 print(option_str)
             str_to_option[option_str] = option
+    if auto_cancel and len(str_to_option) == 1:
+        if auto_cancel_message:
+            print(auto_cancel_message)
+        return None
+    if abbrebiate_single and len(str_to_option) == 2:
+        del str_to_option[cancel]
+        choice: T = set(str_to_option.values()).pop()
+        if abbrebiate_single_message:
+            print(abbrebiate_single_message.format(choice))
+        return choice
+    if cancel is None:
+        del str_to_option[cancel]
     while True:
-        print(message)
+        if message:
+            print(message)
         pprint(sorted(str_to_option))
         choice = input()
         if choice in str_to_option:
@@ -1014,28 +1184,30 @@ class Pawn(IPiece):
         LeaperMove(
             [RelativeCoordinate(1, 0)],
             symmetry='none',
-            interaction=InteractionTemplate.NO_CAPTURE
+            interaction=TInteraction.NO_CAPTURE
         ),
         LeaperMove(
             [RelativeCoordinate(1, 1)],
             symmetry='lr',
-            interaction=InteractionTemplate.ONLY_CAPTURE
+            interaction=TInteraction.ONLY_CAPTURE
         ),
     )
     INITIAL_MOVE = MoveParallelJoint(
         RiderMove(
             {RelativeCoordinate(1, 0): 2},
             symmetry='none',
-            interaction=InteractionTemplate.NO_CAPTURE
+            interaction=TInteraction.NO_CAPTURE
         ),
         LeaperMove(
             [RelativeCoordinate(1, 1)],
             symmetry='lr',
-            interaction=InteractionTemplate.ONLY_CAPTURE
+            interaction=TInteraction.ONLY_CAPTURE
         ),
     )
     ROYALTY = False
     SYMBOL = "p"
+    FORCE_PROMOTE = True
+Pawn.PROMOTE_DEFAULT = {kind.as_promotion_of(Pawn) for kind in (Qween, Bishop, Rook, Knight)}
 
 
 if __name__ == '__main__':
@@ -1053,5 +1225,7 @@ if __name__ == '__main__':
         initial_position=initial_piece_position,
         lr_symmetry=True,
         wb_symmetry='face',
+        can_use_captured_piece=True,
+        promotion_condition=TPromotionCondition.oppornent_field(row=1),
     )
     play_board.game()
