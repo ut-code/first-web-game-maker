@@ -28,7 +28,14 @@ for (let i = 1; i < size / 2 - 1; i++) {
 }
 wall[size / 2 - 1] = new Array(size).fill("x");
 
-const result = {
+const pacmanResult = {
+  north: true,
+  south: true,
+  east: true,
+  west: true,
+};
+
+const enemyResult = {
   north: true,
   south: true,
   east: true,
@@ -59,6 +66,9 @@ const enemyPosition = { x: 525, y: 225 };
 let nextDirection;
 let nowDirection;
 
+let enemyNextDirection;
+let enemyNowDirection;
+
 // 開始
 createWall();
 drawContext();
@@ -69,6 +79,9 @@ movePacman();
 
 // キーボード操作を取得
 document.onkeydown = onKeyDown;
+
+// Enemy の動作
+setEnemyDirection();
 
 // 入力を元に壁を生成
 function createWall() {
@@ -171,8 +184,10 @@ function drawCookie(i, j) {
 // パックマンの移動・再描画
 function movePacman() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const canMove = canMoveFrom();
+  const canMove = canMoveFrom(pacmanPosition, pacmanResult);
+  const enemyCanMove = canMoveFrom(enemyPosition, enemyResult);
 
+  // パックマンを動かす
   if (nextDirection === "north" && canMove.north) {
     nowDirection = "north";
   } else if (nextDirection === "south" && canMove.south) {
@@ -190,6 +205,26 @@ function movePacman() {
     pacmanPosition.x += 1;
   } else if (nowDirection === "west" && canMove.west) {
     pacmanPosition.x -= 1;
+  }
+
+  // 敵を動かす
+  if (enemyNextDirection === "north" && enemyCanMove.north) {
+    enemyNowDirection = "north";
+  } else if (enemyNextDirection === "south" && enemyCanMove.south) {
+    enemyNowDirection = "south";
+  } else if (enemyNextDirection === "east" && enemyCanMove.east) {
+    enemyNowDirection = "east";
+  } else if (enemyNextDirection === "west" && enemyCanMove.west) {
+    enemyNowDirection = "west";
+  }
+  if (enemyNowDirection === "north" && enemyCanMove.north) {
+    enemyPosition.y -= 1;
+  } else if (enemyNowDirection === "south" && enemyCanMove.south) {
+    enemyPosition.y += 1;
+  } else if (enemyNowDirection === "east" && enemyCanMove.east) {
+    enemyPosition.x += 1;
+  } else if (enemyNowDirection === "west" && enemyCanMove.west) {
+    enemyPosition.x -= 1;
   }
 
   eraseCookie();
@@ -234,6 +269,25 @@ function onKeyDown(e) {
   }
 }
 
+// 敵の動く方向をランダムに生成
+// ちゃんとそれっぽく動かす必要がある
+function setEnemyDirection() {
+  const canMove = canMoveFrom(enemyPosition, enemyResult);
+  const directions = [];
+  canMove.north ? directions.push("north") : null;
+  canMove.south ? directions.push("south") : null;
+  canMove.east ? directions.push("east") : null;
+  canMove.west ? directions.push("west") : null;
+
+  console.log("directions", directions);
+  enemyNextDirection =
+    directions[Math.floor(Math.random() * directions.length)];
+  const interval = Math.random() * 2000 + 1000;
+  setTimeout(() => {
+    setEnemyDirection();
+  }, interval);
+}
+
 // canvas上のx座標をwallのindexに変換
 function indexX(x) {
   return Math.floor((x / canvas.width) * wall[0].length);
@@ -244,34 +298,34 @@ function indexY(y) {
 }
 
 // ここでいい感じに端点をはんていすればいい
-function canMoveFrom() {
+function canMoveFrom(position, result) {
   const minusMargin = 1;
   // まだ境界
   const [northBorder, southBorder, eastBorder, westBorder] = [
-    indexY(pacmanPosition.y + minusMargin - roadWidth / 2),
-    indexY(pacmanPosition.y - minusMargin + roadWidth / 2),
-    indexX(pacmanPosition.x - minusMargin + roadWidth / 2),
-    indexX(pacmanPosition.x + minusMargin - roadWidth / 2),
+    indexY(position.y + minusMargin - roadWidth / 2),
+    indexY(position.y - minusMargin + roadWidth / 2),
+    indexX(position.x - minusMargin + roadWidth / 2),
+    indexX(position.x + minusMargin - roadWidth / 2),
   ];
 
-  const centerX = indexX(pacmanPosition.x);
-  const centerY = indexY(pacmanPosition.y);
+  const centerX = indexX(position.x);
+  const centerY = indexY(position.y);
 
-  console.log(
-    northBorder,
-    southBorder,
-    centerY,
-    eastBorder,
-    westBorder,
-    centerX
-  );
+  // console.log(
+  //   northBorder,
+  //   southBorder,
+  //   centerY,
+  //   eastBorder,
+  //   westBorder,
+  //   centerX
+  // );
 
   const isMovingEastWest = northBorder === centerY && southBorder === centerY;
   const isMovingNorthSouth = eastBorder === centerX && westBorder === centerX;
 
-  console.log(
-    `isMovingEastWest: ${isMovingEastWest}, isMovingNorthSouth: ${isMovingNorthSouth}`
-  );
+  // console.log(
+  //   `isMovingEastWest: ${isMovingEastWest}, isMovingNorthSouth: ${isMovingNorthSouth}`
+  // );
 
   // 明らかに冗長なのでなおす
   if (isMovingEastWest) {
@@ -308,7 +362,7 @@ function canMoveFrom() {
     result.north = false;
     result.south = false;
   }
-  console.log(result);
+  // console.log(result);
   return result;
 }
 
