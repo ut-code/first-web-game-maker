@@ -228,6 +228,7 @@ function movePacman() {
   }
 
   eraseCookie();
+  hitEnemy();
 
   drawContext();
   drawWall();
@@ -373,5 +374,19 @@ function eraseCookie() {
   if (wall[centerY][centerX] === "o") {
     wall[centerY][centerX] = "-";
     cookiePoint += 1;
+  }
+}
+
+function hitEnemy() {
+  const centerX = indexX(pacmanPosition.x);
+  const centerY = indexY(pacmanPosition.y);
+
+  const enemyCenterX = indexX(enemyPosition.x);
+  const enemyCenterY = indexY(enemyPosition.y);
+
+  if (wall[centerY][centerX] === wall[enemyCenterY][enemyCenterX]) {
+    document.write(
+      `<span style="color: red; font-weight: bold; background-color: black;">Game Over!! </span>`
+    );
   }
 }
