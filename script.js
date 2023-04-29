@@ -42,6 +42,8 @@ const cookiePointSpan = document.getElementById("cookie-point");
 
 const pacmanImage = new Image();
 pacmanImage.src = "./img/pacman.svg";
+const enemyImage = new Image();
+enemyImage.src = "./img/ghost.svg";
 
 // canvas領域を定義
 const canvas = document.getElementById("canvas");
@@ -52,6 +54,7 @@ const roadWidth = canvas.width / wall[0].length;
 
 // let lastTime = performance.now();
 const pacmanPosition = { x: 75, y: 75 }; //最初の出現位置を動的に指定するように修正の必要あり
+const enemyPosition = { x: 525, y: 225 };
 // const nextDirection = { x: 0, y: 0 };
 let nextDirection;
 let nowDirection;
@@ -60,7 +63,8 @@ let nowDirection;
 createWall();
 drawContext();
 drawWall();
-drawPacman(pacmanPosition.x, pacmanPosition.y);
+// drawPacman(pacmanPosition.x, pacmanPosition.y);
+// drawEnemy(100, 100);
 movePacman();
 
 // キーボード操作を取得
@@ -134,13 +138,15 @@ function drawPacman(x, y) {
   // 位置調整　ハードコーディングしない
 }
 
-// function drawEnemy(x, y) {
-//   ctx.fillStyle = "red";
-//   ctx.beginPath();
-//   ctx.arc(x, y, 30, 0, Math.PI * 2, true);
-//   ctx.closePath();
-//   ctx.fill();
-// }
+function drawEnemy(x, y) {
+  // ctx.fillStyle = "red";
+  // ctx.beginPath();
+  // ctx.arc(x, y, 30, 0, Math.PI * 2, true);
+  // ctx.closePath();
+  // ctx.fill();
+  ctx.drawImage(enemyImage, x - 30, y - 30, 65, 65);
+  // 位置調整　ハードコーディングしない
+}
 
 function drawCookie(i, j) {
   ctx.fillStyle = "white";
@@ -191,6 +197,7 @@ function movePacman() {
   drawContext();
   drawWall();
   drawPacman(pacmanPosition.x, pacmanPosition.y);
+  drawEnemy(enemyPosition.x, enemyPosition.y);
 
   // debug
   nowDirectionDiv.textContent = `now: ${nowDirection}`;
