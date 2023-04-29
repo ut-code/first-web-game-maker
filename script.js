@@ -385,8 +385,6 @@ function hitEnemy() {
   const enemyCenterY = indexY(enemyPosition.y);
 
   if (wall[centerY][centerX] === wall[enemyCenterY][enemyCenterX]) {
-    document.write(
-      `<span style="color: red; font-weight: bold; background-color: black;">Game Over!! </span>`
-    );
+    alert("Game Over!");
   }
 }
