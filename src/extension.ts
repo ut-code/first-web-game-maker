@@ -41,14 +41,7 @@ export function activate(context: vscode.ExtensionContext) {
   // vscode.workspace.openTextDocument(paths.scriptJs);
   // vscode.workspace.openTextDocument(paths.indexHtml);
 
-  context.subscriptions.push(
-    ...commands.map((command) =>
-      vscode.commands.registerCommand(
-        `first-web-game-maker.${command.name}`,
-        command.execute
-      )
-    )
-  );
+  context.subscriptions.push(...commands);
 
   context.subscriptions.push(treeView);
 

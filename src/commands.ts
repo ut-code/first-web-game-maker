@@ -1,4 +1,5 @@
 import { type Command } from "./definitions/command";
+import toCommands from "./utils/toCommands";
 import insertHelloWorldAtTopCommand from "./commands/insertHelloWorldAtTop";
 import insertAtCursorCommand from "./commands/insertAtCursor";
 import deleteAfterCursorCommand from "./commands/deleteAfterCursor";
@@ -11,4 +12,4 @@ const commands: Command[] = [
   ...htmlCommands,
 ];
 
-export default commands;
+export default toCommands(commands);
