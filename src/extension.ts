@@ -23,6 +23,7 @@ function renderMd(text: string) {
 }
 
 import insertHelloWorldAtTop from "./commands/insertHelloWorldAtTop";
+import insertAtCursor from "./commands/insertAtCursor";
 
 export function activate(context: vscode.ExtensionContext) {
   // const files = vscode.workspace.textDocuments;
@@ -39,17 +40,6 @@ export function activate(context: vscode.ExtensionContext) {
 
   // vscode.workspace.openTextDocument(paths.scriptJs);
   // vscode.workspace.openTextDocument(paths.indexHtml);
-
-  const insertAtCursor = (text: string) => {
-    const activeEditor = vscode.window.activeTextEditor;
-    if (!activeEditor) {
-      return;
-    }
-    const position = activeEditor.selection.active;
-    activeEditor.edit((edit) => {
-      edit.insert(position, text);
-    });
-  };
 
   const deleteAfterCursor = (chars: number) => {
     const activeEditor = vscode.window.activeTextEditor;
