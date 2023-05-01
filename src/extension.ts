@@ -250,7 +250,7 @@ export function activate(context: vscode.ExtensionContext) {
     constructor() {
       this.data = [
         new TreeItem(
-          "Parent Item",
+          "構造",
           vscode.TreeItemCollapsibleState.Expanded,
           undefined,
           [
@@ -282,12 +282,12 @@ export function activate(context: vscode.ExtensionContext) {
           ]
         ),
         new TreeItem(
-          "Another Parent Item",
+          "見た目",
           vscode.TreeItemCollapsibleState.Expanded,
           undefined,
           [
-            new TreeItem("Child Item 3", vscode.TreeItemCollapsibleState.None),
-            new TreeItem("Child Item 4", vscode.TreeItemCollapsibleState.None),
+            new TreeItem("あいてむ", vscode.TreeItemCollapsibleState.None),
+            new TreeItem("あいてむ", vscode.TreeItemCollapsibleState.None),
           ]
         ),
       ];
