@@ -1,8 +1,11 @@
 import * as vscode from "vscode";
 import { TreeItem } from "../definitions/treeItem";
 
-const treeData = [
-  new TreeItem("構造", vscode.TreeItemCollapsibleState.Expanded, undefined, [
+const htmlTreeData = new TreeItem(
+  "構造",
+  vscode.TreeItemCollapsibleState.Expanded,
+  undefined,
+  [
     new TreeItem("箱を挿入", vscode.TreeItemCollapsibleState.None, {
       command: "first-web-game-maker.insertDivElementAtCursor",
       title: "",
@@ -27,11 +30,7 @@ const treeData = [
       command: "first-web-game-maker.insertParagraphElementAtCursor",
       title: "",
     }),
-  ]),
-  new TreeItem("見た目", vscode.TreeItemCollapsibleState.Expanded, undefined, [
-    new TreeItem("あいてむ", vscode.TreeItemCollapsibleState.None),
-    new TreeItem("あいてむ", vscode.TreeItemCollapsibleState.None),
-  ]),
-];
+  ]
+);
 
-export default treeData;
+export default htmlTreeData;
