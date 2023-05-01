@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { type Command } from "./../commands";
 
 const deleteAfterCursor = (chars: number) => {
   const activeEditor = vscode.window.activeTextEditor;
@@ -16,4 +17,15 @@ const deleteAfterCursor = (chars: number) => {
   });
 };
 
-export default deleteAfterCursor;
+const deleteAfterCursorCommand: Command = {
+  name: "deleteAfterCursor",
+  execute: async () => {
+    const input = await vscode.window.showInputBox({
+      prompt: "削除する文字数を入力してください",
+      value: "1",
+    });
+    deleteAfterCursor(parseInt(input || "1"));
+  },
+};
+
+export default deleteAfterCursorCommand;

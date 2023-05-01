@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { type Command } from "./../commands";
 
 const insertHelloWorldAtTop = () => {
   const activeEditor = vscode.window.activeTextEditor;
@@ -11,4 +12,11 @@ const insertHelloWorldAtTop = () => {
   });
 };
 
-export default insertHelloWorldAtTop;
+const insertHelloWorldAtTopCommand: Command = {
+  name: "insertHelloWorldAtTop",
+  execute: () => {
+    insertHelloWorldAtTop();
+  },
+};
+
+export default insertHelloWorldAtTopCommand;
