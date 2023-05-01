@@ -231,16 +231,68 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   class TreeItem extends vscode.TreeItem {
+    children: TreeItem[];
     constructor(
       public readonly label: string,
       public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-      public readonly command?: vscode.Command
+      public readonly command?: vscode.Command,
+      children?: TreeItem[]
     ) {
       super(label, collapsibleState);
+      this.children = children || [];
+      this.contextValue = "treeItem";
     }
   }
 
   class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
+    private data: TreeItem[];
+
+    constructor() {
+      this.data = [
+        new TreeItem(
+          "構造",
+          vscode.TreeItemCollapsibleState.Expanded,
+          undefined,
+          [
+            new TreeItem("箱を挿入", vscode.TreeItemCollapsibleState.None, {
+              command: "first-web-game-maker.insertDivElementAtCursor",
+              title: "",
+            }),
+            new TreeItem("ボタンを挿入", vscode.TreeItemCollapsibleState.None, {
+              command: "first-web-game-maker.insertButtonElementAtCursor",
+              title: "",
+            }),
+            new TreeItem("入力欄を挿入", vscode.TreeItemCollapsibleState.None, {
+              command: "first-web-game-maker.insertInputElementAtCursor",
+              title: "",
+            }),
+            new TreeItem("リストを挿入", vscode.TreeItemCollapsibleState.None, {
+              command:
+                "first-web-game-maker.insertUnorderedListElementAtCursor",
+              title: "",
+            }),
+            new TreeItem("見出しを挿入", vscode.TreeItemCollapsibleState.None, {
+              command: "first-web-game-maker.insertH1ElementAtCursor",
+              title: "",
+            }),
+            new TreeItem("段落を挿入", vscode.TreeItemCollapsibleState.None, {
+              command: "first-web-game-maker.insertParagraphElementAtCursor",
+              title: "",
+            }),
+          ]
+        ),
+        new TreeItem(
+          "見た目",
+          vscode.TreeItemCollapsibleState.Expanded,
+          undefined,
+          [
+            new TreeItem("あいてむ", vscode.TreeItemCollapsibleState.None),
+            new TreeItem("あいてむ", vscode.TreeItemCollapsibleState.None),
+          ]
+        ),
+      ];
+    }
+
     private _onDidChangeTreeData: vscode.EventEmitter<
       TreeItem | undefined | void
     > = new vscode.EventEmitter<TreeItem | undefined | void>();
@@ -255,37 +307,11 @@ export function activate(context: vscode.ExtensionContext) {
       return element;
     }
 
-    // この中に TreeView に表示する要素を返す処理を書くらしい。
     getChildren(element?: TreeItem): Thenable<TreeItem[]> {
       if (element) {
-        return Promise.resolve([]);
+        return Promise.resolve(element.children);
       } else {
-        return Promise.resolve([
-          new TreeItem("箱を挿入", vscode.TreeItemCollapsibleState.None, {
-            command: "first-web-game-maker.insertDivElementAtCursor",
-            title: "",
-          }),
-          new TreeItem("ボタンを挿入", vscode.TreeItemCollapsibleState.None, {
-            command: "first-web-game-maker.insertButtonElementAtCursor",
-            title: "",
-          }),
-          new TreeItem("入力欄を挿入", vscode.TreeItemCollapsibleState.None, {
-            command: "first-web-game-maker.insertInputElementAtCursor",
-            title: "",
-          }),
-          new TreeItem("リストを挿入", vscode.TreeItemCollapsibleState.None, {
-            command: "first-web-game-maker.insertUnorderedListElementAtCursor",
-            title: "",
-          }),
-          new TreeItem("見出しを挿入", vscode.TreeItemCollapsibleState.None, {
-            command: "first-web-game-maker.insertH1ElementAtCursor",
-            title: "",
-          }),
-          new TreeItem("段落を挿入", vscode.TreeItemCollapsibleState.None, {
-            command: "first-web-game-maker.insertParagraphElementAtCursor",
-            title: "",
-          }),
-        ]);
+        return Promise.resolve(this.data);
       }
     }
   }
