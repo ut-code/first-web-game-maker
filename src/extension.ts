@@ -50,7 +50,12 @@ export function activate(context: vscode.ExtensionContext) {
   // vscode.workspace.openTextDocument(paths.scriptJs);
   // vscode.workspace.openTextDocument(paths.indexHtml);
 
-  const commands = [
+  type Command = {
+    name: string;
+    callback: () => void;
+  };
+
+  const commands: Command[] = [
     {
       name: "insertHelloWorldAtTop",
       callback: () => {
