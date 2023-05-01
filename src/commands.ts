@@ -1,14 +1,7 @@
 import insertHelloWorldAtTopCommand from "./commands/insertHelloWorldAtTop";
 import insertAtCursorCommand from "./commands/insertAtCursor";
 import deleteAfterCursorCommand from "./commands/deleteAfterCursor";
-import {
-  insertDivElementAtCursorCommand,
-  insertButtonElementAtCursorCommand,
-  insertInputElementAtCursorCommand,
-  insertUnorderedListElementAtCursorCommand,
-  insertH1ElementAtCursorCommand,
-  insertParagraphElementAtCursorCommand,
-} from "./commands/htmlCommands";
+import htmlCommands from "./commands/htmlCommands";
 
 /**
  * the type of command
@@ -25,12 +18,7 @@ const commands: Command[] = [
   insertHelloWorldAtTopCommand,
   insertAtCursorCommand,
   deleteAfterCursorCommand,
-  insertDivElementAtCursorCommand,
-  insertButtonElementAtCursorCommand,
-  insertInputElementAtCursorCommand,
-  insertUnorderedListElementAtCursorCommand,
-  insertH1ElementAtCursorCommand,
-  insertParagraphElementAtCursorCommand,
+  ...htmlCommands,
 ];
 
 export default commands;

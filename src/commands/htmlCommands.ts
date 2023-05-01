@@ -12,16 +12,6 @@ const insertDivElementAtCursor = (idName: string) => {
   });
 };
 
-export const insertDivElementAtCursorCommand: Command = {
-  name: "insertDivElementAtCursor",
-  execute: async () => {
-    const input = await vscode.window.showInputBox({
-      prompt: "挿入する `div` 要素の `id` 属性を入力してください",
-    });
-    insertDivElementAtCursor(input || "");
-  },
-};
-
 const insertButtonElementAtCursor = (idName: string) => {
   const activeEditor = vscode.window.activeTextEditor;
   if (!activeEditor) {
@@ -33,16 +23,6 @@ const insertButtonElementAtCursor = (idName: string) => {
   });
 };
 
-export const insertButtonElementAtCursorCommand: Command = {
-  name: "insertButtonElementAtCursor",
-  execute: async () => {
-    const input = await vscode.window.showInputBox({
-      prompt: "挿入する `button` 要素の `id` 属性を入力してください",
-    });
-    insertButtonElementAtCursor(input || "");
-  },
-};
-
 const insertInputElementAtCursor = (idName: string) => {
   const activeEditor = vscode.window.activeTextEditor;
   if (!activeEditor) {
@@ -52,16 +32,6 @@ const insertInputElementAtCursor = (idName: string) => {
   activeEditor.edit((edit) => {
     edit.insert(position, `<input id="${idName}" />`);
   });
-};
-
-export const insertInputElementAtCursorCommand: Command = {
-  name: "insertInputElementAtCursor",
-  execute: async () => {
-    const input = await vscode.window.showInputBox({
-      prompt: "挿入する `input` 要素の `id` 属性を入力してください",
-    });
-    insertInputElementAtCursor(input || "");
-  },
 };
 
 const insertUnorderedListElementAtCursor = (idName: string) => {
@@ -81,16 +51,6 @@ const insertUnorderedListElementAtCursor = (idName: string) => {
   });
 };
 
-export const insertUnorderedListElementAtCursorCommand: Command = {
-  name: "insertUnorderedListElementAtCursor",
-  execute: async () => {
-    const input = await vscode.window.showInputBox({
-      prompt: "挿入する `ul` 要素の `id` 属性を入力してください",
-    });
-    insertUnorderedListElementAtCursor(input || "");
-  },
-};
-
 const insertH1ElementAtCursor = (idName: string) => {
   const activeEditor = vscode.window.activeTextEditor;
   if (!activeEditor) {
@@ -100,16 +60,6 @@ const insertH1ElementAtCursor = (idName: string) => {
   activeEditor.edit((edit) => {
     edit.insert(position, `<h1 id="${idName}">見出し</h1>`);
   });
-};
-
-export const insertH1ElementAtCursorCommand: Command = {
-  name: "insertH1ElementAtCursor",
-  execute: async () => {
-    const input = await vscode.window.showInputBox({
-      prompt: "挿入する `h1` 要素の `id` 属性を入力してください",
-    });
-    insertH1ElementAtCursor(input || "");
-  },
 };
 
 const insertParagraphElementAtCursor = (idName: string) => {
@@ -123,12 +73,61 @@ const insertParagraphElementAtCursor = (idName: string) => {
   });
 };
 
-export const insertParagraphElementAtCursorCommand: Command = {
-  name: "insertParagraphElementAtCursor",
-  execute: async () => {
-    const input = await vscode.window.showInputBox({
-      prompt: "挿入する `p` 要素の `id` 属性を入力してください",
-    });
-    insertParagraphElementAtCursor(input || "");
+const htmlCommands: Command[] = [
+  {
+    name: "insertDivElementAtCursor",
+    execute: async () => {
+      const input = await vscode.window.showInputBox({
+        prompt: "挿入する `div` 要素の `id` 属性を入力してください",
+      });
+      insertDivElementAtCursor(input || "");
+    },
   },
-};
+  {
+    name: "insertButtonElementAtCursor",
+    execute: async () => {
+      const input = await vscode.window.showInputBox({
+        prompt: "挿入する `button` 要素の `id` 属性を入力してください",
+      });
+      insertButtonElementAtCursor(input || "");
+    },
+  },
+  {
+    name: "insertInputElementAtCursor",
+    execute: async () => {
+      const input = await vscode.window.showInputBox({
+        prompt: "挿入する `input` 要素の `id` 属性を入力してください",
+      });
+      insertInputElementAtCursor(input || "");
+    },
+  },
+  {
+    name: "insertUnorderedListElementAtCursor",
+    execute: async () => {
+      const input = await vscode.window.showInputBox({
+        prompt: "挿入する `ul` 要素の `id` 属性を入力してください",
+      });
+      insertUnorderedListElementAtCursor(input || "");
+    },
+  },
+  {
+    name: "insertH1ElementAtCursor",
+    execute: async () => {
+      const input = await vscode.window.showInputBox({
+        prompt: "挿入する `h1` 要素の `id` 属性を入力してください",
+      });
+      insertH1ElementAtCursor(input || "");
+    },
+  },
+  {
+    name: "insertParagraphElementAtCursor",
+    execute: async () => {
+      const input = await vscode.window.showInputBox({
+        prompt: "挿入する `p` 要素の `id` 属性を入力してください",
+      });
+      insertParagraphElementAtCursor(input || "");
+    },
+  },
+];
+
+export default htmlCommands;
