@@ -20,10 +20,6 @@
   "contributes": {
     "commands": [
       {
-        "command": "first-web-game-maker.paperFortune",
-        "title": "おみくじ"
-      },
-      {
         "command": "first-web-game-maker.insertHelloWorldAtTop",
         "title": "insert hello world at top"
       },
