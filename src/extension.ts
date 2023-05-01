@@ -22,6 +22,8 @@ function renderMd(text: string) {
   );
 }
 
+import insertHelloWorldAtTop from "./commands/insertHelloWorldAtTop";
+
 export function activate(context: vscode.ExtensionContext) {
   // const files = vscode.workspace.textDocuments;
   // const paths = { scriptJs: "", indexHtml: "" };
@@ -37,17 +39,6 @@ export function activate(context: vscode.ExtensionContext) {
 
   // vscode.workspace.openTextDocument(paths.scriptJs);
   // vscode.workspace.openTextDocument(paths.indexHtml);
-
-  const insertHelloWorldAtTop = () => {
-    const activeEditor = vscode.window.activeTextEditor;
-    if (!activeEditor) {
-      return;
-    }
-    const position = new vscode.Position(0, 0);
-    activeEditor.edit((edit) => {
-      edit.insert(position, "Hello, World!\n");
-    });
-  };
 
   const insertAtCursor = (text: string) => {
     const activeEditor = vscode.window.activeTextEditor;
