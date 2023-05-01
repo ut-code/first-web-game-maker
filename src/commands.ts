@@ -1,4 +1,4 @@
-import { type Command } from "./types/command";
+import { type Command } from "./definitions/command";
 import insertHelloWorldAtTopCommand from "./commands/insertHelloWorldAtTop";
 import insertAtCursorCommand from "./commands/insertAtCursor";
 import deleteAfterCursorCommand from "./commands/deleteAfterCursor";

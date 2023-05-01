@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { type Command } from "./../types/command";
+import { type Command } from "../definitions/command";
 
 const deleteAfterCursor = (chars: number) => {
   const activeEditor = vscode.window.activeTextEditor;
