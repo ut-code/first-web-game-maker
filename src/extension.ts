@@ -52,19 +52,19 @@ export function activate(context: vscode.ExtensionContext) {
 
   type Command = {
     name: string;
-    callback: () => void;
+    execute: () => void;
   };
 
   const commands: Command[] = [
     {
       name: "insertHelloWorldAtTop",
-      callback: () => {
+      execute: () => {
         insertHelloWorldAtTop();
       },
     },
     {
       name: "insertAtCursor",
-      callback: async () => {
+      execute: async () => {
         const input = await vscode.window.showInputBox({
           prompt: "挿入する文字列を入力してください",
         });
@@ -73,7 +73,7 @@ export function activate(context: vscode.ExtensionContext) {
     },
     {
       name: "deleteAfterCursor",
-      callback: async () => {
+      execute: async () => {
         const input = await vscode.window.showInputBox({
           prompt: "削除する文字数を入力してください",
           value: "1",
@@ -83,7 +83,7 @@ export function activate(context: vscode.ExtensionContext) {
     },
     {
       name: "insertDivElementAtCursor",
-      callback: async () => {
+      execute: async () => {
         const input = await vscode.window.showInputBox({
           prompt: "挿入する `div` 要素の `id` 属性を入力してください",
         });
@@ -92,7 +92,7 @@ export function activate(context: vscode.ExtensionContext) {
     },
     {
       name: "insertButtonElementAtCursor",
-      callback: async () => {
+      execute: async () => {
         const input = await vscode.window.showInputBox({
           prompt: "挿入する `button` 要素の `id` 属性を入力してください",
         });
@@ -101,7 +101,7 @@ export function activate(context: vscode.ExtensionContext) {
     },
     {
       name: "insertInputElementAtCursor",
-      callback: async () => {
+      execute: async () => {
         const input = await vscode.window.showInputBox({
           prompt: "挿入する `input` 要素の `id` 属性を入力してください",
         });
@@ -110,7 +110,7 @@ export function activate(context: vscode.ExtensionContext) {
     },
     {
       name: "insertUnorderedListElementAtCursor",
-      callback: async () => {
+      execute: async () => {
         const input = await vscode.window.showInputBox({
           prompt: "挿入する `ul` 要素の `id` 属性を入力してください",
         });
@@ -119,7 +119,7 @@ export function activate(context: vscode.ExtensionContext) {
     },
     {
       name: "insertH1ElementAtCursor",
-      callback: async () => {
+      execute: async () => {
         const input = await vscode.window.showInputBox({
           prompt: "挿入する `h1` 要素の `id` 属性を入力してください",
         });
@@ -128,7 +128,7 @@ export function activate(context: vscode.ExtensionContext) {
     },
     {
       name: "insertParagraphElementAtCursor",
-      callback: async () => {
+      execute: async () => {
         const input = await vscode.window.showInputBox({
           prompt: "挿入する `p` 要素の `id` 属性を入力してください",
         });
@@ -141,7 +141,7 @@ export function activate(context: vscode.ExtensionContext) {
     ...commands.map((command) =>
       vscode.commands.registerCommand(
         `first-web-game-maker.${command.name}`,
-        command.callback
+        command.execute
       )
     )
   );
