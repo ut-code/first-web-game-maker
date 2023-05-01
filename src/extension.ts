@@ -25,6 +25,14 @@ function renderMd(text: string) {
 import insertHelloWorldAtTop from "./commands/insertHelloWorldAtTop";
 import insertAtCursor from "./commands/insertAtCursor";
 import deleteAfterCursor from "./commands/deleteAfterCursor";
+import {
+  insertDivElementAtCursor,
+  insertButtonElementAtCursor,
+  insertInputElementAtCursor,
+  insertUnorderedListElementAtCursor,
+  insertH1ElementAtCursor,
+  insertParagraphElementAtCursor,
+} from "./commands/htmlCommands";
 
 export function activate(context: vscode.ExtensionContext) {
   // const files = vscode.workspace.textDocuments;
@@ -41,78 +49,6 @@ export function activate(context: vscode.ExtensionContext) {
 
   // vscode.workspace.openTextDocument(paths.scriptJs);
   // vscode.workspace.openTextDocument(paths.indexHtml);
-
-  const insertDivElementAtCursor = (idName: string) => {
-    const activeEditor = vscode.window.activeTextEditor;
-    if (!activeEditor) {
-      return;
-    }
-    const position = activeEditor.selection.active;
-    activeEditor.edit((edit) => {
-      edit.insert(position, `<div id="${idName}"></div>`);
-    });
-  };
-
-  const insertButtonElementAtCursor = (idName: string) => {
-    const activeEditor = vscode.window.activeTextEditor;
-    if (!activeEditor) {
-      return;
-    }
-    const position = activeEditor.selection.active;
-    activeEditor.edit((edit) => {
-      edit.insert(position, `<button id="${idName}">ボタン</button>`);
-    });
-  };
-
-  const insertInputElementAtCursor = (idName: string) => {
-    const activeEditor = vscode.window.activeTextEditor;
-    if (!activeEditor) {
-      return;
-    }
-    const position = activeEditor.selection.active;
-    activeEditor.edit((edit) => {
-      edit.insert(position, `<input id="${idName}" />`);
-    });
-  };
-
-  const insertUnorderedListElementAtCursor = (idName: string) => {
-    const activeEditor = vscode.window.activeTextEditor;
-    if (!activeEditor) {
-      return;
-    }
-    const position = activeEditor.selection.active;
-    activeEditor.edit((edit) => {
-      edit.insert(
-        position,
-        `\
-<ul id="${idName}">
-  <li></li>
-</ul>`
-      );
-    });
-  };
-
-  const insertH1ElementAtCursor = (idName: string) => {
-    const activeEditor = vscode.window.activeTextEditor;
-    if (!activeEditor) {
-      return;
-    }
-    const position = activeEditor.selection.active;
-    activeEditor.edit((edit) => {
-      edit.insert(position, `<h1 id="${idName}">見出し</h1>`);
-    });
-  };
-
-  const insertParagraphElementAtCursor = (idName: string) => {
-    const activeEditor = vscode.window.activeTextEditor;
-    if (!activeEditor) {
-      return;
-    }
-    const position = activeEditor.selection.active;
-    activeEditor.edit((edit) => {
-      edit.insert(position, `<p id="${idName}">段落</p>`);
-    });
-  };
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
