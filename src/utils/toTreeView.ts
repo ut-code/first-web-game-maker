@@ -1,6 +1,14 @@
 import * as vscode from "vscode";
 import { TreeItem } from "./../definitions/treeItem";
 
+/**
+ * toTreeView
+ * @param treeData
+ * @returns treeView
+ * @description
+ * toTreeView is a function that converts treeData to treeView.
+ * It is used to display the tree view in the sidebar.
+ */
 export default function toTreeView(treeData: TreeItem[]) {
   class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
     private data: TreeItem[];
