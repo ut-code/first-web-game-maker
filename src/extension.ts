@@ -63,53 +63,49 @@ export function activate(context: vscode.ExtensionContext) {
     }
   }
 
+  const treeData = [
+    new TreeItem("構造", vscode.TreeItemCollapsibleState.Expanded, undefined, [
+      new TreeItem("箱を挿入", vscode.TreeItemCollapsibleState.None, {
+        command: "first-web-game-maker.insertDivElementAtCursor",
+        title: "",
+      }),
+      new TreeItem("ボタンを挿入", vscode.TreeItemCollapsibleState.None, {
+        command: "first-web-game-maker.insertButtonElementAtCursor",
+        title: "",
+      }),
+      new TreeItem("入力欄を挿入", vscode.TreeItemCollapsibleState.None, {
+        command: "first-web-game-maker.insertInputElementAtCursor",
+        title: "",
+      }),
+      new TreeItem("リストを挿入", vscode.TreeItemCollapsibleState.None, {
+        command: "first-web-game-maker.insertUnorderedListElementAtCursor",
+        title: "",
+      }),
+      new TreeItem("見出しを挿入", vscode.TreeItemCollapsibleState.None, {
+        command: "first-web-game-maker.insertH1ElementAtCursor",
+        title: "",
+      }),
+      new TreeItem("段落を挿入", vscode.TreeItemCollapsibleState.None, {
+        command: "first-web-game-maker.insertParagraphElementAtCursor",
+        title: "",
+      }),
+    ]),
+    new TreeItem(
+      "見た目",
+      vscode.TreeItemCollapsibleState.Expanded,
+      undefined,
+      [
+        new TreeItem("あいてむ", vscode.TreeItemCollapsibleState.None),
+        new TreeItem("あいてむ", vscode.TreeItemCollapsibleState.None),
+      ]
+    ),
+  ];
+
   class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
     private data: TreeItem[];
 
     constructor() {
-      this.data = [
-        new TreeItem(
-          "構造",
-          vscode.TreeItemCollapsibleState.Expanded,
-          undefined,
-          [
-            new TreeItem("箱を挿入", vscode.TreeItemCollapsibleState.None, {
-              command: "first-web-game-maker.insertDivElementAtCursor",
-              title: "",
-            }),
-            new TreeItem("ボタンを挿入", vscode.TreeItemCollapsibleState.None, {
-              command: "first-web-game-maker.insertButtonElementAtCursor",
-              title: "",
-            }),
-            new TreeItem("入力欄を挿入", vscode.TreeItemCollapsibleState.None, {
-              command: "first-web-game-maker.insertInputElementAtCursor",
-              title: "",
-            }),
-            new TreeItem("リストを挿入", vscode.TreeItemCollapsibleState.None, {
-              command:
-                "first-web-game-maker.insertUnorderedListElementAtCursor",
-              title: "",
-            }),
-            new TreeItem("見出しを挿入", vscode.TreeItemCollapsibleState.None, {
-              command: "first-web-game-maker.insertH1ElementAtCursor",
-              title: "",
-            }),
-            new TreeItem("段落を挿入", vscode.TreeItemCollapsibleState.None, {
-              command: "first-web-game-maker.insertParagraphElementAtCursor",
-              title: "",
-            }),
-          ]
-        ),
-        new TreeItem(
-          "見た目",
-          vscode.TreeItemCollapsibleState.Expanded,
-          undefined,
-          [
-            new TreeItem("あいてむ", vscode.TreeItemCollapsibleState.None),
-            new TreeItem("あいてむ", vscode.TreeItemCollapsibleState.None),
-          ]
-        ),
-      ];
+      this.data = treeData;
     }
 
     private _onDidChangeTreeData: vscode.EventEmitter<
