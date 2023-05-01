@@ -1,4 +1,3 @@
-import * as vscode from "vscode";
 import insertHelloWorldAtTopCommand from "./commands/insertHelloWorldAtTop";
 import insertAtCursorCommand from "./commands/insertAtCursor";
 import deleteAfterCursorCommand from "./commands/deleteAfterCursor";
