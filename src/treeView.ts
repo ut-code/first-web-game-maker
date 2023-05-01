@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
-import treeData, { TreeItem } from "./treeData/treeData";
+import { TreeItem } from "./definitions/treeItem";
+import treeData from "./treeData/treeData";
 
 class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
   private data: TreeItem[];
