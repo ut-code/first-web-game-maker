@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 
 import commands from "./commands";
 import treeView from "./treeView";
-import convertMarkdownToHtml from "./utils/convertMarkdownToHTML";
+import panel from "./panel";
 
 export function activate(context: vscode.ExtensionContext) {
   // const files = vscode.workspace.textDocuments;
@@ -23,17 +23,6 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(...commands);
 
   context.subscriptions.push(treeView);
-
-  const panel = vscode.window.createWebviewPanel(
-    "first-web-game-maker",
-    "First Web Game Maker",
-    vscode.ViewColumn.Two,
-    {
-      enableScripts: true,
-    }
-  );
-
-  panel.webview.html = convertMarkdownToHtml("descriptions/htmlDescription.md");
 
   panel.webview.onDidReceiveMessage(
     (message) => {
