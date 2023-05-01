@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { type Command } from "./../commands";
+import { type Command } from "./../types/command";
 
 const insertAtCursor = (text: string) => {
   const activeEditor = vscode.window.activeTextEditor;
