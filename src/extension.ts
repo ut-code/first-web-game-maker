@@ -316,9 +316,9 @@ export function activate(context: vscode.ExtensionContext) {
     }
   }
 
+  const treeDataProvider = new TreeDataProvider();
   const treeView = vscode.window.createTreeView("first-web-game-maker", {
-    treeDataProvider: new TreeDataProvider(),
-    showCollapseAll: true,
+    treeDataProvider,
   });
   context.subscriptions.push(treeView);
 
