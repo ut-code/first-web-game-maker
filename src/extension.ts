@@ -50,85 +50,94 @@ export function activate(context: vscode.ExtensionContext) {
   // vscode.workspace.openTextDocument(paths.scriptJs);
   // vscode.workspace.openTextDocument(paths.indexHtml);
 
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      "first-web-game-maker.insertHelloWorldAtTop",
-      () => {
+  const commands = [
+    {
+      name: "insertHelloWorldAtTop",
+      callback: () => {
         insertHelloWorldAtTop();
-      }
-    ),
-    vscode.commands.registerCommand(
-      "first-web-game-maker.insertAtCursor",
-      async () => {
+      },
+    },
+    {
+      name: "insertAtCursor",
+      callback: async () => {
         const input = await vscode.window.showInputBox({
           prompt: "挿入する文字列を入力してください",
         });
         insertAtCursor(input || "");
-      }
-    ),
-    vscode.commands.registerCommand(
-      "first-web-game-maker.deleteAfterCursor",
-      async () => {
+      },
+    },
+    {
+      name: "deleteAfterCursor",
+      callback: async () => {
         const input = await vscode.window.showInputBox({
           prompt: "削除する文字数を入力してください",
           value: "1",
         });
         deleteAfterCursor(parseInt(input || "1"));
-      }
-    ),
-    vscode.commands.registerCommand(
-      "first-web-game-maker.insertDivElementAtCursor",
-      async () => {
+      },
+    },
+    {
+      name: "insertDivElementAtCursor",
+      callback: async () => {
         const input = await vscode.window.showInputBox({
           prompt: "挿入する `div` 要素の `id` 属性を入力してください",
         });
         insertDivElementAtCursor(input || "");
-      }
-    ),
-    vscode.commands.registerCommand(
-      "first-web-game-maker.insertButtonElementAtCursor",
-      async () => {
+      },
+    },
+    {
+      name: "insertButtonElementAtCursor",
+      callback: async () => {
         const input = await vscode.window.showInputBox({
           prompt: "挿入する `button` 要素の `id` 属性を入力してください",
         });
         insertButtonElementAtCursor(input || "");
-      }
-    ),
-    vscode.commands.registerCommand(
-      "first-web-game-maker.insertInputElementAtCursor",
-      async () => {
+      },
+    },
+    {
+      name: "insertInputElementAtCursor",
+      callback: async () => {
         const input = await vscode.window.showInputBox({
           prompt: "挿入する `input` 要素の `id` 属性を入力してください",
         });
         insertInputElementAtCursor(input || "");
-      }
-    ),
-    vscode.commands.registerCommand(
-      "first-web-game-maker.insertUnorderedListElementAtCursor",
-      async () => {
+      },
+    },
+    {
+      name: "insertUnorderedListElementAtCursor",
+      callback: async () => {
         const input = await vscode.window.showInputBox({
           prompt: "挿入する `ul` 要素の `id` 属性を入力してください",
         });
         insertUnorderedListElementAtCursor(input || "");
-      }
-    ),
-    vscode.commands.registerCommand(
-      "first-web-game-maker.insertH1ElementAtCursor",
-      async () => {
+      },
+    },
+    {
+      name: "insertH1ElementAtCursor",
+      callback: async () => {
         const input = await vscode.window.showInputBox({
           prompt: "挿入する `h1` 要素の `id` 属性を入力してください",
         });
         insertH1ElementAtCursor(input || "");
-      }
-    ),
-    vscode.commands.registerCommand(
-      "first-web-game-maker.insertParagraphElementAtCursor",
-      async () => {
+      },
+    },
+    {
+      name: "insertParagraphElementAtCursor",
+      callback: async () => {
         const input = await vscode.window.showInputBox({
           prompt: "挿入する `p` 要素の `id` 属性を入力してください",
         });
         insertParagraphElementAtCursor(input || "");
-      }
+      },
+    },
+  ];
+
+  context.subscriptions.push(
+    ...commands.map((command) =>
+      vscode.commands.registerCommand(
+        `first-web-game-maker.${command.name}`,
+        command.callback
+      )
     )
   );
 
