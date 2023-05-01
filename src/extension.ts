@@ -307,7 +307,6 @@ export function activate(context: vscode.ExtensionContext) {
       return element;
     }
 
-    // この中に TreeView に表示する要素を返す処理を書くらしい。
     getChildren(element?: TreeItem): Thenable<TreeItem[]> {
       if (element) {
         return Promise.resolve(element.children);
