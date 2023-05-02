@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { type Command } from "../definitions/command";
+import { type Command } from "../../types/command";
 
 const insertHelloWorldAtTop = () => {
   const activeEditor = vscode.window.activeTextEditor;

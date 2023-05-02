@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { TreeItem } from "./../definitions/treeItem";
+import { TreeItem } from "../models/treeItem";
 
 /**
  * toTreeView
