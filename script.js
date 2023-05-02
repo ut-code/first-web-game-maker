@@ -385,6 +385,9 @@ function hitEnemy() {
   const enemyCenterY = indexY(enemyPosition.y);
 
   if (wall[centerY][centerX] === wall[enemyCenterY][enemyCenterX]) {
-    alert("Game Over!");
+    if (confirm("Game Over!")) {
+      console.log("Game Over!");
+      location.reload();
+    }
   }
 }
