@@ -554,10 +554,54 @@ class MoveParallelJoint(IMove):
         )
 
 
-class IPiece(ABC):
+class IntroduceClassConstant(type):
+    """大文字のみで構成された変数をクラス定数扱いにするメタクラス"""
+    def __init__(
+        cls,
+        __name: str,
+        __bases: tuple[type, ...],
+        __dict: dict[str, Any],
+        **kwds: Any,
+    ) -> None:
+        super().__init__(__name, __bases, __dict, **kwds)
+        cls.__yet_can_assign: dict[str, bool] = {__key: True for __key in cls.ONE_OFF_ASSIGN}
+        cls._print_is_can_assign = lambda: cls.__yet_can_assign
+        """再代入が1回のみ可能なクラス定数について、その一覧を、まだ代入可能かを返す"""
+
+    def __setattr__(cls, __name: str, __value: Any) -> None:
+        if __name == __name.upper():
+            if __name not in cls.ONE_OFF_ASSIGN or not cls.__yet_can_assign[__name]:
+                raise AttributeError(f"cannot reassign to constant {__name}")
+            cls.__yet_can_assign[__name] = False
+        return super().__setattr__(__name, __value)
+
+    ONE_OFF_ASSIGN: set[str] = set()
+    """1回限りの再代入を許可する定数名の集合"""
+
+
+class BanConcealClassVar:
+    """クラス変数と同名のインスタンス変数の作成を禁止する"""
+    def __setattr__(self, __name: str, __value: Any) -> None:
+        if hasattr(self.__class__, __name):
+            raise AttributeError(f"attribute {__name} is already defined in {self.__class__}")
+        return super().__setattr__(__name, __value)
+
+
+class StrictVarHelper(BanConcealClassVar, metaclass=IntroduceClassConstant):
+    """定数(コンスタントケース)の導入, クラス変数の隠蔽防止
+    
+    1回のみ再代入可能な定数(そのクラス自身を参照する値を代入したい場合を想定)は、
+    ONE_OFF_ASSIGN(set[str])に定数名を記述する
+    """
+
+
+class IPiece(StrictVarHelper):
     # pylint: disable=C0103
     # 上記はクラス定数に対する警告の抑制を目的としている
     """駒の抽象クラス"""
+    ONE_OFF_ASSIGN = {'PROMOTE_DEFAULT'}
+    # PROMOTE_DEFAULTは、「取られたときに何の駒として駒台に載るか」なので、自身を参照する必要があり得る
+
     def __init__(
             self,
             controller: Controller2P,
@@ -584,18 +628,11 @@ class IPiece(ABC):
             return self.SYMBOL.lower()
         return f"\033[33m{self.SYMBOL}\033[0m"  # とりあえず黄色にしている
 
-    @classmethod
-    @property
-    def NAME(cls) -> str:
-        """name of piece"""
-        return cls.__name__
+    NAME: ClassVar[str] = __name__
+    """name of piece"""
 
-    @classmethod
-    @property
-    @abstractmethod
-    def MOVE(cls) -> IMove:
-        """move definition of piece"""
-        raise NotImplementedError
+    MOVE: ClassVar[IMove]
+    """move definition of piece"""
 
     @classmethod
     @property
@@ -603,30 +640,17 @@ class IPiece(ABC):
         """move definition of piece, but only appried to the first move"""
         return cls.MOVE
 
-    @classmethod
-    @property
-    def ROYALTY(cls) -> bool:
-        """if True, this piece is royal (Player who lost all royal pieces loses the game.)"""
-        return False
+    IS_ROYAL: ClassVar[bool] = False
+    """if True, this piece is royal (Player who lost all royal pieces loses the game.)"""
 
-    @classmethod
-    @property
-    @abstractmethod
-    def SYMBOL(cls) -> str:
-        """a character that represents this piece"""
-        raise NotImplementedError
+    SYMBOL: ClassVar[str]
+    """a character that represents this piece"""
 
-    @classmethod
-    @property
-    def PROMOTE_DEFAULT(cls) -> set[type[IPiece]]:
-        """デフォルトの成り先(ない場合はNone)"""
-        return set()
+    PROMOTE_DEFAULT: ClassVar[set[type[IPiece]]] = set()
+    """デフォルトの成り先(ない場合はNone)"""
 
-    @classmethod
-    @property
-    def FORCE_PROMOTE(cls) -> bool:
-        """成りが存在する場合、強制か否か"""
-        return False
+    FORCE_PROMOTE: ClassVar[bool] = False
+    """成りが存在する場合、強制か否か"""
 
     @classmethod
     @property
@@ -898,7 +922,7 @@ class MatchBoard(IBoard):
         """(ゲームが終了したかの真偽値, 勝者)"""
         remaining_player: set[Controller2P] = {
             player for player in (Controller2P.WHITE, Controller2P.BLACK)
-            if any(v for (k, v) in self.piece_in_board_index[player].items() if k.ROYALTY)
+            if any(v for (k, v) in self.piece_in_board_index[player].items() if k.IS_ROYAL)
         }
         if len(remaining_player) > 1:
             return (False, None)
@@ -956,10 +980,10 @@ class MatchBoard(IBoard):
 
     def drop_destination(self) -> set[AbsoluteCoordinate]:
         """駒を打つ先として有効な座標を返す"""
-        return set(filter(
-            lambda coord: (not self[coord].is_excluded) and (self[coord].piece is None),
-            self.coords_iterator,
-        ))
+        return {
+            coord for coord in self.coords_iterator
+            if (not self[coord].is_excluded) and (self[coord].piece is None)
+        }
 
     def movable_piece_mapping(self) -> dict[AbsoluteCoordinate, set[AbsoluteCoordinate]]:
         """ターンプレイヤーの駒のうち、動かせるものについて、dict[今いる位置, set[移動可能な位置]]を返す"""
@@ -1027,9 +1051,19 @@ class MatchBoard(IBoard):
             # TODO: ステイルメイト対応?
             while True:
                 # 駒を動かすか打つかを選択する
+                # TODO: merge
                 if self.can_use_captured_piece and self.piece_stands[self.turn_player]:
-                    mode = select_by_user(({'move', 'drop'}, str), message="select move or drop")
+                    mode = select_by_user(
+                        ({'move', 'drop'}, str),
+                        message="select move or drop",
+                        cancel=None,
+                        auto_cancel=True,
+                        auto_cancel_message="you have no valid move",
+                        abbrebiate_single=True,
+                        abbrebiate_single_message="",
+                    )
                     if mode is None:
+                        # ここに「動かせる駒がない」状態のときの処理を書く
                         print("This game was called off.")
                         return
                 else:
@@ -1136,7 +1170,7 @@ class King(IPiece):
     """
     NAME = "King"
     MOVE = LeaperMove([RelativeCoordinate(1, 0), RelativeCoordinate(1, 1)], symmetry='oct')
-    ROYALTY = True
+    IS_ROYAL = True
     SYMBOL = 'k'
 
 class Qween(IPiece):
@@ -1145,7 +1179,7 @@ class Qween(IPiece):
     """
     NAME = "Qween"
     MOVE = RiderMove({RelativeCoordinate(1, 0): -1, RelativeCoordinate(1, 1): -1}, symmetry='oct')
-    ROYALTY = False
+    IS_ROYAL = False
     SYMBOL = 'q'
 
 class Bishop(IPiece):
@@ -1154,7 +1188,7 @@ class Bishop(IPiece):
     """
     NAME = "Bishop"
     MOVE = RiderMove({RelativeCoordinate(1, 1): -1}, symmetry='fblr')
-    ROYALTY = False
+    IS_ROYAL = False
     SYMBOL = 'b'
 
 class Rook(IPiece):
@@ -1163,7 +1197,7 @@ class Rook(IPiece):
     """
     NAME = "Rook"
     MOVE = RiderMove({RelativeCoordinate(1, 0): -1}, symmetry='oct')
-    ROYALTY = False
+    IS_ROYAL = False
     SYMBOL = 'r'
 
 class Knight(IPiece):
@@ -1172,7 +1206,7 @@ class Knight(IPiece):
     """
     NAME = "Knight"
     MOVE = LeaperMove([RelativeCoordinate(2, 1)], symmetry='oct')
-    ROYALTY = False
+    IS_ROYAL = False
     SYMBOL = "n"
 
 class Pawn(IPiece):
@@ -1204,7 +1238,7 @@ class Pawn(IPiece):
             interaction=TInteraction.ONLY_CAPTURE
         ),
     )
-    ROYALTY = False
+    IS_ROYAL = False
     SYMBOL = "p"
     FORCE_PROMOTE = True
 Pawn.PROMOTE_DEFAULT = {kind.as_promotion_of(Pawn) for kind in (Qween, Bishop, Rook, Knight)}
