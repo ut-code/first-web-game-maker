@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import convertMarkdownToHtml from "./utils/convertMarkdownToHTML";
+import convertMarkdownToHtml from "./utils/convertMarkdownToHtml";
 
 const panel = vscode.window.createWebviewPanel(
   "first-web-game-maker",
