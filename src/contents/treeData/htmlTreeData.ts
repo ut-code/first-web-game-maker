@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { TreeItem } from "../models/treeItem";
+import { TreeItem } from "../../models/treeItem";
 
 const htmlTreeData = new TreeItem(
   "構造",

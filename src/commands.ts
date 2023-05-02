@@ -1,9 +1,9 @@
 import { type Command } from "./types/command";
 import toCommands from "./utils/toCommands";
-import insertHelloWorldAtTopCommand from "./commands/insertHelloWorldAtTop";
-import insertAtCursorCommand from "./commands/insertAtCursor";
-import deleteAfterCursorCommand from "./commands/deleteAfterCursor";
-import htmlCommands from "./commands/htmlCommands";
+import insertHelloWorldAtTopCommand from "./contents/commands/insertHelloWorldAtTop";
+import insertAtCursorCommand from "./contents/commands/insertAtCursor";
+import deleteAfterCursorCommand from "./contents/commands/deleteAfterCursor";
+import htmlCommands from "./contents/commands/htmlCommands";
 
 const commands: Command[] = [
   insertHelloWorldAtTopCommand,

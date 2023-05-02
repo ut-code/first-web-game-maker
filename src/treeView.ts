@@ -1,6 +1,6 @@
 import toTreeView from "./utils/toTreeView";
-import htmlTreeData from "./treeData/htmlTreeData";
-import cssTreeData from "./treeData/cssTreeData";
+import htmlTreeData from "./contents/treeData/htmlTreeData";
+import cssTreeData from "./contents/treeData/cssTreeData";
 
 const treeData = [htmlTreeData, cssTreeData];
 
