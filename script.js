@@ -2,24 +2,20 @@
 // 参加者が変更可能な部分
 
 // 迷路のサイズ
-const size = 12;
+const size = 20;
 
 // ===========================================
 // initialize
 let cookiePoint = 0;
 
 // ===========================================
-
+// maze template
 // "x"は壁、"o"はクッキー、"-"は空白
-const mazeState = new Array(size / 2);
-mazeState[0] = new Array(size).fill("x");
-for (let i = 1; i < size / 2 - 1; i++) {
-  mazeState[i] = new Array(size).fill("o");
-  mazeState[i][0] = "x";
-  mazeState[i][size - 1] = "x";
-}
-mazeState[size / 2 - 1] = new Array(size).fill("x");
 
+// template #1
+const mazeState = createStandardMaze(size);
+
+// ===========================================
 const pacmanState = {
   north: true,
   south: true,
@@ -59,10 +55,10 @@ enemySouthImage.src = "./img/ghost_south.svg";
 
 // canvas領域を定義
 const canvas = document.getElementById("canvas");
-canvas.width = size * 50;
-canvas.height = size * 25; // とりあえず縦横比1:2
+const roadWidth = 50; // まだ50でしか動かない
+canvas.width = roadWidth * mazeState[0].length;
+canvas.height = roadWidth * mazeState.length;
 const ctx = canvas.getContext("2d");
-const roadWidth = canvas.width / mazeState[0].length;
 
 // let lastTime = performance.now();
 const pacmanPosition = { x: 75, y: 75 }; //最初の出現位置を動的に指定するように修正の必要あり
@@ -370,4 +366,31 @@ function hitEnemy() {
       location.reload();
     }
   }
+}
+
+// ===================
+// create maze template
+// 外壁のみ
+// function createPlaneMaze(size) {
+//   const mazeState = new Array(size / 2);
+//   mazeState[0] = new Array(size).fill("x");
+//   for (let i = 1; i < size / 2 - 1; i++) {
+//     mazeState[i] = new Array(size).fill("o");
+//     mazeState[i][0] = "x";
+//     mazeState[i][size - 1] = "x";
+//   }
+//   mazeState[size / 2 - 1] = new Array(size).fill("x");
+//   return mazeState;
+// }
+
+function createStandardMaze(size) {
+  const mazeState = new Array(size / 2);
+  mazeState[0] = new Array(size).fill("x");
+  for (let i = 1; i < size / 2 - 1; i++) {
+    mazeState[i] = new Array(size).fill("o");
+    mazeState[i][0] = "x";
+    mazeState[i][size - 1] = "x";
+  }
+  mazeState[size / 2 - 1] = new Array(size).fill("x");
+  return mazeState;
 }
