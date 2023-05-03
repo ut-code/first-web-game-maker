@@ -1,26 +1,33 @@
+// ===========================================
+// 参加者が変更可能な部分
+
 // 迷路のサイズ
 const size = 12;
 
+// ===========================================
+// initialize
 let cookiePoint = 0;
 
-// "x"は壁、"o"はクッキー、"-"は空白
-const wall = new Array(size / 2);
-wall[0] = new Array(size).fill("x");
-for (let i = 1; i < size / 2 - 1; i++) {
-  wall[i] = new Array(size).fill("o");
-  wall[i][0] = "x";
-  wall[i][size - 1] = "x";
-}
-wall[size / 2 - 1] = new Array(size).fill("x");
+// ===========================================
 
-const pacmanResult = {
+// "x"は壁、"o"はクッキー、"-"は空白
+const mazeState = new Array(size / 2);
+mazeState[0] = new Array(size).fill("x");
+for (let i = 1; i < size / 2 - 1; i++) {
+  mazeState[i] = new Array(size).fill("o");
+  mazeState[i][0] = "x";
+  mazeState[i][size - 1] = "x";
+}
+mazeState[size / 2 - 1] = new Array(size).fill("x");
+
+const pacmanState = {
   north: true,
   south: true,
   east: true,
   west: true,
 };
 
-const enemyResult = {
+const ghostState = {
   north: true,
   south: true,
   east: true,
@@ -55,7 +62,7 @@ const canvas = document.getElementById("canvas");
 canvas.width = size * 50;
 canvas.height = size * 25; // とりあえず縦横比1:2
 const ctx = canvas.getContext("2d");
-const roadWidth = canvas.width / wall[0].length;
+const roadWidth = canvas.width / mazeState[0].length;
 
 // let lastTime = performance.now();
 const pacmanPosition = { x: 75, y: 75 }; //最初の出現位置を動的に指定するように修正の必要あり
@@ -67,9 +74,9 @@ let enemyNextDirection;
 let enemyNowDirection;
 
 // 開始
-createWall();
+createMazeState();
 drawContext();
-drawWall();
+drawMazeState();
 // drawPacman(pacmanPosition.x, pacmanPosition.y);
 // drawEnemy(100, 100);
 movePacman();
@@ -81,7 +88,7 @@ document.onkeydown = onKeyDown;
 setEnemyDirection();
 
 // 入力を元に壁を生成
-function createWall() {
+function createMazeState() {
   tableDiv.innerHTML = "";
   const table = document.createElement("table");
   for (let i = 0; i < size / 2; i++) {
@@ -90,14 +97,14 @@ function createWall() {
       const td = document.createElement("td");
       td.style.width = "40px";
       td.style.height = "40px";
-      if (wall[i][j] === "x") {
+      if (mazeState[i][j] === "x") {
         td.style.backgroundColor = "blue";
       } else {
         td.style.backgroundColor = "black";
       }
       td.onclick = () => {
-        wall[i][j] = wall[i][j] === "o" ? "x" : "o";
-        createWall();
+        mazeState[i][j] = mazeState[i][j] === "o" ? "x" : "o";
+        createmazeState();
       };
       tr.appendChild(td);
     }
@@ -113,16 +120,16 @@ function drawContext() {
 }
 
 // 壁描画
-function drawWall() {
+function drawMazeState() {
   ctx.strokeStyle = "blue";
 
-  for (let i = 0; i < wall.length; i++) {
-    for (let j = 0; j < wall[i].length; j++) {
-      if (wall[i][j] === "x") {
+  for (let i = 0; i < mazeState.length; i++) {
+    for (let j = 0; j < mazeState[i].length; j++) {
+      if (mazeState[i][j] === "x") {
         ctx.strokeRect(roadWidth * j, roadWidth * i, roadWidth, roadWidth);
-      } else if (wall[i][j] === "o") {
+      } else if (mazeState[i][j] === "o") {
         drawCookie(i, j);
-      } else if (wall[i][j] === "-") {
+      } else if (mazeState[i][j] === "-") {
         // empty
       }
     }
@@ -157,8 +164,8 @@ function drawCookie(i, j) {
 // パックマンの移動・再描画
 function movePacman() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const canMove = canMoveFrom(pacmanPosition, pacmanResult);
-  const enemyCanMove = canMoveFrom(enemyPosition, enemyResult);
+  const canMove = canMoveFrom(pacmanPosition, pacmanState);
+  const enemyCanMove = canMoveFrom(enemyPosition, ghostState);
 
   // パックマンを動かす
   let pacmanImage;
@@ -214,7 +221,7 @@ function movePacman() {
   hitEnemy();
 
   drawContext();
-  drawWall();
+  drawMazeState();
   drawPacman(
     pacmanImage || pacmanEastImage,
     pacmanPosition.x,
@@ -260,7 +267,7 @@ function onKeyDown(e) {
 // 敵の動く方向をランダムに生成
 // ちゃんとそれっぽく動かす必要がある
 function setEnemyDirection() {
-  const canMove = canMoveFrom(enemyPosition, enemyResult);
+  const canMove = canMoveFrom(enemyPosition, ghostState);
   const directions = [];
   canMove.north ? directions.push("north") : null;
   canMove.south ? directions.push("south") : null;
@@ -276,13 +283,13 @@ function setEnemyDirection() {
   }, interval);
 }
 
-// canvas上のx座標をwallのindexに変換
+// canvas上のx座標をmazeStateのindexに変換
 function indexX(x) {
-  return Math.floor((x / canvas.width) * wall[0].length);
+  return Math.floor((x / canvas.width) * mazeState[0].length);
 }
-// canvas上のy座標をwallのindexに変換
+// canvas上のy座標をmazeStateのindexに変換
 function indexY(y) {
-  return Math.floor((y / canvas.height) * wall.length);
+  return Math.floor((y / canvas.height) * mazeState.length);
 }
 
 function canMoveFrom(position, result) {
@@ -304,12 +311,12 @@ function canMoveFrom(position, result) {
   if (isMovingEastWest) {
     result.east = true;
     result.west = true;
-    if (wall[centerY][centerX + 1] !== "x") {
+    if (mazeState[centerY][centerX + 1] !== "x") {
       result.east = true;
     } else if (isMovingNorthSouth) {
       result.east = false;
     }
-    if (wall[centerY][centerX - 1] !== "x") {
+    if (mazeState[centerY][centerX - 1] !== "x") {
       result.west = true;
     } else if (isMovingNorthSouth) {
       result.west = false;
@@ -321,12 +328,12 @@ function canMoveFrom(position, result) {
   if (isMovingNorthSouth) {
     result.north = true;
     result.south = true;
-    if (wall[centerY - 1][centerX] !== "x") {
+    if (mazeState[centerY - 1][centerX] !== "x") {
       result.north = true;
     } else if (isMovingEastWest) {
       result.north = false;
     }
-    if (wall[centerY + 1][centerX] !== "x") {
+    if (mazeState[centerY + 1][centerX] !== "x") {
       result.south = true;
     } else if (isMovingEastWest) {
       result.south = false;
@@ -343,8 +350,8 @@ function eraseCookie() {
   // pacmanの大きさが相まっていい感じだが、本来ちゃんと当たり判定をやる必要がある
   const centerX = indexX(pacmanPosition.x);
   const centerY = indexY(pacmanPosition.y);
-  if (wall[centerY][centerX] === "o") {
-    wall[centerY][centerX] = "-";
+  if (mazeState[centerY][centerX] === "o") {
+    mazeState[centerY][centerX] = "-";
     cookiePoint += 1;
   }
 }
