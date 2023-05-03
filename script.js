@@ -384,9 +384,10 @@ function hitEnemy() {
   const enemyCenterX = indexX(enemyPosition.x);
   const enemyCenterY = indexY(enemyPosition.y);
 
-  if (wall[centerY][centerX] === wall[enemyCenterY][enemyCenterX]) {
+  if (centerY === enemyCenterY && centerX === enemyCenterX) {
     if (confirm("Game Over!")) {
-      console.log("Game Over!");
+      console.log("ok");
+      // 処理を停止する必要がある
       location.reload();
     }
   }
