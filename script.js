@@ -1,24 +1,9 @@
-//モジュール化
-
-// canvasの座標を反転させてから扱ってもいいかも
-
-// const wall = [
-//   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-//   [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-//   [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
-//   [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-//   [1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1],
-//   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-// ];
-
 // 迷路のサイズ
 const size = 12;
 
 let cookiePoint = 0;
 
-// 壁の初期設定（もっと綺麗に書けるはず）
 // "x"は壁、"o"はクッキー、"-"は空白
-
 const wall = new Array(size / 2);
 wall[0] = new Array(size).fill("x");
 for (let i = 1; i < size / 2 - 1; i++) {
@@ -75,7 +60,6 @@ const roadWidth = canvas.width / wall[0].length;
 // let lastTime = performance.now();
 const pacmanPosition = { x: 75, y: 75 }; //最初の出現位置を動的に指定するように修正の必要あり
 const enemyPosition = { x: 525, y: 225 };
-// const nextDirection = { x: 0, y: 0 };
 let nextDirection;
 let nowDirection;
 
@@ -132,8 +116,6 @@ function drawContext() {
 function drawWall() {
   ctx.strokeStyle = "blue";
 
-  // border collapse的な処理をする
-
   for (let i = 0; i < wall.length; i++) {
     for (let j = 0; j < wall[i].length; j++) {
       if (wall[i][j] === "x") {
@@ -147,29 +129,12 @@ function drawWall() {
   }
 }
 
-// パックマン描画
-// SVG化できたらする
-// function drawPacman(x, y) {
-//   ctx.fillStyle = "yellow";
-//   ctx.beginPath();
-//   ctx.arc(x, y, roadWidth / 2, 0, Math.PI * 2, true);
-//   ctx.closePath();
-//   ctx.fill();
-// }
-
 function drawPacman(pacmanImage, x, y) {
-  // ctx.fillStyle = "yellow";
-  // ctx.beginPath();
   ctx.drawImage(pacmanImage, x - 30, y - 30, 65, 65);
   // 位置調整　ハードコーディングしない
 }
 
 function drawEnemy(enemyImage, x, y) {
-  // ctx.fillStyle = "red";
-  // ctx.beginPath();
-  // ctx.arc(x, y, 30, 0, Math.PI * 2, true);
-  // ctx.closePath();
-  // ctx.fill();
   ctx.drawImage(enemyImage, x - 30, y - 30, 65, 65);
   // 位置調整　ハードコーディングしない
 }
@@ -188,11 +153,6 @@ function drawCookie(i, j) {
   ctx.closePath();
   ctx.fill();
 }
-
-// function removeCookie(x, y) {
-//   ctx.fillStyle = "black";
-//   ctx.fillRect(x - 5, y - 5, 10, 10);
-// }
 
 // パックマンの移動・再描画
 function movePacman() {
@@ -325,10 +285,8 @@ function indexY(y) {
   return Math.floor((y / canvas.height) * wall.length);
 }
 
-// ここでいい感じに端点をはんていすればいい
 function canMoveFrom(position, result) {
   const minusMargin = 1;
-  // まだ境界
   const [northBorder, southBorder, eastBorder, westBorder] = [
     indexY(position.y + minusMargin - roadWidth / 2),
     indexY(position.y - minusMargin + roadWidth / 2),
@@ -339,21 +297,8 @@ function canMoveFrom(position, result) {
   const centerX = indexX(position.x);
   const centerY = indexY(position.y);
 
-  // console.log(
-  //   northBorder,
-  //   southBorder,
-  //   centerY,
-  //   eastBorder,
-  //   westBorder,
-  //   centerX
-  // );
-
   const isMovingEastWest = northBorder === centerY && southBorder === centerY;
   const isMovingNorthSouth = eastBorder === centerX && westBorder === centerX;
-
-  // console.log(
-  //   `isMovingEastWest: ${isMovingEastWest}, isMovingNorthSouth: ${isMovingNorthSouth}`
-  // );
 
   // 明らかに冗長なのでなおす
   if (isMovingEastWest) {
