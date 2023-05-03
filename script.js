@@ -49,8 +49,14 @@ const cookiePointSpan = document.getElementById("cookie-point");
 
 const pacmanImage = new Image();
 pacmanImage.src = "./img/pacman.svg";
-const enemyImage = new Image();
-enemyImage.src = "./img/ghost.svg";
+const enemyEastImage = new Image();
+enemyEastImage.src = "./img/ghost_right.svg";
+const enemyWestImage = new Image();
+enemyWestImage.src = "./img/ghost_left.svg";
+const enemyNorthImage = new Image();
+enemyNorthImage.src = "./img/ghost_up.svg";
+const enemySouthImage = new Image();
+enemySouthImage.src = "./img/ghost_down.svg";
 
 // canvas領域を定義
 const canvas = document.getElementById("canvas");
@@ -151,7 +157,7 @@ function drawPacman(x, y) {
   // 位置調整　ハードコーディングしない
 }
 
-function drawEnemy(x, y) {
+function drawEnemy(enemyImage, x, y) {
   // ctx.fillStyle = "red";
   // ctx.beginPath();
   // ctx.arc(x, y, 30, 0, Math.PI * 2, true);
@@ -208,6 +214,7 @@ function movePacman() {
   }
 
   // 敵を動かす
+  let enemyImage;
   if (enemyNextDirection === "north" && enemyCanMove.north) {
     enemyNowDirection = "north";
   } else if (enemyNextDirection === "south" && enemyCanMove.south) {
@@ -219,12 +226,16 @@ function movePacman() {
   }
   if (enemyNowDirection === "north" && enemyCanMove.north) {
     enemyPosition.y -= 1;
+    enemyImage = enemyNorthImage;
   } else if (enemyNowDirection === "south" && enemyCanMove.south) {
     enemyPosition.y += 1;
+    enemyImage = enemySouthImage;
   } else if (enemyNowDirection === "east" && enemyCanMove.east) {
     enemyPosition.x += 1;
+    enemyImage = enemyEastImage;
   } else if (enemyNowDirection === "west" && enemyCanMove.west) {
     enemyPosition.x -= 1;
+    enemyImage = enemyWestImage;
   }
 
   eraseCookie();
@@ -233,7 +244,7 @@ function movePacman() {
   drawContext();
   drawWall();
   drawPacman(pacmanPosition.x, pacmanPosition.y);
-  drawEnemy(enemyPosition.x, enemyPosition.y);
+  drawEnemy(enemyImage || enemyEastImage, enemyPosition.x, enemyPosition.y);
 
   // debug
   nowDirectionDiv.textContent = `now: ${nowDirection}`;
