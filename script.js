@@ -57,13 +57,13 @@ const pacmanSouthImage = new Image();
 pacmanSouthImage.src = "./img/pacman_south_temp.svg";
 
 const enemyEastImage = new Image();
-enemyEastImage.src = "./img/ghost_right.svg";
+enemyEastImage.src = "./img/ghost_east.svg";
 const enemyWestImage = new Image();
-enemyWestImage.src = "./img/ghost_left.svg";
+enemyWestImage.src = "./img/ghost_west.svg";
 const enemyNorthImage = new Image();
-enemyNorthImage.src = "./img/ghost_up.svg";
+enemyNorthImage.src = "./img/ghost_north.svg";
 const enemySouthImage = new Image();
-enemySouthImage.src = "./img/ghost_down.svg";
+enemySouthImage.src = "./img/ghost_south.svg";
 
 // canvas領域を定義
 const canvas = document.getElementById("canvas");
