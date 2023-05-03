@@ -47,8 +47,15 @@ const nowDirectionDiv = document.getElementById("now-direction");
 const nextDirectionDiv = document.getElementById("next-direction");
 const cookiePointSpan = document.getElementById("cookie-point");
 
-const pacmanImage = new Image();
-pacmanImage.src = "./img/pacman.svg";
+const pacmanEastImage = new Image();
+pacmanEastImage.src = "./img/pacman_east.svg";
+const pacmanWestImage = new Image();
+pacmanWestImage.src = "./img/pacman_west.svg";
+const pacmanNorthImage = new Image();
+pacmanNorthImage.src = "./img/pacman_north_temp.svg";
+const pacmanSouthImage = new Image();
+pacmanSouthImage.src = "./img/pacman_south_temp.svg";
+
 const enemyEastImage = new Image();
 enemyEastImage.src = "./img/ghost_right.svg";
 const enemyWestImage = new Image();
@@ -150,7 +157,7 @@ function drawWall() {
 //   ctx.fill();
 // }
 
-function drawPacman(x, y) {
+function drawPacman(pacmanImage, x, y) {
   // ctx.fillStyle = "yellow";
   // ctx.beginPath();
   ctx.drawImage(pacmanImage, x - 30, y - 30, 65, 65);
@@ -194,6 +201,7 @@ function movePacman() {
   const enemyCanMove = canMoveFrom(enemyPosition, enemyResult);
 
   // パックマンを動かす
+  let pacmanImage;
   if (nextDirection === "north" && canMove.north) {
     nowDirection = "north";
   } else if (nextDirection === "south" && canMove.south) {
@@ -205,12 +213,16 @@ function movePacman() {
   }
   if (nowDirection === "north" && canMove.north) {
     pacmanPosition.y -= 1;
+    pacmanImage = pacmanNorthImage;
   } else if (nowDirection === "south" && canMove.south) {
     pacmanPosition.y += 1;
+    pacmanImage = pacmanSouthImage;
   } else if (nowDirection === "east" && canMove.east) {
     pacmanPosition.x += 1;
+    pacmanImage = pacmanEastImage;
   } else if (nowDirection === "west" && canMove.west) {
     pacmanPosition.x -= 1;
+    pacmanImage = pacmanWestImage;
   }
 
   // 敵を動かす
@@ -243,7 +255,11 @@ function movePacman() {
 
   drawContext();
   drawWall();
-  drawPacman(pacmanPosition.x, pacmanPosition.y);
+  drawPacman(
+    pacmanImage || pacmanEastImage,
+    pacmanPosition.x,
+    pacmanPosition.y
+  );
   drawEnemy(enemyImage || enemyEastImage, enemyPosition.x, enemyPosition.y);
 
   // debug
