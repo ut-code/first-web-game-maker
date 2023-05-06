@@ -10,8 +10,12 @@ const panel = vscode.window.createWebviewPanel(
   }
 );
 
+// panel.webview.html = convertMarkdownToHtml(
+//   "./contents/descriptions/htmlDescription.md"
+// );
+
 panel.webview.html = convertMarkdownToHtml(
-  "./contents/descriptions/htmlDescription.md"
+  "./contents/descriptions/pacmanDescription.md"
 );
 
 export default panel;
