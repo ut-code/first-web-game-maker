@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { TreeItem } from "../../models/treeItem";
 
 const pacmanTreeData = new TreeItem(
-  "構造",
+  "パックマン",
   vscode.TreeItemCollapsibleState.Expanded,
   undefined,
   [
