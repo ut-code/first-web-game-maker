@@ -6,7 +6,8 @@ const size = 20;
 
 // ===========================================
 // initialize
-let cookiePoint = 0;
+let eatenCookie = 0;
+let createdCookie = 0;
 
 // ===========================================
 // maze template
@@ -34,7 +35,7 @@ const ghostState = {
 const tableDiv = document.getElementById("table");
 const nowDirectionDiv = document.getElementById("now-direction");
 const nextDirectionDiv = document.getElementById("next-direction");
-const cookiePointSpan = document.getElementById("cookie-point");
+const eatenCookieSpan = document.getElementById("cookie-point");
 
 const pacmanEastImage = new Image();
 pacmanEastImage.src = "./img/pacman_east.svg";
@@ -119,7 +120,6 @@ function drawContext() {
 // 壁描画
 function drawMazeState() {
   ctx.strokeStyle = "blue";
-
   for (let i = 0; i < mazeState.length; i++) {
     for (let j = 0; j < mazeState[i].length; j++) {
       if (mazeState[i][j] === "x") {
@@ -214,8 +214,9 @@ function movePacman() {
     enemyImage = enemyWestImage;
   }
 
-  eraseCookie();
+  hitCookie();
   hitEnemy();
+  judgeGameClear();
 
   drawContext();
   drawMazeState();
@@ -230,7 +231,7 @@ function movePacman() {
   nowDirectionDiv.textContent = `now: ${nowDirection}`;
   nextDirectionDiv.textContent = `next: ${nextDirection}`;
 
-  cookiePointSpan.textContent = cookiePoint;
+  eatenCookieSpan.textContent = eatenCookie * 10;
 
   setTimeout(() => {
     movePacman();
@@ -343,13 +344,13 @@ function canMoveFrom(position, result) {
   return result;
 }
 
-function eraseCookie() {
+function hitCookie() {
   // pacmanの大きさが相まっていい感じだが、本来ちゃんと当たり判定をやる必要がある
   const centerX = indexX(pacmanPosition.x);
   const centerY = indexY(pacmanPosition.y);
   if (mazeState[centerY][centerX] === "o") {
     mazeState[centerY][centerX] = "-";
-    cookiePoint += 1;
+    eatenCookie += 1;
   }
 }
 
@@ -369,6 +370,18 @@ function hitEnemy() {
   }
 }
 
+function judgeGameClear() {
+  if (eatenCookie === createdCookie) {
+    setTimeout(() => {
+      if (confirm("Game Clear!")) {
+        console.log("ok");
+        // 処理を停止する必要がある
+        location.reload();
+      }
+    }, 200);
+  }
+}
+
 // ===================
 // create maze template
 // 外壁のみ
@@ -385,6 +398,7 @@ function hitEnemy() {
 // }
 
 function createStandardMaze20() {
+  createdCookie = 88;
   return [
     [
       "x",
