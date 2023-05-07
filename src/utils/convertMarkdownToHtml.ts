@@ -3,6 +3,20 @@ import * as fs from "fs";
 import * as MarkdownIt from "markdown-it";
 import hljs from "highlight.js";
 
+const header = `\
+<button id="html">構造</button>
+<button id="test">test</button>
+<script>
+  const vscode = acquireVsCodeApi();
+  document.getElementById("html").onclick = () => {
+    vscode.postMessage({ type: "html" });
+  };
+  document.getElementById("test").onclick = () => {
+    vscode.postMessage({ type: "test" });
+  };
+</script>
+`;
+
 /**
  * Convert markdown file to html string
  * @param {string} filePath - the path of markdown file
@@ -40,6 +54,7 @@ export default function convertMarkdownToHtml(filePath: string): string {
     },
   });
   const html =
+    header +
     md.render(fileContent) +
     `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">`;
 
