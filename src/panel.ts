@@ -1,35 +1,17 @@
 import * as vscode from "vscode";
-import convertMarkdownToHtml from "./utils/convertMarkdownToHtml";
+import { type PanelData } from "./types/panelData";
+import toPanel from "./utils/toPanel";
 
 export default function createPanel(context: vscode.ExtensionContext) {
-  const panel = vscode.window.createWebviewPanel(
-    "first-web-game-maker",
-    "First Web Game Maker",
-    vscode.ViewColumn.Two,
+  const panelDataList: PanelData[] = [
     {
-      enableScripts: true,
-    }
-  );
-
-  panel.webview.html = convertMarkdownToHtml(
-    "./contents/descriptions/htmlDescription.md"
-  );
-
-  panel.webview.onDidReceiveMessage(
-    (message) => {
-      if (message.type === "html") {
-        panel.webview.html = convertMarkdownToHtml(
-          "./contents/descriptions/htmlDescription.md"
-        );
-      } else if (message.type === "test") {
-        panel.webview.html = convertMarkdownToHtml(
-          "./contents/descriptions/test.md"
-        );
-      }
+      title: "構造",
+      path: "./contents/descriptions/htmlDescription.md",
     },
-    undefined,
-    context.subscriptions
-  );
-
-  return panel;
+    {
+      title: "テスト",
+      path: "./contents/descriptions/test.md",
+    },
+  ];
+  return toPanel(panelDataList, context);
 }
