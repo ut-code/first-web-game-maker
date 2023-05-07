@@ -1,17 +1,17 @@
 import * as vscode from "vscode";
-import convertMarkdownToHtml from "./utils/convertMarkdownToHtml";
+import { type PanelData } from "./types/panelData";
+import toPanel from "./utils/toPanel";
 
-const panel = vscode.window.createWebviewPanel(
-  "first-web-game-maker",
-  "First Web Game Maker",
-  vscode.ViewColumn.Two,
-  {
-    enableScripts: true,
-  }
-);
-
-panel.webview.html = convertMarkdownToHtml(
-  "./contents/descriptions/htmlDescription.md"
-);
-
-export default panel;
+export default function createPanel(context: vscode.ExtensionContext) {
+  const panelDataList: PanelData[] = [
+    {
+      title: "構造",
+      path: "./contents/descriptions/htmlDescription.md",
+    },
+    {
+      title: "テスト",
+      path: "./contents/descriptions/test.md",
+    },
+  ];
+  return toPanel(panelDataList, context);
+}

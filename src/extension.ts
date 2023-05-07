@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 
 import commands from "./commands";
 import treeView from "./treeView";
-import panel from "./panel";
+import createPanel from "./panel";
 
 export function activate(context: vscode.ExtensionContext) {
   // const files = vscode.workspace.textDocuments;
@@ -24,17 +24,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(treeView);
 
-  panel.webview.onDidReceiveMessage(
-    (message) => {
-      if (message.type === "alert") {
-        vscode.window.showInformationMessage(message.message);
-      }
-    },
-    undefined,
-    context.subscriptions
-  );
-
-  context.subscriptions.push(panel);
+  context.subscriptions.push(createPanel(context));
 }
 
 export function deactivate() {}
