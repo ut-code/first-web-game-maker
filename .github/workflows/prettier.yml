@@ -22,5 +22,5 @@ jobs:
         shell: bash
 
       - name: Run Prettier
-        run: npm run format
+        run: npx prettier --check .
         shell: bash
