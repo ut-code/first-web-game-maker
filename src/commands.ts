@@ -4,11 +4,13 @@ import insertHelloWorldAtTopCommand from "./contents/commands/insertHelloWorldAt
 import insertAtCursorCommand from "./contents/commands/insertAtCursor";
 import deleteAfterCursorCommand from "./contents/commands/deleteAfterCursor";
 import htmlCommands from "./contents/commands/htmlCommands";
+import insertSugorokuHtmlAtTopCommand from "./contents/commands/insertSugorokuHtmlAtTop";
 
 const commands: Command[] = [
   insertHelloWorldAtTopCommand,
   insertAtCursorCommand,
   deleteAfterCursorCommand,
+  insertSugorokuHtmlAtTopCommand,
   ...htmlCommands,
 ];
 

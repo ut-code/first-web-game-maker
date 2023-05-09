@@ -12,6 +12,10 @@ export default function createPanel(context: vscode.ExtensionContext) {
       title: "テスト",
       path: "./contents/descriptions/test.md",
     },
+    {
+      title: "すごろく",
+      path: "./contents/descriptions/sugorokuDescriptions.md",
+    }
   ];
   return toPanel(panelDataList, context);
 }
