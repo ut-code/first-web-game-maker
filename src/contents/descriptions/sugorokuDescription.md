@@ -1,11 +1,16 @@
 # すごろくをつくってみよう
+
 ## 定数設定
+
 ```
   positions = new Array(1,1,1,1);
   userNum = 0;
 ```
+
 `positions`は各プレイヤーのすごろく上の位置を保存する為にもちいます。`userNum`はすごろくのターンを管理するために用います。完成すると下記のようになります。
+
 ## プレイヤーの表作成
+
 ```
     <form name="form1">
       <table border="0" cellspacing="5" cellpadding="5">
@@ -33,8 +38,7 @@
       </form>
 ```
 
-
-4人でプレイできるように4x３枠の表を作成します。各列にはプレイヤー名の入力欄、サイコロのボタン、出目を表示します。ボタンはイベント処理として、後につくる”getNum()”を呼び出すようにしてあります。以下のように表示されます。
+4 人でプレイできるように 4x ３枠の表を作成します。各列にはプレイヤー名の入力欄、サイコロのボタン、出目を表示します。ボタンはイベント処理として、後につくる”getNum()”を呼び出すようにしてあります。以下のように表示されます。
 
 <form name="form1">
     <table border="0" cellspacing="5" cellpadding="5">
@@ -61,24 +65,24 @@
     </table>
     </form>
 
-
-
 ## サイコロをつくる
+
 ```
       function diceStart() {
         r = Math.floor(Math.random() * 6) + 1;
-        document.getElementById("dice"+userNum).innerHTML = r; 
+        document.getElementById("dice"+userNum).innerHTML = r;
         timer = setTimeout("diceStart()",100);
       }
 ```
 
-`Math.random()`は0以上1未満のランダムな実数を生成、`Math.floor()`は少数部分を切り捨てて整数部分をとってくれます。  
-`Math.random()`で生成した実数を６倍すると0以上６未満の実数が得られるので`Math.floor()`で少数を切り捨てて+1すると1,2,3,4,5,6をランダムに出すサイコロができます。
-`document.getElementById`はIDで指定したHTMLオブジェクトを取得できます。ここでは各プレイヤーに割り当てられたサイコロの値のHTML要素に先ほどの処理で得たサイコロの目を代入しています。
-`setTimeout(functionRef,delay)`は`delay`ミリ秒経過すると処理を終了し、`functionRef`を実行します。よって`setTimeout(diceReset(),100)`は100ミリ秒ごとに処理を終了し`diceReset()`を再び実行するので100ミリ秒ごとにサイコロを振る処理を繰り返す無限ループを起こします。
-このとき変数`timer`には制御用のタイマーのIDが入っており、のちに無限ループを止めるときに用います。
+`Math.random()`は 0 以上 1 未満のランダムな実数を生成、`Math.floor()`は少数部分を切り捨てて整数部分をとってくれます。  
+`Math.random()`で生成した実数を６倍すると 0 以上６未満の実数が得られるので`Math.floor()`で少数を切り捨てて+1 すると 1,2,3,4,5,6 をランダムに出すサイコロができます。
+`document.getElementById`は ID で指定した HTML オブジェクトを取得できます。ここでは各プレイヤーに割り当てられたサイコロの値の HTML 要素に先ほどの処理で得たサイコロの目を代入しています。
+`setTimeout(functionRef,delay)`は`delay`ミリ秒経過すると処理を終了し、`functionRef`を実行します。よって`setTimeout(diceReset(),100)`は 100 ミリ秒ごとに処理を終了し`diceReset()`を再び実行するので 100 ミリ秒ごとにサイコロを振る処理を繰り返す無限ループを起こします。
+このとき変数`timer`には制御用のタイマーの ID が入っており、のちに無限ループを止めるときに用います。
 
 ## ボタンを押してサイコロを止める
+
 ```
       function getNum(num) {
         clearTimeout(timer);
@@ -88,11 +92,12 @@
       }
 ```
 
-最初に作った各プレイヤーのボタンを押すとこの`getnNum()`が実行されます。`clearTimeout(timer)`で先ほどの無限ループを停止して、3行目で同様にサイコロの目を出します。出た目の値をターンプレイヤーに対応するpositionsの値に加えましょう。処理が終了したらdiceStart()に戻ります。
+最初に作った各プレイヤーのボタンを押すとこの`getnNum()`が実行されます。`clearTimeout(timer)`で先ほどの無限ループを停止して、3 行目で同様にサイコロの目を出します。出た目の値をターンプレイヤーに対応する positions の値に加えましょう。処理が終了したら diceStart()に戻ります。
 
 ## ターンプレイヤー以外にダイスを振れなくする
+
 ```
-      function diceReset() { 
+      function diceReset() {
         document.form1.button0.disabled = true;
         document.form1.button1.disabled = true;
         document.form1.button2.disabled = true;
@@ -101,10 +106,12 @@
         diceStart();
       }
 ```
+
 現在の状態では一人のプレイヤーしかサイコロを振れません。ターンプレイヤー以外はサイコロが振れないようにしてサイコロボタンが押されたらターンが切り替わるようにしましょう。
-`document.form1.button0.disabled = true`とすることで使用不可にできます。まず全プレイヤーのボタンを使用不可にした後、ターンが回ってきている(`userNum`に対応する)プレイヤーだけ`.disabled = false`としましょう。ターンプレイヤーが決まったら`diceStart()`します。ターン終了後にuserNumを操作するのはこの後のdiceNext()でやります。
+`document.form1.button0.disabled = true`とすることで使用不可にできます。まず全プレイヤーのボタンを使用不可にした後、ターンが回ってきている(`userNum`に対応する)プレイヤーだけ`.disabled = false`としましょう。ターンプレイヤーが決まったら`diceStart()`します。ターン終了後に userNum を操作するのはこの後の diceNext()でやります。
 
 ## ターンの切り替え
+
 ```
       function diceNext() {
         userNum++;
@@ -113,9 +120,10 @@
       }
 ```
 
-サイコロの出目を表示したらターンを切り替えましょう。出目の処理後、ターンを管理しているuserNumに1を足します。ただしプレイヤーは0から3の４人のためuserNumが４になったらif文をもちいて０に戻してあげましょう。最後にdiceResetをもちいてターンプレイヤーを切り替えます。
+サイコロの出目を表示したらターンを切り替えましょう。出目の処理後、ターンを管理している userNum に 1 を足します。ただしプレイヤーは 0 から 3 の４人のため userNum が４になったら if 文をもちいて０に戻してあげましょう。最後に diceReset をもちいてターンプレイヤーを切り替えます。
 
-getNumの5行目をを修正して
+getNum の 5 行目をを修正して
+
 ```
      function getNum(num) {
         clearTimeout(timer);
@@ -124,17 +132,21 @@ getNumの5行目をを修正して
         diceNext();
       }
 ```
+
 としたらすごろくの処理は完成です。
 
 処理の流れとしては
 
-diceResetでターンプレイヤーを決める→diceStartでサイコロが回りつつづける→(ボタンを押す)→getNumでサイコロの出目が決まり、その値だけpositionsが増加→diceNextでターンが切り替わる→diceReset→…
+diceReset でターンプレイヤーを決める →diceStart でサイコロが回りつつづける →(ボタンを押す)→getNum でサイコロの出目が決まり、その値だけ positions が増加 →diceNext でターンが切り替わる →diceReset→…
 
-となっています。   
+となっています。
+
 # すごろくを表示する
-それではここからHTMLとCSSをもちいてwebページ上にすごろくを表示していきましょう。
+
+それではここから HTML と CSS をもちいて web ページ上にすごろくを表示していきましょう。
 
 ## ゲームボードとプレイヤーのスタイル及び定数
+
 ```
 <style>
       /* ゲームボードのスタイル */
@@ -190,6 +202,7 @@ diceResetでターンプレイヤーを決める→diceStartでサイコロが�
       }
     </style>
 ```
+
 ```
       const BOARD_SIZE = 5;
       const CELL_SIZE = 100;
@@ -203,6 +216,7 @@ diceResetでターンプレイヤーを決める→diceStartでサイコロが�
 `Player` の`position: absolute`を忘れないことと`CELL_SIZE`と`PLAYER_SIZE`の値を`<style>`で用いた値と一致させること以外は適当に変更しても動くので大丈夫です。
 
 ## ゲームボードの作成
+
 ```
       function createBoard() {
         const board = document.querySelector('.board');
@@ -228,12 +242,13 @@ diceResetでターンプレイヤーを決める→diceStartでサイコロが�
       }
 ```
 
-`document.querySelector(selectors)`は`selecors`に一致するものを探し出してHTML要素にしてくれます。`document.createElement(tagName)`は`tagName`で指定されたHTML要素を作り出してくれます。
+`document.querySelector(selectors)`は`selecors`に一致するものを探し出して HTML 要素にしてくれます。`document.createElement(tagName)`は`tagName`で指定された HTML 要素を作り出してくれます。
 
-ここでは２行目で`const board = document.querySelector('.board');`で.boardをHTML要素としてゲームボードを作成します。4行目`const cell = document.createElement('div')`でdivタグの空のHTML要素をつくり５行目で内部に数字を入れて6行目の`board.appendChild(cell)`で`cell`を`board`の子要素として表示することで、数字入りのマス目ができます。あとはFor文でゴールまでのマス目分繰り返しましょう。
+ここでは２行目で`const board = document.querySelector('.board');`で.board を HTML 要素としてゲームボードを作成します。4 行目`const cell = document.createElement('div')`で div タグの空の HTML 要素をつくり５行目で内部に数字を入れて 6 行目の`board.appendChild(cell)`で`cell`を`board`の子要素として表示することで、数字入りのマス目ができます。あとは For 文でゴールまでのマス目分繰り返しましょう。
 後は同様に各プレイヤーを`startCell`の子要素としてボードに配置していきましょう。
 
 ## プレイヤーの移動
+
 ```
       function movePlayer0() {
         const currentCell = document.querySelector(`.cell:nth-child(${positions[0]})`);
@@ -261,7 +276,7 @@ diceResetでターンプレイヤーを決める→diceStartでサイコロが�
       }
 ```
 
-２行目の`.cell:nth-child(${positions[0]})`はさきほど作ったセルのうち`position[0]`番目(プレイヤー0の現在地)を指定しています。３行目ではCSSの`.player0`を指定してプレイヤーの駒を表示しています。4,5行目ではHTML上の駒の位置にあたる`player0.style.top`(上端からの距離), `player0.style.left`(左端からの距離)を変更して、先ほどの`currentCell`に駒を移動しています。`currentCell`との相対位置を用いて駒の位置がマスの中央にくるようにしたあと最後にわずかに位置をずらしてそれぞれのプレイヤーの駒がかぶらないようにしています。
+２行目の`.cell:nth-child(${positions[0]})`はさきほど作ったセルのうち`position[0]`番目(プレイヤー 0 の現在地)を指定しています。３行目では CSS の`.player0`を指定してプレイヤーの駒を表示しています。4,5 行目では HTML 上の駒の位置にあたる`player0.style.top`(上端からの距離), `player0.style.left`(左端からの距離)を変更して、先ほどの`currentCell`に駒を移動しています。`currentCell`との相対位置を用いて駒の位置がマスの中央にくるようにしたあと最後にわずかに位置をずらしてそれぞれのプレイヤーの駒がかぶらないようにしています。
 
 これで表示処理ができたので先ほどのすごろくの処理に組み込みましょう。
 
@@ -279,6 +294,7 @@ diceResetでターンプレイヤーを決める→diceStartでサイコロが�
 ```
 
 ## ゲームを開始する関数
+
 ```
       function startGame() {
         movePlayer0()
@@ -287,9 +303,11 @@ diceResetでターンプレイヤーを決める→diceStartでサイコロが�
         movePlayer3()
       }
 ```
+
 ゲームの開始時にも駒の移動をしないと駒の表示位置がかぶってしまうのでこの関数を用意しておきましょう
 
 最後にゲームを開始するするための処理を一つにまとめて
+
 ```
       function initGame() {
         createBoard();
@@ -298,5 +316,6 @@ diceResetでターンプレイヤーを決める→diceStartでサイコロが�
       }
     initGame();
 ```
+
 として実行しましょう。
 これでいったん完成です。
