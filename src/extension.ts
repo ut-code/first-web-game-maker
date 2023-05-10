@@ -38,7 +38,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.languages.registerHoverProvider("javascript", new GoHoverProvider())
   );
-  
+
   context.subscriptions.push(createPanel(context));
 }
 
