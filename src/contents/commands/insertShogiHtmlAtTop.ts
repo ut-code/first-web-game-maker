@@ -1,23 +1,23 @@
 import * as vscode from "vscode";
 import { type Command } from "../../types/command";
-import sugorokuHtml from "./sugorokuTemplate/sugorokuHtml";
+import shogiHtml from "./shogiTemplate/shogiHtml";
 
-const insertSugorokuAtTop = () => {
+const insertShogiHtmlAtTop = () => {
   const activeEditor = vscode.window.activeTextEditor;
   if (!activeEditor) {
     return;
   }
   const position = new vscode.Position(0, 0);
   activeEditor.edit((edit) => {
-    edit.insert(position, sugorokuHtml + "\n");
+    edit.insert(position, shogiHtml + "\n");
   });
 };
 
-const insertSugorokuAtTopCommand: Command = {
-  name: "insertSugorokuAtTop",
+const insertShogiHtmlAtTopCommand: Command = {
+  name: "insertShogiHtmlAtTop",
   execute: () => {
-    insertSugorokuAtTop();
+    insertShogiHtmlAtTop();
   },
 };
 
-export default insertSugorokuAtTopCommand;
+export default insertShogiHtmlAtTopCommand;
