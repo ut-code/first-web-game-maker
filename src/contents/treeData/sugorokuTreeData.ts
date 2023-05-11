@@ -6,7 +6,7 @@ const sugorokuTreeData = new TreeItem(
   vscode.TreeItemCollapsibleState.Expanded,
   undefined,
   [
-    new TreeItem("すごろく", vscode.TreeItemCollapsibleState.None, {
+    new TreeItem("すごろく(本体)", vscode.TreeItemCollapsibleState.None, {
       command: "first-web-game-maker.insertSugorokuAtTop",
       title: "",
     }),
@@ -48,6 +48,10 @@ const sugorokuTreeData = new TreeItem(
     }),
     new TreeItem("initGame", vscode.TreeItemCollapsibleState.None, {
       command: "first-web-game-maker.insertSugorokuInitGame",
+      title: "",
+    }),
+    new TreeItem("すごろく(追加版)", vscode.TreeItemCollapsibleState.None, {
+      command: "first-web-game-maker.insertSugorokuAppendAtTop",
       title: "",
     }),
   ]

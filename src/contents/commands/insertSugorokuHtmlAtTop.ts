@@ -11,6 +11,7 @@ import sugorokuDiceNext from "./sugorokuTemplate/sugorokuDiceNext";
 import sugorokuCreateBoard from "./sugorokuTemplate/sugorokuCreateBoard";
 import sugorokuMovePlayer from "./sugorokuTemplate/sugorokuMovePlayer";
 import sugorokuInitGame from "./sugorokuTemplate/sugorokuInitGame";
+import sugorokuAppendHtml from "./sugorokuTemplate/sugorokuAppendHtml";
 
 const insertSugorokuAtTop = () => {
   const activeEditor = vscode.window.activeTextEditor;
@@ -133,6 +134,17 @@ const insertSugorokuInitGame = () => {
   });
 };
 
+const insertSugorokuAppendAtTop = () => {
+  const activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor) {
+    return;
+  }
+  const position = new vscode.Position(0, 0);
+  activeEditor.edit((edit) => {
+    edit.insert(position, sugorokuAppendHtml + "\n");
+  });
+};
+
 const insertSugorokuCommands: Command[] = [
   {
     name: "insertSugorokuAtTop",
@@ -198,6 +210,12 @@ const insertSugorokuCommands: Command[] = [
     name: "insertSugorokuInitGame",
     execute: () => {
       insertSugorokuInitGame();
+    },
+  },
+  {
+    name: "insertSugorokuAppendAtTop",
+    execute: () => {
+      insertSugorokuAppendAtTop();
     },
   },
 ];

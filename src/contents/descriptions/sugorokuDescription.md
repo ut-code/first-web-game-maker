@@ -245,7 +245,7 @@ style を挿入するときは`<head>`と`</head>`の間に挿入しましょう
 
 ### 見出しを挿入
 
-```js
+```html
 <h1>すごろくゲーム</h1>
 ```
 
@@ -263,8 +263,12 @@ style を挿入するときは`<head>`と`</head>`の間に挿入しましょう
 
 ```js
 <script>
-  // ゲームの定数と変数 const BOARD_SIZE = 25; const CELL_SIZE = 100;
-  const　PLAYER_SIZE = 20; const positions = new Array(1, 1, 1, 1); userNum = 0;
+  // ゲームの定数と変数 
+  const BOARD_SIZE = 25; 
+  const CELL_SIZE = 100;
+  const　PLAYER_SIZE = 20; 
+  const positions = new Array(1, 1, 1, 1); 
+  userNum = 0;
 </script>
 ```
 
@@ -503,3 +507,7 @@ initGame();
 ### 発展
 
 -サイコロを振るとランダムにイベントが発生するようにしてみましょう。 -所持金などの新たな概念をすごろくに取り入れてみましょう。 -アイテムの概念を追加し各プレイヤーが使えるようにしてみましょう。
+
+### おまけ
+
+すごろく(追加版)を押すと様々な要素が追加されたすごろくで遊べます。ぜひ参考にしてオリジナルのすごろくを作ってみてください。
