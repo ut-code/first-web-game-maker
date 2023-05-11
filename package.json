@@ -57,7 +57,8 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
-    "format": "npx prettier --write ."
+    "format": "npx prettier --write .",
+    "format:check": "npx prettier --check ."
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",
