@@ -46,23 +46,45 @@ startGame();
 // クリックに対する処理
 
 // マスをクリックした時
-function onClickCell(x, y) {}
+function onClickCell(x, y) {
+  /* ゲームの状態に応じて下3つのどれかに処理を分ける */
+}
 
 // 盤面の駒を選んだ時
 function handleSelectPiece(x, y) {
-  showMessage("駒を移動させるマスを選んでください。");
+  /* 駒が動けるマスを探索 */
+  if(/* 動けるマスがあるか */ kari) {
+    /* 移動元の座標と駒の種類を記録しておく */
+    showMessage("駒を移動させるマスを選んでください。");
+  } else {
+    showMessage("その駒は動かせません。");
+  }
 }
 
 // 駒の移動先を選んだ時
-function handleMovePiece(x, y) {}
+function handleMovePiece(x, y) {
+  /* 駒の移動 */
+  // renderCell(移動元x, 移動元y);
+  renderCell(x, y);
+}
 
 // 持ち駒の置き先を選んだ時
-function handlePlacePiece(x, y) {}
+function handlePlacePiece(x, y) {
+  /* 駒の設置 */
+  renderCell(x, y);
+}
 
 // 持ち駒をクリックした時
 function onClickCapturedPiece(player, index) {
   if (index < capturedPieces[player].length) {
-    showMessage("駒を置くマスを選んでください。");
+    /* 駒が置けるマスを探索 */
+    if(/* 置けるマスがあるか */ kari) {
+      /* 置こうとしている駒の種類を記録 */
+      showMessage("駒を置くマスを選んでください。");
+    } else {
+      showMessage("駒を置けるマスがありません。");
+    }
+    
   }
 }
 
