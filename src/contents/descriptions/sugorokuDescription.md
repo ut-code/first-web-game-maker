@@ -263,9 +263,9 @@ style を挿入するときは`<head>`と`</head>`の間に挿入しましょう
 
 ```js
 <script>
-  // ゲームの定数と変数 
+  // ゲームの定数と変数ss
   const BOARD_SIZE = 25; 
-  const CELL_SIZE = 100; 
+  const CELL_SIZE = 100;
   const　PLAYER_SIZE = 20; 
   const positions = new Array(1, 1, 1, 1); 
   userNum = 0;
