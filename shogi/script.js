@@ -24,12 +24,13 @@ function initialize() {}
 
 // for test
 const currentBoard = [
-  [1,1,1],
-  [1,0,1],
-  [1,0,0],
+  [1, 1, 1],
+  [1, 0, 1],
+  [1, 0, 0],
 ];
-const pieces = [{name: ""},{name: "歩"}];
+const pieces = [{ name: "" }, { name: "歩" }];
 const kari = false;
+const capturedPieces = [[], [{name: "歩", count: 2}]];
 
 const messageDiv = document.getElementById("メッセージ表示");
 const boardTds = boardMatrix();
@@ -37,10 +38,8 @@ const capturedPieceDivs = [
   document.getElementById("先手持ち駒置き場"),
   document.getElementById("後手持ち駒置き場"),
 ];
-const capturedPieces = [[], []];
 initialize();
 startGame();
-
 
 // ===========================================
 // クリックに対する処理
@@ -53,7 +52,7 @@ function onClickCell(x, y) {
 // 盤面の駒を選んだ時
 function handleSelectPiece(x, y) {
   /* 駒が動けるマスを探索 */
-  if(/* 動けるマスがあるか */ kari) {
+  if (/* 動けるマスがあるか */ kari) {
     /* 移動元の座標と駒の種類を記録しておく */
     showMessage("駒を移動させるマスを選んでください。");
   } else {
@@ -78,13 +77,12 @@ function handlePlacePiece(x, y) {
 function onClickCapturedPiece(player, index) {
   if (index < capturedPieces[player].length) {
     /* 駒が置けるマスを探索 */
-    if(/* 置けるマスがあるか */ kari) {
+    if (/* 置けるマスがあるか */ kari) {
       /* 置こうとしている駒の種類を記録 */
       showMessage("駒を置くマスを選んでください。");
     } else {
       showMessage("駒を置けるマスがありません。");
     }
-    
   }
 }
 
