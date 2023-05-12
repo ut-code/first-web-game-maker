@@ -4,11 +4,17 @@ import insertHelloWorldAtTopCommand from "./contents/commands/insertHelloWorldAt
 import insertAtCursorCommand from "./contents/commands/insertAtCursor";
 import deleteAfterCursorCommand from "./contents/commands/deleteAfterCursor";
 import htmlCommands from "./contents/commands/htmlCommands";
+import insertSugorokuHtmlAtTopCommand from "./contents/commands/insertSugorokuHtmlAtTop";
+import insertShogiHtmlAtTopCommand from "./contents/commands/insertShogiHtmlAtTop";
+import insertShogiJsAtTopCommand from "./contents/commands/insertShogiJsAtTop";
 
 const commands: Command[] = [
   insertHelloWorldAtTopCommand,
   insertAtCursorCommand,
   deleteAfterCursorCommand,
+  insertSugorokuHtmlAtTopCommand,
+  insertShogiHtmlAtTopCommand,
+  insertShogiJsAtTopCommand,
   ...htmlCommands,
 ];
 

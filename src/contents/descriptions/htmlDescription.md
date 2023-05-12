@@ -8,17 +8,6 @@
 
 コードブロックはこんな感じで書けます。なんと、シンタックスハイライトもできます！
 
-\`\`\`js
+```js
 document.write("Hello, World!");
-\`\`\`
-
-HTML もこんな感じでかけます。このボタンは、Webview から VS Code にメッセージを送るサンプルです。ボタンを押すと、VS Code のウィンドウにメッセージが表示されます。
-
-<button id="alert">alert</button>
-
-<script>
-  const vscode = acquireVsCodeApi();
-  document.getElementById("alert").onclick = () =>{
-    vscode.postMessage({type: "alert", message: "Hello, World!"});
-  }
-</script>
+```
