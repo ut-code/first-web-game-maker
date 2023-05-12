@@ -51,7 +51,7 @@ function マスがクリックされた時(x, y) {
   /* ゲームの状態に応じて下3つのどれかに処理を分ける */
 }
 
-function 盤面の駒が選ばれた時(x, y) {
+function 動かす駒の選択(x, y) {
   /* 駒が動けるマスを探索 */
   if (/* 動けるマスがあるか */ kari) {
     /* 移動元の座標と駒の種類を記録しておく */
@@ -61,13 +61,13 @@ function 盤面の駒が選ばれた時(x, y) {
   }
 }
 
-function 駒の移動先が選ばれた時(x, y) {
+function 駒の移動先の選択(x, y) {
   /* 駒の移動 */
   // マスの描画(移動元x, 移動元y);
   renderCell(x, y);
 }
 
-function 持ち駒を置くマスが選ばれた時(x, y) {
+function 持ち駒を置くマスの選択(x, y) {
   /* 駒の設置 */
   renderCell(x, y);
 }
@@ -184,7 +184,7 @@ function createBoardTable() {
       td.style.backgroundColor = マスの色;
       td.style.border = マスの境界線;
       td.onclick = () => {
-        マスがクリックされた時(j, i);
+        onClickCell(j, i);
       };
       boardTds[i][j] = td;
     }
