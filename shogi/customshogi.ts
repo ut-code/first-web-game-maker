@@ -930,7 +930,7 @@ class MatchBoard extends IBoard {
       } as unknown as PlayLogComplete;
       this.#updateMovablePieceMap();
 
-      this.IO.startTurnMessage(this.turnPlayer === PlayerIndex.WHITE ? 0 : 1);
+      this.IO.startTurnMessaging(this.turnPlayer === PlayerIndex.WHITE ? 0 : 1);
       Turn: while (true) {
         const target = converter(
           await this.IO.selectBoard(
@@ -1006,7 +1006,10 @@ class MatchBoard extends IBoard {
           this.IO.renderCapturedPiece(
             this.turnPlayer === PlayerIndex.WHITE ? 0 : 1,
             [...this.pieceStands.get(this.turnPlayer)!.entries()].map(
-              ([kind, num]) => [new kind(undefined as any).SYMBOL, num]
+              ([kind, num]) => ({
+                name: new kind(undefined as any).SYMBOL,
+                count: num,
+              })
             )
           );
           break Turn;
@@ -1031,24 +1034,31 @@ const players = {
 
 type PlayerExpression = keyof typeof players;
 interface IOFunctions {
+  // done
   initializeBoardVisualization: () => void;
-  startTurnMessage: (player: PlayerExpression) => void;
+  // done
+  startTurnMessaging: (player: PlayerExpression) => void;
+  // done
+  showMessage: (message: string) => void;
+  // NOT done
   selectBoard: <T extends [number, number] | PieceType>(
     options: Iterable<T>,
     message: string,
     cancel: boolean
   ) => Promise<T | null>;
+  // NOT done
   selectPromotion: (options: PieceType[]) => Promise<PieceType>;
-  showMessage: (message: string) => void;
+  // done
   renderCell: (
     y: number,
     x: number,
     player: PlayerExpression,
     pieceName: string | ""
   ) => void;
+  // done
   renderCapturedPiece: (
     player: PlayerExpression,
-    pieceNameAndNum: [string, number][]
+    pieceNameAndNum: { name: string; count: number }[]
   ) => void;
 }
 

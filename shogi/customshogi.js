@@ -495,7 +495,7 @@ class MatchBoard extends IBoard {
                 turnPlayer: this.turnPlayer,
             };
             __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_updateMovablePieceMap).call(this);
-            this.IO.startTurnMessage(this.turnPlayer === PlayerIndex.WHITE ? 0 : 1);
+            this.IO.startTurnMessaging(this.turnPlayer === PlayerIndex.WHITE ? 0 : 1);
             Turn: while (true) {
                 const target = converter(await this.IO.selectBoard([
                     ...[...__classPrivateFieldGet(this, _MatchBoard_movablePieceMapCache, "f").keys()].map(this.coordToNum),
@@ -533,7 +533,10 @@ class MatchBoard extends IBoard {
                     }
                     __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_drop).call(this, target, goal, playLog);
                     this.IO.renderCell(...this.coordToNum(goal), this.turnPlayer === PlayerIndex.WHITE ? 0 : 1, new target(undefined).SYMBOL);
-                    this.IO.renderCapturedPiece(this.turnPlayer === PlayerIndex.WHITE ? 0 : 1, [...this.pieceStands.get(this.turnPlayer).entries()].map(([kind, num]) => [new kind(undefined).SYMBOL, num]));
+                    this.IO.renderCapturedPiece(this.turnPlayer === PlayerIndex.WHITE ? 0 : 1, [...this.pieceStands.get(this.turnPlayer).entries()].map(([kind, num]) => ({
+                        name: new kind(undefined).SYMBOL,
+                        count: num,
+                    })));
                     break Turn;
                 }
             }

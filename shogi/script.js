@@ -50,11 +50,11 @@ startGame();
 // ===========================================
 // クリックに対する処理
 
-function マスがクリックされた時(x, y) {
+function マスがクリックされた時(y, x) {
   /* ゲームの状態に応じて下3つのどれかに処理を分ける */
 }
 
-function 動かす駒の選択(x, y) {
+function 動かす駒の選択(y, x) {
   /* 駒が動けるマスを探索 */
   if (/* 動けるマスがあるか */ kari) {
     /* 移動元の座標と駒の種類を記録しておく */
@@ -64,15 +64,15 @@ function 動かす駒の選択(x, y) {
   }
 }
 
-function 駒の移動先の選択(x, y) {
+function 駒の移動先の選択(y, x) {
   /* 駒の移動 */
   // マスの描画(移動元x, 移動元y);
-  renderCell(x, y);
+  renderCell(y, x);
 }
 
-function 持ち駒を置くマスの選択(x, y) {
+function 持ち駒を置くマスの選択(y, x) {
   /* 駒の設置 */
-  renderCell(x, y);
+  renderCell(y, x);
 }
 
 function 持ち駒がクリックされた時(player, index) {
@@ -98,17 +98,25 @@ function startTurn(player) {
 // ===========================================
 // 基本的に変更不要な処理
 
+// added by Logic section
+function initializeBoardVisualization() {
+  createBoardTable();
+  initCapturedPieceDivs();
+}
+
 // ゲーム開始
 function startGame() {
   createBoardTable();
   initCapturedPieceDivs();
   for (let i = 0; i < 縦のマス数; i++) {
     for (let j = 0; j < 横のマス数; j++) {
-      renderCell(j, i);
+      let pieceId = currentBoard[j][i];
+      let pieceName = pieces[pieceId].name;
+      renderCell(j, i, 1, pieceName);
     }
   }
-  renderCapturedPiece(0);
-  renderCapturedPiece(1);
+  renderCapturedPiece(0, capturedPieces[0]);
+  renderCapturedPiece(1, capturedPieces[0]);
   startTurn(0);
 }
 
@@ -167,7 +175,7 @@ async function selectBoard(options, message, canCancel) {
     // マス
     for (let i = 0; i < height; i++) {
       for (let j = 0; j < width; j++) {
-        if (/* TODO 選択可能か */) {
+        if (/* TODO 選択可能か */ kari) {
           tds[i][j].style.backgroundColor = 選択可能なマスの色;
           tds[i][j].onclick = () => handleBoardClick(resolve /* TODO */);
         }
@@ -201,10 +209,9 @@ function resetCellColor() {
 
 // 駒をマスに描画
 // TODO pieces, currentBoard
-function renderCell(x, y) {
-  let pieceId = currentBoard[y][x];
+function renderCell(y, x, player, pieceName) {
   const td = boardTds[y][x];
-  if (/* TODO 1Pの駒かどうか */ kari) {
+  if (player === 0) {
     td.style.color = 先手の駒の色;
     td.style.transform = "rotate(0deg)";
   } else {
@@ -213,14 +220,14 @@ function renderCell(x, y) {
       td.style.transform = "rotate(180deg)";
     }
   }
-  td.textContent = pieces[pieceId].name;
+  td.textContent = pieceName;
 }
 
 // 持ち駒を描画
 // TODO capturedPieces, pieces
-function renderCapturedPiece(player) {
+function renderCapturedPiece(player, pieceNameAndNum) {
   const childrenLength = capturedPieceDivs[player].children.length;
-  const capturedPiecesLength = capturedPieces[player].length;
+  const capturedPiecesLength = pieceNameAndNum.length;
   if (childrenLength < capturedPiecesLength) {
     // 不足分のdiv要素を生成
     for (let i = childrenLength; i < capturedPiecesLength; i++) {
@@ -230,10 +237,10 @@ function renderCapturedPiece(player) {
 
   for (let i = 0; i < capturedPiecesLength; i++) {
     capturedPieceDivs[player].children[i].children[0].textContent =
-      capturedPieces[player][i].name;
+      pieceNameAndNum[i].name;
     capturedPieceDivs[player].children[
       i
-    ].children[1].textContent = ` x ${capturedPieces[player][i].count}`;
+    ].children[1].textContent = ` x ${pieceNameAndNum[i].count}`;
   }
 }
 
