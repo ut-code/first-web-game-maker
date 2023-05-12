@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import { type PanelData } from "../types/panelData";
-import getFileContentFromPath from "./getFileContentFromPath";
 import convertMarkdownToHtml from "./convertMarkdownToHtml";
 
 export default function toPanel(
@@ -29,17 +28,12 @@ export default function toPanel(
     .join("")}</script>`;
   const header = html + js;
 
-  panel.webview.html =
-    header +
-    convertMarkdownToHtml(getFileContentFromPath(panelDataList[0].path));
+  panel.webview.html = header + convertMarkdownToHtml(panelDataList[0].content);
 
   panel.webview.onDidReceiveMessage(
     (message) => {
       panel.webview.html =
-        header +
-        convertMarkdownToHtml(
-          getFileContentFromPath(panelDataList[message.type].path)
-        );
+        header + convertMarkdownToHtml(panelDataList[message.type].content);
     },
     undefined,
     context.subscriptions
