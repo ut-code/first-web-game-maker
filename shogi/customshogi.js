@@ -333,6 +333,9 @@ class IPiece {
             : this.MOVE;
         return referentMove.validDestination(board, this.controller, myCoordinate);
     }
+    static toString() {
+        return new this(undefined).SYMBOL;
+    }
     // TODO: 本当に動くのか?
     static updatePromotion(promotedPieces) {
         const original = this;
@@ -498,8 +501,8 @@ class MatchBoard extends IBoard {
             this.IO.startTurnMessaging(this.turnPlayer === PlayerIndex.WHITE ? 0 : 1);
             Turn: while (true) {
                 const target = converter(await this.IO.selectBoard([
-                    ...[...__classPrivateFieldGet(this, _MatchBoard_movablePieceMapCache, "f").keys()].map(this.coordToNum),
-                    ...this.pieceStands.get(this.turnPlayer).keys(),
+                    [...__classPrivateFieldGet(this, _MatchBoard_movablePieceMapCache, "f").keys()].map(this.coordToNum),
+                    [...this.pieceStands.get(this.turnPlayer).keys()],
                 ], "移動させる駒か打つ駒を選んでください。", false));
                 if (target === null) {
                     this.IO.showMessage(`Game end: the winner is ${String(PlayerIndex.nextPlayer(this.turnPlayer))}`);
@@ -507,7 +510,9 @@ class MatchBoard extends IBoard {
                 }
                 if (target instanceof AbsoluteCoordinate) {
                     // コマを動かす
-                    const goal = converter(await this.IO.selectBoard([...__classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_currentMovablePieceMap_get).get(target)].map(this.coordToNum), "駒を移動させるマスを選んでください。", true));
+                    const goal = converter(await this.IO.selectBoard([
+                        [...__classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_currentMovablePieceMap_get).get(target)].map(this.coordToNum),
+                    ], "駒を移動させるマスを選んでください。", true));
                     if (goal === null) {
                         continue Turn;
                     }
@@ -527,7 +532,7 @@ class MatchBoard extends IBoard {
                 }
                 else {
                     // コマを打つ
-                    const goal = converter(await this.IO.selectBoard([...__classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_dropDestination).call(this)].map(this.coordToNum), "駒を置くマスを選んでください。", true));
+                    const goal = converter(await this.IO.selectBoard([[...__classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_dropDestination).call(this)].map(this.coordToNum)], "駒を置くマスを選んでください。", true));
                     if (goal === null) {
                         continue Turn;
                     }

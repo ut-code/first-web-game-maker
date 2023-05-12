@@ -28,6 +28,14 @@ function 初期化処理() {}
 
 // ===========================================
 
+const mediatorY = document.getElementById("mediator_y");
+const mediatorX = document.getElementById("mediator_x");
+
+function onClickCell(i, j) {
+  mediatorY.textContent = i;
+  mediatorX.textContent = j;
+}
+
 // for test
 const currentBoard = [
   [1, 1, 1],
@@ -138,19 +146,19 @@ function showMessage(message) {
 }
 
 // 選択肢付きの質問を表示
-async function showQuestion(message, options) {
+async function showQuestion(options, message) {
   messageDiv.textContent = message;
   const buttons = options.map((option) => {
     const button = document.createElement("button");
     messageDiv.appendChild(button);
-    button.textContent = option;
+    button.textContent = option.toString();
     button.style.marginLeft = "5px";
     return button;
   });
   return new Promise((resolve) => {
     buttons.forEach((button, index) => {
       button.onclick = () => {
-        resolve(index); // 必要であれば修正してください
+        resolve(options[index]); // 必要であれば修正してください
         while (messageDiv.childElementCount > 0) {
           messageDiv.removeChild(messageDiv.lastChild);
         }
@@ -158,12 +166,13 @@ async function showQuestion(message, options) {
     });
   });
 }
-
+// lookup PieceType => 箱: .Symbol
 // マスや持ち駒のクリックによる入力を受付
+// 未完成
 async function selectBoard(options, message, canCancel) {
-  if (message) {
-    showMessage(message);
-  }
+  const boardOption = options[0];
+  const pieceOption = options[1];
+  showMessage(message);
   return new Promise((resolve) => {
     // キャンセルボタン
     const button = document.createElement("button");
@@ -188,6 +197,7 @@ async function selectBoard(options, message, canCancel) {
     }
   });
 }
+
 function handleBoardClick(resolve, response) {
   resolve(response);
   resetCellColor();
@@ -195,6 +205,7 @@ function handleBoardClick(resolve, response) {
     messageDiv.removeChild(messageDiv.firstChild);
   }
 }
+
 function resetCellColor() {
   for (let i = 0; i < height; i++) {
     for (let j = 0; j < width; j++) {
@@ -264,7 +275,7 @@ function createBoardTable() {
       td.style.backgroundColor = マスの色;
       td.style.border = マスの境界線;
       td.onclick = () => {
-        onClickCell(j, i);
+        onClickCell(i, j);
       };
       boardTds[i][j] = td;
     }
@@ -321,7 +332,7 @@ function createCapturedPieceColumn(capturedPieceDiv, player, index) {
 }
 
 async function test1() {
-  const a = await showQuestion("test", ["a", "b"]);
+  const a = await showQuestion(["a", "b"], "test");
   console.log(a);
 }
 test1();

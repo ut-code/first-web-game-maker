@@ -473,6 +473,10 @@ abstract class IPiece {
     return referentMove.validDestination(board, this.controller, myCoordinate);
   }
 
+  static toString(): string {
+    return new (this as PieceType)(undefined as any).SYMBOL;
+  }
+
   // TODO: 本当に動くのか?
   static updatePromotion(
     promotedPieces: Iterable<[PieceType, string?, string?]>
@@ -935,8 +939,8 @@ class MatchBoard extends IBoard {
         const target = converter(
           await this.IO.selectBoard(
             [
-              ...[...this.#movablePieceMapCache.keys()].map(this.coordToNum),
-              ...this.pieceStands.get(this.turnPlayer)!.keys(),
+              [...this.#movablePieceMapCache.keys()].map(this.coordToNum),
+              [...this.pieceStands.get(this.turnPlayer)!.keys()],
             ],
             "移動させる駒か打つ駒を選んでください。",
             false
@@ -953,10 +957,12 @@ class MatchBoard extends IBoard {
         if (target instanceof AbsoluteCoordinate) {
           // コマを動かす
           const goal = converter(
-            await this.IO.selectBoard(
-              [...this.#currentMovablePieceMap.get(target)!].map(
-                this.coordToNum
-              ),
+            await this.IO.selectBoard<undefined>(
+              [
+                [...this.#currentMovablePieceMap.get(target)!].map(
+                  this.coordToNum
+                ),
+              ],
               "駒を移動させるマスを選んでください。",
               true
             )
@@ -988,8 +994,8 @@ class MatchBoard extends IBoard {
         } else {
           // コマを打つ
           const goal = converter(
-            await this.IO.selectBoard(
-              [...this.#dropDestination()].map(this.coordToNum),
+            await this.IO.selectBoard<undefined>(
+              [[...this.#dropDestination()].map(this.coordToNum)],
               "駒を置くマスを選んでください。",
               true
             )
@@ -1041,12 +1047,16 @@ interface IOFunctions {
   // done
   showMessage: (message: string) => void;
   // NOT done
-  selectBoard: <T extends [number, number] | PieceType>(
-    options: Iterable<T>,
+  selectBoard: <T extends undefined | PieceType>(
+    options: T extends PieceType
+      ? [[number, number][], T[]]
+      : [[number, number][]],
     message: string,
     cancel: boolean
-  ) => Promise<T | null>;
-  // NOT done
+  ) => Promise<
+    (T extends PieceType ? PieceType : never) | [number, number] | null
+  >;
+  // done(showQuestion)
   selectPromotion: (options: PieceType[]) => Promise<PieceType>;
   // done
   renderCell: (
