@@ -39,7 +39,7 @@ level2 ではすごろくのコードを部分ごとに理解しながら、自�
 
 ### style
 
-```js
+```html
 <!DOCTYPE html>
 <html lang="ja">
   <head>
@@ -245,7 +245,7 @@ style を挿入するときは`<head>`と`</head>`の間に挿入しましょう
 
 ### 見出しを挿入
 
-```html
+```js
 <h1>すごろくゲーム</h1>
 ```
 
@@ -261,13 +261,13 @@ style を挿入するときは`<head>`と`</head>`の間に挿入しましょう
 
 ### settings
 
-```js
+```html
 <script>
-  // ゲームの定数と変数 
-  const BOARD_SIZE = 25; 
+  // ゲームの定数と変数
+  const BOARD_SIZE = 25;
   const CELL_SIZE = 100;
-  const　PLAYER_SIZE = 20; 
-  const positions = new Array(1, 1, 1, 1); 
+  const PLAYER_SIZE = 20;
+  const positions = new Array(1, 1, 1, 1);
   userNum = 0;
 </script>
 ```
