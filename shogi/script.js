@@ -13,8 +13,7 @@ const 駒のフォントサイズ = 24;
 const マスの色 = "white";
 const 選択可能なマスの色 = "yellow";
 const マスの境界線 = "1px black solid";
-const マスの縦の長さ = 40;
-const マスの横の長さ = 40;
+const マスの一辺の長さ = 40;
 
 const 先手の持ち駒置き場の色 = "white";
 const 後手の持ち駒置き場の色 = "white";
@@ -179,8 +178,8 @@ function createBoardTable() {
     for (let j = 0; j < 横のマス数; j++) {
       const td = document.createElement("td");
       tr.appendChild(td);
-      td.style.height = `${マスの縦の長さ}px`;
-      td.style.width = `${マスの横の長さ}px`;
+      td.style.height = `${マスの一辺の長さ}px`;
+      td.style.width = `${マスの一辺の長さ}px`;
       td.style.fontSize = `${駒のフォントサイズ}px`;
       td.style.backgroundColor = マスの色;
       td.style.border = マスの境界線;
@@ -200,7 +199,7 @@ function initCapturedPieceDivs() {
     capturedPieceDivs[1].style.backgroundColor = 後手の持ち駒置き場の色;
     capturedPieceDivs[1].style.border = 後手の持ち駒置き場の境界線;
     capturedPieceDivs.forEach((capturedPieceDiv, index) => {
-      capturedPieceDiv.style.width = `${マスの横の長さ * 2}px`;
+      capturedPieceDiv.style.width = `${マスの一辺の長さ * 2}px`;
       capturedPieceDiv.style.textAlign = "center";
       for (let i = 0; i < 縦のマス数; i++) {
         createCapturedPieceColumn(capturedPieceDiv, index, i);
@@ -220,7 +219,7 @@ function createCapturedPieceColumn(capturedPieceDiv, player, index) {
   div.onclick = () => {
     持ち駒がクリックされた時(player, index);
   };
-  div.style.height = `${マスの縦の長さ}px`;
+  div.style.height = `${マスの一辺の長さ}px`;
   const pieceNameSpan = document.createElement("span");
   div.appendChild(pieceNameSpan);
   const pieceCountSpan = document.createElement("span");
