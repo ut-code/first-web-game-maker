@@ -1,9 +1,7 @@
-
-
 class DefaultDict<K, V> extends Map<K, V> {
   constructor(
     public defaultFactory: () => V,
-    iterable?: Iterable<readonly [K, V]> | null,
+    iterable?: Iterable<readonly [K, V]> | null
   ) {
     super(iterable);
   }
@@ -18,59 +16,66 @@ class DefaultDict<K, V> extends Map<K, V> {
   }
 }
 
-
 class Counter<K> extends DefaultDict<K, number> {
-  constructor(
-    iterable?: Iterable<readonly [K, number]> | null,
-  ) {
+  constructor(iterable?: Iterable<readonly [K, number]> | null) {
     super(() => 0, iterable);
   }
 }
 
-
 class Coordinate {
-    constructor(
-      public readonly y: number,
-      public readonly x: number,
-    ) {}
+  constructor(public readonly y: number, public readonly x: number) {}
 
-    toString(): string {
-      return `${this.constructor.name}${this.y, this.x}`
-    }
+  toString(): string {
+    return `${this.constructor.name}${(this.y, this.x)}`;
+  }
 
-    add<T extends Coordinate>(coord: Coordinate): T {
-      return new (this.constructor as { new (y: number, x: number): T })(this.y + coord.y, this.x + coord.x);
-    }
-  
-    eq(coord: Coordinate): boolean {
-      return (this.y === coord.y) && (this.x === coord.x);
-    }
+  add<T extends Coordinate>(coord: Coordinate): T {
+    return new (this.constructor as { new (y: number, x: number): T })(
+      this.y + coord.y,
+      this.x + coord.x
+    );
+  }
+
+  eq(coord: Coordinate): boolean {
+    return this.y === coord.y && this.x === coord.x;
+  }
 }
-
 
 class AbsoluteCoordinate extends Coordinate {
   get xInverted() {
-    return new AbsoluteCoordinate(this.y, -this.x-1);
+    return new AbsoluteCoordinate(this.y, -this.x - 1);
   }
 
   get yInverted() {
-    return new AbsoluteCoordinate(-this.y-1, this.x);
+    return new AbsoluteCoordinate(-this.y - 1, this.x);
   }
 
   get fullInverted() {
-    return new AbsoluteCoordinate(-this.y-1, -this.x-1);
+    return new AbsoluteCoordinate(-this.y - 1, -this.x - 1);
   }
 
   isInside(board: IBoard, strict: boolean = true): boolean {
     if (strict) {
-      return (0 <= this.y) && (this.y < board.height) && (0 <= this.x) && (this.x < board.width);
+      return (
+        0 <= this.y &&
+        this.y < board.height &&
+        0 <= this.x &&
+        this.x < board.width
+      );
     }
-    return (-board.height <= this.y) && (this.y < board.height) && (-board.width <= this.x) && (this.x < board.width);
+    return (
+      -board.height <= this.y &&
+      this.y < board.height &&
+      -board.width <= this.x &&
+      this.x < board.width
+    );
   }
 
   normalizedBy(board: IBoard, negative: boolean = false): AbsoluteCoordinate {
-    if (!(this.isInside(board, false))) {
-      throw RangeError(`${this.toString()} is out of the board ${board.height, board.width}`);
+    if (!this.isInside(board, false)) {
+      throw RangeError(
+        `${this.toString()} is out of the board ${(board.height, board.width)}`
+      );
     }
     return new AbsoluteCoordinate(
       this.#normalizer(this.y, board.height, negative),
@@ -78,7 +83,11 @@ class AbsoluteCoordinate extends Coordinate {
     );
   }
 
-  #normalizer(target: number, standard: number, negative: boolean = false): number {
+  #normalizer(
+    target: number,
+    standard: number,
+    negative: boolean = false
+  ): number {
     if (negative) {
       if (target >= 0) {
         return target - standard;
@@ -89,7 +98,6 @@ class AbsoluteCoordinate extends Coordinate {
     return target;
   }
 }
-
 
 class RelativeCoordinate extends Coordinate {
   get xInverted() {
@@ -113,16 +121,15 @@ class RelativeCoordinate extends Coordinate {
   }
 }
 
-
 class PlayerIndex {
-  static readonly WHITE = Symbol('White');
-  static readonly BLACK = Symbol('Black');
+  static readonly WHITE = Symbol("White");
+  static readonly BLACK = Symbol("Black");
 
   static relation(self: Player, value?: Player): RelationType {
-    if (value == undefined) {
+    if (value === undefined) {
       return Relation.TO_BLANK;
     }
-    if ((value !== this.WHITE) && (value !== this.BLACK)) {
+    if (value !== this.WHITE && value !== this.BLACK) {
       throw new TypeError();
     }
     if (self === value) {
@@ -143,14 +150,12 @@ class PlayerIndex {
 }
 type Player = typeof PlayerIndex.WHITE | typeof PlayerIndex.BLACK;
 
-
 const Relation = {
-  TO_BLANK: Symbol('To blank'),
-  FRIEND: Symbol('Friend'),
-  ENEMY: Symbol('Enemy'),
+  TO_BLANK: Symbol("To blank"),
+  FRIEND: Symbol("Friend"),
+  ENEMY: Symbol("Enemy"),
 } as const;
-type RelationType = typeof Relation[keyof typeof Relation];
-
+type RelationType = (typeof Relation)[keyof typeof Relation];
 
 const Approachability = {
   REJECT: { canLand: false, canGoOver: false },
@@ -158,8 +163,7 @@ const Approachability = {
   ONLY_PASS: { canLand: false, canGoOver: true },
   CONTINUE: { canLand: true, canGoOver: true },
 } as const;
-type ApproachabilityType = { canLand: boolean, canGoOver: boolean };
-
+type ApproachabilityType = { canLand: boolean; canGoOver: boolean };
 
 const TInteraction = {
   NORMAL: new Map<RelationType, ApproachabilityType>([
@@ -180,22 +184,20 @@ const TInteraction = {
 } as const;
 type Interaction = Map<RelationType, ApproachabilityType>;
 
-
 abstract class IMove {
-  add(move: IMove): MoveParallelJoint{
+  add(move: IMove): MoveParallelJoint {
     if (move instanceof MoveParallelJoint) {
       return new MoveParallelJoint(this, ...move.move);
     }
     return new MoveParallelJoint(this, move);
-  };
+  }
 
   abstract validDestination(
     board: IBoard,
     controller: Player,
-    currentCoordinate: AbsoluteCoordinate,
+    currentCoordinate: AbsoluteCoordinate
   ): Set<AbsoluteCoordinate>;
 }
-
 
 class LeaperMove extends IMove {
   interaction: Map<symbol, ApproachabilityType>;
@@ -203,8 +205,8 @@ class LeaperMove extends IMove {
 
   constructor(
     coordinates: Iterable<RelativeCoordinate>,
-    symmetry: 'none' | 'lr' | 'fblr' | 'oct' = 'none',
-    interaction?: Interaction,
+    symmetry: "none" | "lr" | "fblr" | "oct" = "none",
+    interaction?: Interaction
   ) {
     super();
 
@@ -217,62 +219,70 @@ class LeaperMove extends IMove {
 
     this.#coordinates = new Set(coordinates);
     switch (symmetry) {
-      case 'oct':
-        for (const coord of [...this.#coordinates]){
+      case "oct":
+        for (const coord of [...this.#coordinates]) {
           this.#coordinates.add(coord.upsideLeft);
         }
-      case 'fblr':
-        for (const coord of [...this.#coordinates]){
+      case "fblr":
+        for (const coord of [...this.#coordinates]) {
           this.#coordinates.add(coord.yInverted);
         }
-      case 'lr':
-        for (const coord of [...this.#coordinates]){
+      case "lr":
+        for (const coord of [...this.#coordinates]) {
           this.#coordinates.add(coord.xInverted);
         }
-      case 'none':
-        ;
+      case "none":
     }
   }
 
   derive(
     coordinates: Iterable<RelativeCoordinate>,
-    symmetry: 'none' | 'lr' | 'fblr' | 'oct' = 'none',
-    interaction?: Interaction,
-  ){
-    return new (this.constructor as { new (
-      coordinates: Iterable<RelativeCoordinate>,
-      symmetry?: 'none' | 'lr' | 'fblr' | 'oct',
-      interaction?: Interaction,  
-    ): LeaperMove })(
+    symmetry: "none" | "lr" | "fblr" | "oct" = "none",
+    interaction?: Interaction
+  ) {
+    return new (this.constructor as {
+      new (
+        coordinates: Iterable<RelativeCoordinate>,
+        symmetry?: "none" | "lr" | "fblr" | "oct",
+        interaction?: Interaction
+      ): LeaperMove;
+    })(
       coordinates ?? this.#coordinates,
       symmetry,
-      interaction ?? this.interaction,
+      interaction ?? this.interaction
     );
   }
 
   coordinatesInController(controller: Player): Set<RelativeCoordinate> {
-    return controller === PlayerIndex.WHITE ? this.#coordinates
-      : new Set([...this.#coordinates].map(
-        (value: RelativeCoordinate) => value.fullInverted
-      ));
+    return controller === PlayerIndex.WHITE
+      ? this.#coordinates
+      : new Set(
+          [...this.#coordinates].map(
+            (value: RelativeCoordinate) => value.fullInverted
+          )
+        );
   }
 
   validDestination(
     board: IBoard,
     controller: Player,
-    currentCoordinate: AbsoluteCoordinate,
+    currentCoordinate: AbsoluteCoordinate
   ): Set<AbsoluteCoordinate> {
     const destinations = new Set<AbsoluteCoordinate>();
     for (const movement of this.coordinatesInController(controller)) {
-      const newCoordinate: AbsoluteCoordinate = currentCoordinate.add<AbsoluteCoordinate>(movement);
-      if (!(newCoordinate.isInside(board))) {
+      const newCoordinate: AbsoluteCoordinate =
+        currentCoordinate.add<AbsoluteCoordinate>(movement);
+      if (!newCoordinate.isInside(board)) {
         continue;
       }
       const targetSquare = board.square(newCoordinate);
       if (targetSquare.isExcluded) {
         continue;
       }
-      const relation: RelationType = PlayerIndex.relation(controller, targetSquare.piece?.controller);
+      const relation: RelationType = PlayerIndex.relation(
+        controller,
+        targetSquare.piece?.controller
+      );
       if (this.interaction.get(relation)!.canLand) {
         destinations.add(newCoordinate);
       }
@@ -281,15 +291,14 @@ class LeaperMove extends IMove {
   }
 }
 
-
 class RiderMove extends IMove {
   interaction: Map<symbol, ApproachabilityType>;
   #coordinatesToDist: Map<RelativeCoordinate, number>;
 
   constructor(
     coordinatesToDist: Map<RelativeCoordinate, number>,
-    symmetry: 'none' | 'lr' | 'fblr' | 'oct' = 'none',
-    interaction?: Interaction,
+    symmetry: "none" | "lr" | "fblr" | "oct" = "none",
+    interaction?: Interaction
   ) {
     super();
 
@@ -300,60 +309,69 @@ class RiderMove extends IMove {
       }
     }
 
-    const adoptDist = (dist1: number, dist2: number) => 
-      ((dist1 < 0) || (dist2 < 0)) ? -1 : Math.max(dist1, dist2);
-    this.#coordinatesToDist = new DefaultDict(() => 0, coordinatesToDist)
+    const adoptDist = (dist1: number, dist2: number) =>
+      dist1 < 0 || dist2 < 0 ? -1 : Math.max(dist1, dist2);
+    this.#coordinatesToDist = new DefaultDict(() => 0, coordinatesToDist);
     switch (symmetry) {
-      case 'oct':
-        for (const [coord, dist] of [...this.#coordinatesToDist]){
+      case "oct":
+        for (const [coord, dist] of [...this.#coordinatesToDist]) {
           this.#coordinatesToDist.set(
             coord.upsideLeft,
             adoptDist(this.#coordinatesToDist.get(coord.upsideLeft)!, dist)
           );
         }
-      case 'fblr':
-        for (const [coord, dist] of [...this.#coordinatesToDist]){
+      case "fblr":
+        for (const [coord, dist] of [...this.#coordinatesToDist]) {
           this.#coordinatesToDist.set(
             coord.upsideLeft,
             adoptDist(this.#coordinatesToDist.get(coord.yInverted)!, dist)
           );
         }
-      case 'lr':
-        for (const [coord, dist] of [...this.#coordinatesToDist]){
+      case "lr":
+        for (const [coord, dist] of [...this.#coordinatesToDist]) {
           this.#coordinatesToDist.set(
             coord.upsideLeft,
             adoptDist(this.#coordinatesToDist.get(coord.xInverted)!, dist)
           );
         }
-      case 'none':
-        ;
+      case "none":
     }
   }
 
   derive(
     coordinatesToDist: Map<RelativeCoordinate, number>,
-    symmetry: 'none' | 'lr' | 'fblr' | 'oct' = 'none',
-    interaction?: Interaction,
-  ){
-    return new (this.constructor as { new (
-      coordinatesToDist: Map<RelativeCoordinate, number>,
-      symmetry?: 'none' | 'lr' | 'fblr' | 'oct',
-      interaction?: Interaction,  
-    ): RiderMove })(
+    symmetry: "none" | "lr" | "fblr" | "oct" = "none",
+    interaction?: Interaction
+  ) {
+    return new (this.constructor as {
+      new (
+        coordinatesToDist: Map<RelativeCoordinate, number>,
+        symmetry?: "none" | "lr" | "fblr" | "oct",
+        interaction?: Interaction
+      ): RiderMove;
+    })(
       coordinatesToDist ?? this.#coordinatesToDist,
       symmetry,
-      interaction ?? this.interaction,
+      interaction ?? this.interaction
     );
   }
 
   coordinatesInController(controller: Player): Map<RelativeCoordinate, number> {
-    return controller === PlayerIndex.WHITE ? this.#coordinatesToDist
-      : new Map([...this.#coordinatesToDist].map(
-        ([coord, dist]) => [coord.fullInverted, dist]
-      ));
+    return controller === PlayerIndex.WHITE
+      ? this.#coordinatesToDist
+      : new Map(
+          [...this.#coordinatesToDist].map(([coord, dist]) => [
+            coord.fullInverted,
+            dist,
+          ])
+        );
   }
 
-  validDestination(board: IBoard, controller: Player, currentCoordinate: AbsoluteCoordinate): Set<AbsoluteCoordinate> {
+  validDestination(
+    board: IBoard,
+    controller: Player,
+    currentCoordinate: AbsoluteCoordinate
+  ): Set<AbsoluteCoordinate> {
     const destinations = new Set<AbsoluteCoordinate>();
     for (let [movement, maxDist] of this.coordinatesInController(controller)) {
       if (maxDist < 0) {
@@ -364,18 +382,21 @@ class RiderMove extends IMove {
         moveNum <= maxDist;
         ++moveNum, newCoordinate = newCoordinate.add(movement)
       ) {
-        if (!(newCoordinate.isInside(board))) {
+        if (!newCoordinate.isInside(board)) {
           break;
         }
         const targetSquare = board.square(newCoordinate);
         if (targetSquare.isExcluded) {
           continue;
         }
-        const relation: RelationType = PlayerIndex.relation(controller, targetSquare.piece?.controller);
+        const relation: RelationType = PlayerIndex.relation(
+          controller,
+          targetSquare.piece?.controller
+        );
         if (this.interaction.get(relation)!.canLand) {
           destinations.add(newCoordinate);
         }
-        if (!(this.interaction.get(relation)!.canGoOver)) {
+        if (!this.interaction.get(relation)!.canGoOver) {
           break;
         }
       }
@@ -384,11 +405,10 @@ class RiderMove extends IMove {
   }
 }
 
-
 class MoveParallelJoint extends IMove {
   move: IMove[];
 
-  constructor(...move: IMove[]){
+  constructor(...move: IMove[]) {
     super();
     this.move = move;
   }
@@ -407,7 +427,11 @@ class MoveParallelJoint extends IMove {
   ): Set<AbsoluteCoordinate> {
     const coords: Set<AbsoluteCoordinate> = new Set();
     for (const moveElement of this.move) {
-      for (const coord of moveElement.validDestination(board, controller, currentCoordinate)) {
+      for (const coord of moveElement.validDestination(
+        board,
+        controller,
+        currentCoordinate
+      )) {
         coords.add(coord);
       }
     }
@@ -422,7 +446,7 @@ class MoveParallelJoint extends IMove {
 abstract class IPiece {
   constructor(
     public controller?: Player,
-    public isUntouched: boolean = false,
+    public isUntouched: boolean = false
   ) {}
 
   abstract NAME: string;
@@ -436,19 +460,26 @@ abstract class IPiece {
   FORCE_PROMOTE: boolean = false;
   ORIGINAL_PIECE: PieceType = this.constructor as PieceType;
 
-  validDestination(board: IBoard, myCoordinate: AbsoluteCoordinate): Set<AbsoluteCoordinate> {
-    if (!(this.controller)) {
+  validDestination(
+    board: IBoard,
+    myCoordinate: AbsoluteCoordinate
+  ): Set<AbsoluteCoordinate> {
+    if (!this.controller) {
       throw new Error("no support for dummy piece");
     }
-    const referentMove: IMove = this.isUntouched ? this.INITIAL_MOVE : this.MOVE;
+    const referentMove: IMove = this.isUntouched
+      ? this.INITIAL_MOVE
+      : this.MOVE;
     return referentMove.validDestination(board, this.controller, myCoordinate);
   }
 
   // TODO: 本当に動くのか?
-  static updatePromotion(promotedPieces: Iterable<[PieceType, string?, string?]>): void {
+  static updatePromotion(
+    promotedPieces: Iterable<[PieceType, string?, string?]>
+  ): void {
     const original = this as PieceType;
     const truePromotedPieces = new Set<PieceType>();
-    for (const [piece, name, symbol] of promotedPieces){
+    for (const [piece, name, symbol] of promotedPieces) {
       class _ extends piece {
         NAME = name ?? super.NAME;
         SYMBOL = symbol ?? super.SYMBOL;
@@ -459,78 +490,79 @@ abstract class IPiece {
     }
     original.prototype.constructor = function (
       controller?: Player,
-      isUntouched: boolean = false,
+      isUntouched: boolean = false
     ) {
-      (original.prototype.constructor as Function).bind(this, [controller, isUntouched]);
+      (original.prototype.constructor as Function).bind(this, [
+        controller,
+        isUntouched,
+      ]);
       this.PROMOTE_DEFAULT = truePromotedPieces;
-    }
+    };
   }
 }
-type PieceType = 
-  Pick<typeof IPiece, keyof typeof IPiece>
-  & (new (controller: Player, isUntouched?: boolean) => RealPiece);
+type PieceType = Pick<typeof IPiece, keyof typeof IPiece> &
+  (new (controller: Player, isUntouched?: boolean) => RealPiece);
 type RealPiece = Required<IPiece>;
 
 class Square {
   constructor(
     public piece: RealPiece | null = null,
-    public isExcluded: boolean = false,
+    public isExcluded: boolean = false
   ) {}
 }
 
-
 interface PlayLogBase {
-  state: 'defined',
-  board: IBoard,
-  totalStepCount: number,
-  chessTurnCount: number,
-  turnPlayer: Player,
+  state: "defined";
+  board: IBoard;
+  totalStepCount: number;
+  chessTurnCount: number;
+  turnPlayer: Player;
 }
 
 interface PlayLogAddition {
-  start?: AbsoluteCoordinate,
-  goal: AbsoluteCoordinate,
-  movingPiece: PieceType,
-  capturedPiece?: PieceType,
-  promoteTo?: PieceType,
+  start?: AbsoluteCoordinate;
+  goal: AbsoluteCoordinate;
+  movingPiece: PieceType;
+  capturedPiece?: PieceType;
+  promoteTo?: PieceType;
 }
 
-interface PlayLogComplete extends Omit<PlayLogBase, 'state'>, PlayLogAddition {
-  state: 'complete'
+interface PlayLogComplete extends Omit<PlayLogBase, "state">, PlayLogAddition {
+  state: "complete";
 }
 
 type PlayLogUnit = PlayLogBase | PlayLogComplete;
-
 
 abstract class IBoard {
   abstract height: number;
   abstract width: number;
   abstract board: Square[][];
-  abstract pieceInBoardIndex: Map<Player, DefaultDict<PieceType, Set<AbsoluteCoordinate>>>;
+  abstract pieceInBoardIndex: Map<
+    Player,
+    DefaultDict<PieceType, Set<AbsoluteCoordinate>>
+  >;
   abstract pieceStands: Map<Player, Counter<PieceType>>;
 
   balanceOf(
     coord: AbsoluteCoordinate,
-    controller: Player,
+    controller: Player
   ): [AbsoluteCoordinate, AbsoluteCoordinate] {
-    return controller === PlayerIndex.WHITE ? [
-      coord.normalizedBy(this, false),
-      coord.normalizedBy(this, true),
-    ] : [
-      coord.fullInverted.normalizedBy(this, false),
-      coord.fullInverted.normalizedBy(this, true),      
-    ];
+    return controller === PlayerIndex.WHITE
+      ? [coord.normalizedBy(this, false), coord.normalizedBy(this, true)]
+      : [
+          coord.fullInverted.normalizedBy(this, false),
+          coord.fullInverted.normalizedBy(this, true),
+        ];
   }
 
   squareRefererToString(coord: AbsoluteCoordinate): string {
-    return `${String.fromCharCode(97+coord.x)}${coord.y+1}`;
+    return `${String.fromCharCode(97 + coord.x)}${coord.y + 1}`;
   }
 
   square(coord: AbsoluteCoordinate): Square {
     return this.board[coord.y][coord.x];
   }
 }
-
 
 type PromotionCondition = (log: PlayLogComplete) => boolean;
 const TPromotionCondition = {
@@ -539,20 +571,27 @@ const TPromotionCondition = {
     allowInside: boolean = true,
     allowEscape: boolean = true,
     allowEnter: boolean = true,
-    allowOutside: boolean = false,
+    allowOutside: boolean = false
   ) {
     return (log: PlayLogComplete) => {
-      if (!(log.start)) {
+      if (!log.start) {
         return false;
       }
-      const isBeforeIn = row >= -log.board.balanceOf(log.start, log.turnPlayer)[1].y;
-      const isAfterIn = row >= -log.board.balanceOf(log.goal, log.turnPlayer)[1].y;
-      return isAfterIn ? (isBeforeIn ? allowInside : allowEnter) : (isBeforeIn ? allowEscape : allowOutside);
-    }
+      const isBeforeIn =
+        row >= -log.board.balanceOf(log.start, log.turnPlayer)[1].y;
+      const isAfterIn =
+        row >= -log.board.balanceOf(log.goal, log.turnPlayer)[1].y;
+      return isAfterIn
+        ? isBeforeIn
+          ? allowInside
+          : allowEnter
+        : isBeforeIn
+        ? allowEscape
+        : allowOutside;
+    };
   },
   capturedPiece: () => (log: PlayLogComplete) => Boolean(log.capturedPiece),
-}
-
+} as const;
 
 class MatchBoard extends IBoard {
   board: Square[][];
@@ -561,7 +600,10 @@ class MatchBoard extends IBoard {
   turnPlayer: Player;
   readonly promotionCondition: (log: PlayLogComplete) => boolean;
   pieceStands: Map<Player, Counter<PieceType>>;
-  pieceInBoardIndex: Map<Player, DefaultDict<PieceType, Set<AbsoluteCoordinate>>>;
+  pieceInBoardIndex: Map<
+    Player,
+    DefaultDict<PieceType, Set<AbsoluteCoordinate>>
+  >;
   #movablePieceMapCache: Map<AbsoluteCoordinate, Set<AbsoluteCoordinate>>;
 
   constructor(
@@ -572,7 +614,7 @@ class MatchBoard extends IBoard {
     readonly canUseCapturedPiece: boolean = false,
     promotionCondition?: (log: PlayLogComplete) => boolean,
     lrSymmetry: boolean = false,
-    wbSymmetry: 'none' | 'face' | 'cross' = 'none',
+    wbSymmetry: "none" | "face" | "cross" = "none"
   ) {
     super();
 
@@ -581,44 +623,71 @@ class MatchBoard extends IBoard {
     this.chessTurnCount = 0;
     this.turnPlayer = PlayerIndex.WHITE;
 
-    this.promotionCondition = promotionCondition ?? TPromotionCondition.oppornentField(Math.floor(this.height/3));
+    this.promotionCondition =
+      promotionCondition ??
+      TPromotionCondition.oppornentField(Math.floor(this.height / 3));
 
-    this.board = Array(this.height).map(() => Array(this.width).map(() => new Square()));
+    this.board = Array(this.height).map(() =>
+      Array(this.width).map(() => new Square())
+    );
     this.pieceStands = new Map<Player, Counter<PieceType>>([
       [PlayerIndex.WHITE, new Counter<PieceType>()],
       [PlayerIndex.BLACK, new Counter<PieceType>()],
     ]);
-    this.pieceInBoardIndex = new Map<Player, DefaultDict<PieceType, Set<AbsoluteCoordinate>>>([
-      [PlayerIndex.WHITE, new DefaultDict<PieceType, Set<AbsoluteCoordinate>>(() => new Set())],
-      [PlayerIndex.BLACK, new DefaultDict<PieceType, Set<AbsoluteCoordinate>>(() => new Set())],
+    this.pieceInBoardIndex = new Map<
+      Player,
+      DefaultDict<PieceType, Set<AbsoluteCoordinate>>
+    >([
+      [
+        PlayerIndex.WHITE,
+        new DefaultDict<PieceType, Set<AbsoluteCoordinate>>(() => new Set()),
+      ],
+      [
+        PlayerIndex.BLACK,
+        new DefaultDict<PieceType, Set<AbsoluteCoordinate>>(() => new Set()),
+      ],
     ]);
 
     // TODO: 内部的に同じオブジェクトを指しているらしい
-    const excludedSquareSet = new Set([...excludedSquare].map((position) => position.normalizedBy(this)));
+    const excludedSquareSet = new Set(
+      [...excludedSquare].map((position) => position.normalizedBy(this))
+    );
     if (lrSymmetry) {
-      const initialPositionxInverted = new Map([...initialPosition].map(
-        ([position, piece]) => [position.xInverted.normalizedBy(this), piece]
-      ));
-      initialPosition = new Map([...initialPositionxInverted, ...initialPosition]);
+      const initialPositionxInverted = new Map(
+        [...initialPosition].map(([position, piece]) => [
+          position.xInverted.normalizedBy(this),
+          piece,
+        ])
+      );
+      initialPosition = new Map([
+        ...initialPositionxInverted,
+        ...initialPosition,
+      ]);
       for (const position of [...excludedSquareSet]) {
         excludedSquareSet.add(position.yInverted.normalizedBy(this));
       }
     }
-    if (wbSymmetry !== 'none'){
-      let accessor: 'yInverted' | 'fullInverted';
+    if (wbSymmetry !== "none") {
+      let accessor: "yInverted" | "fullInverted";
       switch (wbSymmetry) {
         case "face":
-          accessor = 'yInverted';
+          accessor = "yInverted";
         case "cross":
-          accessor = 'fullInverted';
+          accessor = "fullInverted";
       }
-      const initialPositionAddition = new Map([...initialPosition].map(
-        ([position, piece]) => [
+      const initialPositionAddition = new Map(
+        [...initialPosition].map(([position, piece]) => [
           position[accessor].normalizedBy(this),
-          new (piece.constructor as PieceType)(PlayerIndex.nextPlayer(piece.controller), piece.isUntouched),
-        ]
-      ));
-      initialPosition = new Map([...initialPositionAddition, ...initialPosition]);
+          new (piece.constructor as PieceType)(
+            PlayerIndex.nextPlayer(piece.controller),
+            piece.isUntouched
+          ),
+        ])
+      );
+      initialPosition = new Map([
+        ...initialPositionAddition,
+        ...initialPosition,
+      ]);
       for (const position of [...excludedSquareSet]) {
         excludedSquareSet.add(position[accessor].normalizedBy(this));
       }
@@ -630,7 +699,8 @@ class MatchBoard extends IBoard {
       this.#addPieceToBoard(
         piece.constructor as PieceType,
         piece.controller,
-        position, true,
+        position,
+        true
       );
     }
     this.#movablePieceMapCache = new Map();
@@ -638,21 +708,24 @@ class MatchBoard extends IBoard {
   }
 
   get #coordsGenerator(): Generator<AbsoluteCoordinate, void> {
-    const self = this
-    return function* () {
+    const self = this;
+    return (function* () {
       for (let h = 0; h < self.height; h++) {
         for (let w = 0; w < self.width; w++) {
           yield new AbsoluteCoordinate(h, w);
         }
       }
-    } ();
+    })();
   }
 
   get #isGameTerminated(): [boolean, Player?] {
-    const remainingPlayer = new Set<Player>()
+    const remainingPlayer = new Set<Player>();
     for (const player of [PlayerIndex.WHITE, PlayerIndex.BLACK] as Player[]) {
       for (const [kind, coords] of this.pieceInBoardIndex.get(player)!) {
-        if (new kind(undefined as unknown as Player).IS_ROYAL && (coords.size > 0)) {
+        if (
+          new kind(undefined as unknown as Player).IS_ROYAL &&
+          coords.size > 0
+        ) {
           remainingPlayer.add(player);
           break;
         }
@@ -677,7 +750,7 @@ class MatchBoard extends IBoard {
     controller: Player,
     coord: AbsoluteCoordinate,
     asUntouched: boolean = false,
-    collision: 'raise' | 'overwrite' | 'skip' = 'raise',
+    collision: "raise" | "overwrite" | "skip" = "raise"
   ): void {
     if (this.square(coord).isExcluded) {
       switch (collision) {
@@ -695,7 +768,6 @@ class MatchBoard extends IBoard {
         case "skip":
           return;
         case "overwrite":
-          ;
       }
     }
     this.square(coord).piece = new kind(controller, asUntouched);
@@ -721,7 +793,10 @@ class MatchBoard extends IBoard {
       throw new Error(`removing null piece (from ${coord})`);
     }
     this.square(coord).piece = null;
-    this.pieceInBoardIndex.get(piece.controller)!.get(piece.constructor as PieceType).delete(coord);
+    this.pieceInBoardIndex
+      .get(piece.controller)!
+      .get(piece.constructor as PieceType)
+      .delete(coord);
   }
 
   #moveDestinationFrom(coord: AbsoluteCoordinate): Set<AbsoluteCoordinate> {
@@ -735,8 +810,8 @@ class MatchBoard extends IBoard {
   #dropDestination(): Set<AbsoluteCoordinate> {
     const destinations = new Set<AbsoluteCoordinate>();
     for (const coord of this.#coordsGenerator) {
-      const square = this.square(coord)
-      if (!(square.isExcluded || square.piece)){
+      const square = this.square(coord);
+      if (!(square.isExcluded || square.piece)) {
         destinations.add(coord);
       }
     }
@@ -744,9 +819,13 @@ class MatchBoard extends IBoard {
   }
 
   #updateMovablePieceMap() {
-    const turnPlayerPieceToValidDestination
-      = new Map<AbsoluteCoordinate, Set<AbsoluteCoordinate>>();
-    for (const coords of this.pieceInBoardIndex.get(this.turnPlayer)!.values()) {
+    const turnPlayerPieceToValidDestination = new Map<
+      AbsoluteCoordinate,
+      Set<AbsoluteCoordinate>
+    >();
+    for (const coords of this.pieceInBoardIndex
+      .get(this.turnPlayer)!
+      .values()) {
       for (const start of coords) {
         const goal = this.#moveDestinationFrom(start);
         if (goal.size) {
@@ -757,38 +836,60 @@ class MatchBoard extends IBoard {
     this.#movablePieceMapCache = turnPlayerPieceToValidDestination;
   }
 
-  get #currentMovablePieceMap(): Map<AbsoluteCoordinate, Set<AbsoluteCoordinate>> {
+  get #currentMovablePieceMap(): Map<
+    AbsoluteCoordinate,
+    Set<AbsoluteCoordinate>
+  > {
     return this.#movablePieceMapCache;
   }
 
-  #move(start: AbsoluteCoordinate, goal: AbsoluteCoordinate, log: PlayLogComplete): void {
+  #move(
+    start: AbsoluteCoordinate,
+    goal: AbsoluteCoordinate,
+    log: PlayLogComplete
+  ): void {
     const movingPiece = this.square(start).piece;
     if (!movingPiece) {
       throw new Error(`cannot move null (in ${start})`);
     }
     const capturedPiece = this.square(goal).piece;
     if (capturedPiece) {
-      this.#addPieceToStand(capturedPiece.ORIGINAL_PIECE, movingPiece.controller);
+      this.#addPieceToStand(
+        capturedPiece.ORIGINAL_PIECE,
+        movingPiece.controller
+      );
       this.#removePieceFromBoard(goal);
     }
     this.#removePieceFromBoard(start);
-    this.#addPieceToBoard(movingPiece.constructor as PieceType, movingPiece.controller, goal);
-    log.state = 'complete';
+    this.#addPieceToBoard(
+      movingPiece.constructor as PieceType,
+      movingPiece.controller,
+      goal
+    );
+    log.state = "complete";
     log.start = start;
     log.goal = goal;
     log.movingPiece = movingPiece.constructor as PieceType;
     log.capturedPiece = capturedPiece?.constructor as PieceType | undefined;
   }
 
-  #drop(kind: PieceType, coord: AbsoluteCoordinate, log: PlayLogComplete): void {
+  #drop(
+    kind: PieceType,
+    coord: AbsoluteCoordinate,
+    log: PlayLogComplete
+  ): void {
     this.#addPieceToBoard(kind, this.turnPlayer, coord);
     this.#removePieceFromStand(kind, this.turnPlayer);
-    log.state = 'complete';
+    log.state = "complete";
     log.goal = coord;
     log.movingPiece = kind;
   }
 
-  #promote(kind: PieceType, coord: AbsoluteCoordinate, log: PlayLogComplete): void {
+  #promote(
+    kind: PieceType,
+    coord: AbsoluteCoordinate,
+    log: PlayLogComplete
+  ): void {
     const piece = this.square(coord).piece;
     if (!piece) {
       throw new Error(`removing null piece (from ${coord})`);
@@ -803,7 +904,7 @@ class MatchBoard extends IBoard {
     while (this.#isGameTerminated[0]) {
       initializeBoardVisualization();
       const playLog: PlayLogComplete = {
-        state: 'defined',
+        state: "defined",
         board: this,
         totalStepCount: this.playLog.length,
         chessTurnCount: this.chessTurnCount,
@@ -811,15 +912,21 @@ class MatchBoard extends IBoard {
       } as unknown as PlayLogComplete;
       this.#updateMovablePieceMap();
 
-      Turn:
-      while (true) {
+      Turn: while (true) {
         const target = await selectBoard(
-          [...this.#movablePieceMapCache.keys(), ...this.pieceStands.get(this.turnPlayer)!.keys()],
+          [
+            ...this.#movablePieceMapCache.keys(),
+            ...this.pieceStands.get(this.turnPlayer)!.keys(),
+          ],
           "動かす駒か打つ駒を選択してください",
-          false,
-        )
-        if (target == null) {
-          saySomething(`Game end: the winner is ${String(PlayerIndex.nextPlayer(this.turnPlayer))}`);
+          false
+        );
+        if (target === null) {
+          saySomething(
+            `Game end: the winner is ${String(
+              PlayerIndex.nextPlayer(this.turnPlayer)
+            )}`
+          );
           return;
         }
         if (target instanceof AbsoluteCoordinate) {
@@ -827,15 +934,16 @@ class MatchBoard extends IBoard {
           const goal = await selectBoard(
             this.#currentMovablePieceMap.get(target)!,
             "動かす先のマスを選択してください",
-            true,
+            true
           );
-          if (goal == null) {
+          if (goal === null) {
             continue Turn;
           }
           this.#move(target, goal, playLog);
           if (this.promotionCondition(playLog)) {
             const promoteTo = await selectPromotion(
-              new playLog.movingPiece(undefined as unknown as Player).PROMOTE_DEFAULT,
+              new playLog.movingPiece(undefined as unknown as Player)
+                .PROMOTE_DEFAULT
             );
             if (promoteTo !== playLog.movingPiece) {
               this.#promote(promoteTo, goal, playLog);
@@ -847,9 +955,9 @@ class MatchBoard extends IBoard {
           const goal = await selectBoard(
             this.#dropDestination(),
             "打つ先のマスを選択してください",
-            true,
+            true
           );
-          if (goal == null) {
+          if (goal === null) {
             continue Turn;
           }
           this.#drop(target, goal, playLog);
@@ -861,103 +969,128 @@ class MatchBoard extends IBoard {
         this.chessTurnCount += 1;
       }
     }
-    saySomething(`Game end: the winner is ${String(this.#isGameTerminated[1])}`);
+    saySomething(
+      `Game end: the winner is ${String(this.#isGameTerminated[1])}`
+    );
     return;
   }
 }
 
-
 // 1. start/piece (駒台/盤面)
 // 2. goal (盤面/キャンセル)
 // 3. promote (駒の種類)
-const selectBoard = async <T extends AbsoluteCoordinate | PieceType> (
+const selectBoard = async <T extends AbsoluteCoordinate | PieceType>(
   options: Iterable<T>,
   message: string = "select from following options: ",
-  cancel: boolean = true,
+  cancel: boolean = true
 ): Promise<T | null> => {
   // TODO
   return null;
-}
+};
 
-const selectPromotion = async (options: Iterable<PieceType>): Promise<PieceType> => {
+const selectPromotion = async (
+  options: Iterable<PieceType>
+): Promise<PieceType> => {
   // TODO
   return [...options][0];
-}
+};
 
 // 1. AbsoluteCoordinate, IPiece | null
 // 2. PieceType, Player, number
 const updateBoardVisualization = () => {
   // TODO
-}
+};
 
 const initializeBoardVisualization = () => {
   // TODO
-}
+};
 
 const saySomething = (message: string): void => {
   // TODO
-}
-
+};
 
 class King extends IPiece {
-  NAME: string = 'King';
-  MOVE: IMove = new LeaperMove([new RelativeCoordinate(1, 0), new RelativeCoordinate(1, 1)], 'oct');
+  NAME: string = "King";
+  MOVE: IMove = new LeaperMove(
+    [new RelativeCoordinate(1, 0), new RelativeCoordinate(1, 1)],
+    "oct"
+  );
   IS_ROYAL: boolean = true;
-  SYMBOL: string = 'K';
+  SYMBOL: string = "K";
 }
 
 class Qween extends IPiece {
-  NAME: string = 'Qween';
+  NAME: string = "Qween";
   MOVE: IMove = new RiderMove(
-    new Map([[new RelativeCoordinate(1, 0), -1], [new RelativeCoordinate(1, 1), -1]]),
-    'oct',
+    new Map([
+      [new RelativeCoordinate(1, 0), -1],
+      [new RelativeCoordinate(1, 1), -1],
+    ]),
+    "oct"
   );
-  SYMBOL: string = 'Q';
+  SYMBOL: string = "Q";
 }
 
 class Bishop extends IPiece {
-  NAME: string = 'Bishop';
+  NAME: string = "Bishop";
   MOVE: IMove = new RiderMove(
     new Map([[new RelativeCoordinate(1, 1), -1]]),
-    'fblr',
+    "fblr"
   );
-  SYMBOL: string = 'B';
+  SYMBOL: string = "B";
 }
 
 class Rook extends IPiece {
-  NAME: string = 'Rook';
+  NAME: string = "Rook";
   MOVE: IMove = new RiderMove(
     new Map([[new RelativeCoordinate(1, 0), -1]]),
-    'fblr',
+    "fblr"
   );
-  SYMBOL: string = 'R';
+  SYMBOL: string = "R";
 }
 
 class Knight extends IPiece {
-  NAME: string = 'Knight';
-  MOVE: IMove = new LeaperMove(
-    [new RelativeCoordinate(1, 2)],
-    'oct',
-  );
-  SYMBOL: string = 'N';
+  NAME: string = "Knight";
+  MOVE: IMove = new LeaperMove([new RelativeCoordinate(1, 2)], "oct");
+  SYMBOL: string = "N";
 }
 
 class Pawn extends IPiece {
-  NAME: string = 'Pawn';
+  NAME: string = "Pawn";
   MOVE: IMove = new MoveParallelJoint(
-    new LeaperMove([new RelativeCoordinate(1, 0)], 'none', TInteraction.NO_CAPTURE),
-    new LeaperMove([new RelativeCoordinate(1, 1)], 'lr', TInteraction.ONLY_CAPTURE),
-  )
+    new LeaperMove(
+      [new RelativeCoordinate(1, 0)],
+      "none",
+      TInteraction.NO_CAPTURE
+    ),
+    new LeaperMove(
+      [new RelativeCoordinate(1, 1)],
+      "lr",
+      TInteraction.ONLY_CAPTURE
+    )
+  );
   // @ts-ignore
   override INITIAL_MOVE: IMove = new MoveParallelJoint(
-    new RiderMove(new Map([[new RelativeCoordinate(1, 1), 2]]),
-                  'none', TInteraction.NO_CAPTURE),
-    new LeaperMove([new RelativeCoordinate(1, 1)], 'lr', TInteraction.ONLY_CAPTURE),
-  )
-  SYMBOL: string = 'P';
+    new RiderMove(
+      new Map([[new RelativeCoordinate(1, 1), 2]]),
+      "none",
+      TInteraction.NO_CAPTURE
+    ),
+    new LeaperMove(
+      [new RelativeCoordinate(1, 1)],
+      "lr",
+      TInteraction.ONLY_CAPTURE
+    )
+  );
+  SYMBOL: string = "P";
   FORCE_PROMOTE: boolean = true;
 }
-Pawn.updatePromotion([[Qween as PieceType], [Bishop as PieceType], [Rook as PieceType], [Knight as PieceType]])
+Pawn.updatePromotion([
+  [Qween as PieceType],
+  [Bishop as PieceType],
+  [Rook as PieceType],
+  [Knight as PieceType],
+]);
 
 // @ts-ignore
 const chessInitial: Map<AbsoluteCoordinate, RealPiece> = new Map([
@@ -971,5 +1104,14 @@ const chessInitial: Map<AbsoluteCoordinate, RealPiece> = new Map([
   [new AbsoluteCoordinate(1, 2), new Pawn(PlayerIndex.WHITE)],
   [new AbsoluteCoordinate(1, 3), new Pawn(PlayerIndex.WHITE)],
 ]);
-const playBoard = new MatchBoard(8, 8, chessInitial, [], true, TPromotionCondition.oppornentField(1), true, 'face');
+const playBoard = new MatchBoard(
+  8,
+  8,
+  chessInitial,
+  [],
+  true,
+  TPromotionCondition.oppornentField(1),
+  true,
+  "face"
+);
 playBoard.game();
