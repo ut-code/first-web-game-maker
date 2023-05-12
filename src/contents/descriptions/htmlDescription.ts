@@ -1,3 +1,4 @@
+const htmlDescription = `\
 # First Web Game Maker
 
 使い方の説明を Markdown で書けます！
@@ -8,6 +9,9 @@
 
 コードブロックはこんな感じで書けます。なんと、シンタックスハイライトもできます！
 
-```js
+\`\`\`js
 document.write("Hello, World!");
-```
+\`\`\`
+`;
+
+export default htmlDescription;

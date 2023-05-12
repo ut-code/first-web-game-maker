@@ -1,20 +1,23 @@
 import * as vscode from "vscode";
 import { type PanelData } from "./types/panelData";
 import toPanel from "./utils/toPanel";
+import htmlDescription from "./contents/descriptions/htmlDescription";
+import shogiDescription from "./contents/descriptions/shogiDescription";
+import sugorokuDescription from "./contents/descriptions/sugorokuDescription";
 
 export default function createPanel(context: vscode.ExtensionContext) {
   const panelDataList: PanelData[] = [
     {
       title: "構造",
-      path: "./contents/descriptions/htmlDescription.md",
+      content: htmlDescription,
     },
     {
       title: "すごろく",
-      path: "./contents/descriptions/sugorokuDescription.md",
+      content: sugorokuDescription,
     },
     {
       title: "将棋",
-      path: "./contents/descriptions/shogiDescription.md",
+      content: shogiDescription,
     },
   ];
   return toPanel(panelDataList, context);
