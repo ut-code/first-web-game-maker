@@ -13,6 +13,7 @@ const 後手の駒の色 = "black";
 const 駒のフォントサイズ = 24;
 
 const マスの色 = "white";
+const 壁マスの色 = "black";
 const 選択可能なマスの色 = "yellow";
 const マスの境界線 = "1px black solid";
 const マスの一辺の長さ = 40;
@@ -141,13 +142,61 @@ async function showQuestion(message, options) {
   return new Promise((resolve) => {
     buttons.forEach((button, index) => {
       button.onclick = () => {
-        resolve(index);
+        resolve(index); // 必要であれば修正してください
         while (messageDiv.childElementCount > 0) {
           messageDiv.removeChild(messageDiv.lastChild);
         }
       };
     });
   });
+}
+
+// マスや持ち駒のクリックによる入力を受付
+async function selectBoard(options, message, canCancel) {
+  if (message) {
+    showMessage(message);
+  }
+  return new Promise((resolve) => {
+    // キャンセルボタン
+    const button = document.createElement("button");
+    if (canCancel) {
+      messageDiv.appendChild(button);
+      button.textContent = "キャンセル";
+      button.onclick = () => handleBoardClick(resolve /* TODO */);
+    }
+    // マス
+    for (let i = 0; i < height; i++) {
+      for (let j = 0; j < width; j++) {
+        if (/* TODO 選択可能か */) {
+          tds[i][j].style.backgroundColor = 選択可能なマスの色;
+          tds[i][j].onclick = () => handleBoardClick(resolve /* TODO */);
+        }
+      }
+    }
+    // 持ち駒
+    // TODO player
+    for (const capturedPieceDiv of capturedPieceDivs[player]) {
+      capturedPieceDiv.onclick = () => handleBoardClick(resolve /* TODO */);
+    }
+  });
+}
+function handleBoardClick(resolve, response) {
+  resolve(response);
+  resetCellColor();
+  if (messageDiv.hasChildNodes()) {
+    messageDiv.removeChild(messageDiv.firstChild);
+  }
+}
+function resetCellColor() {
+  for (let i = 0; i < height; i++) {
+    for (let j = 0; j < width; j++) {
+      if (playBoard.squere(AbsoluteCoordinate(i, j).isExcluded)) {
+        tds[i][j].backgroundColor = 壁マスの色;
+      } else {
+        tds[i][j].backgroundColor = マスの色;
+      }
+    }
+  }
 }
 
 // 駒をマスに描画
