@@ -102,7 +102,7 @@ function startGame() {
   initCapturedPieceDivs();
   for (let i = 0; i < 縦のマス数; i++) {
     for (let j = 0; j < 横のマス数; j++) {
-      renderCell(i, j);
+      renderCell(j, i);
     }
   }
   renderCapturedPiece(0);
@@ -130,8 +130,8 @@ function showMessage(message) {
 // 駒をマスに描画
 // TODO pieces, currentBoard
 function renderCell(x, y) {
-  let pieceId = currentBoard[x][y];
-  const td = boardTds[x][y];
+  let pieceId = currentBoard[y][x];
+  const td = boardTds[y][x];
   if (/* TODO 1Pの駒かどうか */ kari) {
     td.style.color = 先手の駒の色;
     td.style.transform = "rotate(0deg)";
@@ -185,7 +185,7 @@ function createBoardTable() {
       td.style.backgroundColor = マスの色;
       td.style.border = マスの境界線;
       td.onclick = () => {
-        マスがクリックされた時(i, j);
+        マスがクリックされた時(j, i);
       };
       boardTds[i][j] = td;
     }
