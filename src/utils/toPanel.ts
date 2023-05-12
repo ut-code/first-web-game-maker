@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import { type PanelData } from "../types/panelData";
-import getFileContentFromPath from "./getFileContentFromPath";
 import convertMarkdownToHtml from "./convertMarkdownToHtml";
 
 export default function toPanel(
