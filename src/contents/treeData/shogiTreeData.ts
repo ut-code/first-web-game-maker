@@ -14,6 +14,10 @@ const shogiTreeData = new TreeItem(
       command: "first-web-game-maker.insertShogiJsAtTop",
       title: "",
     }),
+    new TreeItem("駒", vscode.TreeItemCollapsibleState.None, {
+      command: "first-web-game-maker.insertShogiPieceTemplate",
+      title: "",
+    }),
   ]
 );
 

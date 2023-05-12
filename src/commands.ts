@@ -7,6 +7,7 @@ import htmlCommands from "./contents/commands/htmlCommands";
 import insertSugorokuHtmlAtTopCommand from "./contents/commands/insertSugorokuHtmlAtTop";
 import insertShogiHtmlAtTopCommand from "./contents/commands/insertShogiHtmlAtTop";
 import insertShogiJsAtTopCommand from "./contents/commands/insertShogiJsAtTop";
+import shogiCommands from "./contents/commands/shogiCommands";
 
 const commands: Command[] = [
   insertHelloWorldAtTopCommand,
@@ -16,6 +17,7 @@ const commands: Command[] = [
   insertShogiHtmlAtTopCommand,
   insertShogiJsAtTopCommand,
   ...htmlCommands,
+  ...shogiCommands,
 ];
 
 export default toCommands(commands);
