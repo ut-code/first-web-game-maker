@@ -190,7 +190,7 @@ function handleBoardClick(resolve, response) {
 function resetCellColor() {
   for (let i = 0; i < height; i++) {
     for (let j = 0; j < width; j++) {
-      if (playBoard.squere(AbsoluteCoordinate(i, j).isExcluded)) {
+      if (playBoard.squere(AbsoluteCoordinate(i, j)).isExcluded) {
         tds[i][j].backgroundColor = 壁マスの色;
       } else {
         tds[i][j].backgroundColor = マスの色;
