@@ -607,6 +607,7 @@ class MatchBoard extends IBoard {
   #movablePieceMapCache: Map<AbsoluteCoordinate, Set<AbsoluteCoordinate>>;
 
   constructor(
+    public IO: IOFunctions,
     readonly height: number,
     readonly width: number,
     initialPosition: Map<AbsoluteCoordinate, RealPiece>,
@@ -899,10 +900,27 @@ class MatchBoard extends IBoard {
     log.promoteTo = kind;
   }
 
+  coordToNum(coord: AbsoluteCoordinate): [number, number] {
+    return [this.height - coord.y - 1, coord.x];
+  }
+
+  numToCoord(y: number, x: number): AbsoluteCoordinate {
+    return new AbsoluteCoordinate(this.height - y - 1, x);
+  }
+
   async game(): Promise<void> {
+    const converter = <T extends null | PieceType>(r: [number, number] | T) =>
+      r instanceof Array ? this.numToCoord(...r) : r;
     // ゲーム終了までループ
+    this.IO.initializeBoardVisualization();
+    for (const coord of this.#coordsGenerator) {
+      this.IO.renderCell(
+        ...this.coordToNum(coord),
+        this.turnPlayer === PlayerIndex.WHITE ? 0 : 1,
+        this.square(coord).piece?.SYMBOL ?? ""
+      );
+    }
     while (this.#isGameTerminated[0]) {
-      initializeBoardVisualization();
       const playLog: PlayLogComplete = {
         state: "defined",
         board: this,
@@ -912,17 +930,20 @@ class MatchBoard extends IBoard {
       } as unknown as PlayLogComplete;
       this.#updateMovablePieceMap();
 
+      this.IO.startTurnMessage(this.turnPlayer === PlayerIndex.WHITE ? 0 : 1);
       Turn: while (true) {
-        const target = await selectBoard(
-          [
-            ...this.#movablePieceMapCache.keys(),
-            ...this.pieceStands.get(this.turnPlayer)!.keys(),
-          ],
-          "動かす駒か打つ駒を選択してください",
-          false
+        const target = converter(
+          await this.IO.selectBoard(
+            [
+              ...[...this.#movablePieceMapCache.keys()].map(this.coordToNum),
+              ...this.pieceStands.get(this.turnPlayer)!.keys(),
+            ],
+            "移動させる駒か打つ駒を選んでください。",
+            false
+          )
         );
         if (target === null) {
-          saySomething(
+          this.IO.showMessage(
             `Game end: the winner is ${String(
               PlayerIndex.nextPlayer(this.turnPlayer)
             )}`
@@ -931,36 +952,63 @@ class MatchBoard extends IBoard {
         }
         if (target instanceof AbsoluteCoordinate) {
           // コマを動かす
-          const goal = await selectBoard(
-            this.#currentMovablePieceMap.get(target)!,
-            "動かす先のマスを選択してください",
-            true
+          const goal = converter(
+            await this.IO.selectBoard(
+              [...this.#currentMovablePieceMap.get(target)!].map(
+                this.coordToNum
+              ),
+              "駒を移動させるマスを選んでください。",
+              true
+            )
           );
           if (goal === null) {
             continue Turn;
           }
           this.#move(target, goal, playLog);
           if (this.promotionCondition(playLog)) {
-            const promoteTo = await selectPromotion(
-              new playLog.movingPiece(undefined as unknown as Player)
-                .PROMOTE_DEFAULT
-            );
+            const promoteTo = await this.IO.selectPromotion([
+              ...new playLog.movingPiece(undefined as unknown as Player)
+                .PROMOTE_DEFAULT,
+            ]);
             if (promoteTo !== playLog.movingPiece) {
               this.#promote(promoteTo, goal, playLog);
             }
           }
+          this.IO.renderCell(
+            ...this.coordToNum(goal),
+            this.turnPlayer === PlayerIndex.WHITE ? 0 : 1,
+            this.square(goal).piece?.SYMBOL ?? ""
+          );
+          this.IO.renderCell(
+            ...this.coordToNum(target),
+            this.turnPlayer === PlayerIndex.WHITE ? 0 : 1,
+            this.square(target).piece?.SYMBOL ?? ""
+          );
           break Turn;
         } else {
           // コマを打つ
-          const goal = await selectBoard(
-            this.#dropDestination(),
-            "打つ先のマスを選択してください",
-            true
+          const goal = converter(
+            await this.IO.selectBoard(
+              [...this.#dropDestination()].map(this.coordToNum),
+              "駒を置くマスを選んでください。",
+              true
+            )
           );
           if (goal === null) {
             continue Turn;
           }
           this.#drop(target, goal, playLog);
+          this.IO.renderCell(
+            ...this.coordToNum(goal),
+            this.turnPlayer === PlayerIndex.WHITE ? 0 : 1,
+            new target(undefined as any).SYMBOL
+          );
+          this.IO.renderCapturedPiece(
+            this.turnPlayer === PlayerIndex.WHITE ? 0 : 1,
+            [...this.pieceStands.get(this.turnPlayer)!.entries()].map(
+              ([kind, num]) => [new kind(undefined as any).SYMBOL, num]
+            )
+          );
           break Turn;
         }
       }
@@ -969,45 +1017,47 @@ class MatchBoard extends IBoard {
         this.chessTurnCount += 1;
       }
     }
-    saySomething(
+    this.IO.showMessage(
       `Game end: the winner is ${String(this.#isGameTerminated[1])}`
     );
     return;
   }
 }
 
+const players = {
+  0: PlayerIndex.WHITE,
+  1: PlayerIndex.BLACK,
+};
+
+type PlayerExpression = keyof typeof players;
+interface IOFunctions {
+  initializeBoardVisualization: () => void;
+  startTurnMessage: (player: PlayerExpression) => void;
+  selectBoard: <T extends [number, number] | PieceType>(
+    options: Iterable<T>,
+    message: string,
+    cancel: boolean
+  ) => Promise<T | null>;
+  selectPromotion: (options: PieceType[]) => Promise<PieceType>;
+  showMessage: (message: string) => void;
+  renderCell: (
+    y: number,
+    x: number,
+    player: PlayerExpression,
+    pieceName: string | ""
+  ) => void;
+  renderCapturedPiece: (
+    player: PlayerExpression,
+    pieceNameAndNum: [string, number][]
+  ) => void;
+}
+
 // 1. start/piece (駒台/盤面)
 // 2. goal (盤面/キャンセル)
 // 3. promote (駒の種類)
-const selectBoard = async <T extends AbsoluteCoordinate | PieceType>(
-  options: Iterable<T>,
-  message: string = "select from following options: ",
-  cancel: boolean = true
-): Promise<T | null> => {
-  // TODO
-  return null;
-};
-
-const selectPromotion = async (
-  options: Iterable<PieceType>
-): Promise<PieceType> => {
-  // TODO
-  return [...options][0];
-};
 
 // 1. AbsoluteCoordinate, IPiece | null
 // 2. PieceType, Player, number
-const updateBoardVisualization = () => {
-  // TODO
-};
-
-const initializeBoardVisualization = () => {
-  // TODO
-};
-
-const saySomething = (message: string): void => {
-  // TODO
-};
 
 class King extends IPiece {
   NAME: string = "King";
@@ -1105,6 +1155,7 @@ const chessInitial: Map<AbsoluteCoordinate, RealPiece> = new Map([
   [new AbsoluteCoordinate(1, 3), new Pawn(PlayerIndex.WHITE)],
 ]);
 const playBoard = new MatchBoard(
+  null as any,
   8,
   8,
   chessInitial,
@@ -1115,3 +1166,20 @@ const playBoard = new MatchBoard(
   "face"
 );
 playBoard.game();
+
+// const Vector = RelativeCoordinate;
+// const Cell = AbsoluteCoordinate;
+// const PieceBase = IPiece;
+// const 先手 = PlayerIndex.WHITE;
+// const 後手 = PlayerIndex.BLACK;
+// const FIRST_PLAYER = PlayerIndex.WHITE;
+// const SECOND_PLAYER = PlayerIndex.BLACK;
+// const JumpMove = LeaperMove;
+// const RunMove = RiderMove;
+// const MergedMove = MoveParallelJoint;
+// const 移動の種類 = {
+//   普通の移動: TInteraction.NORMAL,
+//   コマを取らない移動: TInteraction.NO_CAPTURE,
+//   コマを取る移動: TInteraction.ONLY_CAPTURE,
+// };
+// const MoveKind = TInteraction;

@@ -400,8 +400,9 @@ const TPromotionCondition = {
     capturedPiece: () => (log) => Boolean(log.capturedPiece),
 };
 class MatchBoard extends IBoard {
-    constructor(height, width, initialPosition, excludedSquare = [], canUseCapturedPiece = false, promotionCondition, lrSymmetry = false, wbSymmetry = "none") {
+    constructor(IO, height, width, initialPosition, excludedSquare = [], canUseCapturedPiece = false, promotionCondition, lrSymmetry = false, wbSymmetry = "none") {
         super();
+        this.IO = IO;
         this.height = height;
         this.width = width;
         this.canUseCapturedPiece = canUseCapturedPiece;
@@ -472,10 +473,20 @@ class MatchBoard extends IBoard {
         __classPrivateFieldSet(this, _MatchBoard_movablePieceMapCache, new Map(), "f");
         __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_updateMovablePieceMap).call(this);
     }
+    coordToNum(coord) {
+        return [this.height - coord.y - 1, coord.x];
+    }
+    numToCoord(y, x) {
+        return new AbsoluteCoordinate(this.height - y - 1, x);
+    }
     async game() {
+        const converter = (r) => r instanceof Array ? this.numToCoord(...r) : r;
         // ゲーム終了までループ
+        this.IO.initializeBoardVisualization();
+        for (const coord of __classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_coordsGenerator_get)) {
+            this.IO.renderCell(...this.coordToNum(coord), this.turnPlayer === PlayerIndex.WHITE ? 0 : 1, this.square(coord).piece?.SYMBOL ?? "");
+        }
         while (__classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_isGameTerminated_get)[0]) {
-            initializeBoardVisualization();
             const playLog = {
                 state: "defined",
                 board: this,
@@ -484,38 +495,45 @@ class MatchBoard extends IBoard {
                 turnPlayer: this.turnPlayer,
             };
             __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_updateMovablePieceMap).call(this);
+            this.IO.startTurnMessage(this.turnPlayer === PlayerIndex.WHITE ? 0 : 1);
             Turn: while (true) {
-                const target = await selectBoard([
-                    ...__classPrivateFieldGet(this, _MatchBoard_movablePieceMapCache, "f").keys(),
+                const target = converter(await this.IO.selectBoard([
+                    ...[...__classPrivateFieldGet(this, _MatchBoard_movablePieceMapCache, "f").keys()].map(this.coordToNum),
                     ...this.pieceStands.get(this.turnPlayer).keys(),
-                ], "動かす駒か打つ駒を選択してください", false);
+                ], "移動させる駒か打つ駒を選んでください。", false));
                 if (target === null) {
-                    saySomething(`Game end: the winner is ${String(PlayerIndex.nextPlayer(this.turnPlayer))}`);
+                    this.IO.showMessage(`Game end: the winner is ${String(PlayerIndex.nextPlayer(this.turnPlayer))}`);
                     return;
                 }
                 if (target instanceof AbsoluteCoordinate) {
                     // コマを動かす
-                    const goal = await selectBoard(__classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_currentMovablePieceMap_get).get(target), "動かす先のマスを選択してください", true);
+                    const goal = converter(await this.IO.selectBoard([...__classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_currentMovablePieceMap_get).get(target)].map(this.coordToNum), "駒を移動させるマスを選んでください。", true));
                     if (goal === null) {
                         continue Turn;
                     }
                     __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_move).call(this, target, goal, playLog);
                     if (this.promotionCondition(playLog)) {
-                        const promoteTo = await selectPromotion(new playLog.movingPiece(undefined)
-                            .PROMOTE_DEFAULT);
+                        const promoteTo = await this.IO.selectPromotion([
+                            ...new playLog.movingPiece(undefined)
+                                .PROMOTE_DEFAULT,
+                        ]);
                         if (promoteTo !== playLog.movingPiece) {
                             __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_promote).call(this, promoteTo, goal, playLog);
                         }
                     }
+                    this.IO.renderCell(...this.coordToNum(goal), this.turnPlayer === PlayerIndex.WHITE ? 0 : 1, this.square(goal).piece?.SYMBOL ?? "");
+                    this.IO.renderCell(...this.coordToNum(target), this.turnPlayer === PlayerIndex.WHITE ? 0 : 1, this.square(target).piece?.SYMBOL ?? "");
                     break Turn;
                 }
                 else {
                     // コマを打つ
-                    const goal = await selectBoard(__classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_dropDestination).call(this), "打つ先のマスを選択してください", true);
+                    const goal = converter(await this.IO.selectBoard([...__classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_dropDestination).call(this)].map(this.coordToNum), "駒を置くマスを選んでください。", true));
                     if (goal === null) {
                         continue Turn;
                     }
                     __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_drop).call(this, target, goal, playLog);
+                    this.IO.renderCell(...this.coordToNum(goal), this.turnPlayer === PlayerIndex.WHITE ? 0 : 1, new target(undefined).SYMBOL);
+                    this.IO.renderCapturedPiece(this.turnPlayer === PlayerIndex.WHITE ? 0 : 1, [...this.pieceStands.get(this.turnPlayer).entries()].map(([kind, num]) => [new kind(undefined).SYMBOL, num]));
                     break Turn;
                 }
             }
@@ -524,7 +542,7 @@ class MatchBoard extends IBoard {
                 this.chessTurnCount += 1;
             }
         }
-        saySomething(`Game end: the winner is ${String(__classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_isGameTerminated_get)[1])}`);
+        this.IO.showMessage(`Game end: the winner is ${String(__classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_isGameTerminated_get)[1])}`);
         return;
     }
 }
@@ -662,28 +680,15 @@ _MatchBoard_movablePieceMapCache = new WeakMap(), _MatchBoard_instances = new We
     __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_addPieceToBoard).call(this, kind, piece.controller, coord);
     log.promoteTo = kind;
 };
+const players = {
+    0: PlayerIndex.WHITE,
+    1: PlayerIndex.BLACK,
+};
 // 1. start/piece (駒台/盤面)
 // 2. goal (盤面/キャンセル)
 // 3. promote (駒の種類)
-const selectBoard = async (options, message = "select from following options: ", cancel = true) => {
-    // TODO
-    return null;
-};
-const selectPromotion = async (options) => {
-    // TODO
-    return [...options][0];
-};
 // 1. AbsoluteCoordinate, IPiece | null
 // 2. PieceType, Player, number
-const updateBoardVisualization = () => {
-    // TODO
-};
-const initializeBoardVisualization = () => {
-    // TODO
-};
-const saySomething = (message) => {
-    // TODO
-};
 class King extends IPiece {
     constructor() {
         super(...arguments);
@@ -757,6 +762,22 @@ const chessInitial = new Map([
     [new AbsoluteCoordinate(1, 2), new Pawn(PlayerIndex.WHITE)],
     [new AbsoluteCoordinate(1, 3), new Pawn(PlayerIndex.WHITE)],
 ]);
-const playBoard = new MatchBoard(8, 8, chessInitial, [], true, TPromotionCondition.oppornentField(1), true, "face");
+const playBoard = new MatchBoard(null, 8, 8, chessInitial, [], true, TPromotionCondition.oppornentField(1), true, "face");
 playBoard.game();
+// const Vector = RelativeCoordinate;
+// const Cell = AbsoluteCoordinate;
+// const PieceBase = IPiece;
+// const 先手 = PlayerIndex.WHITE;
+// const 後手 = PlayerIndex.BLACK;
+// const FIRST_PLAYER = PlayerIndex.WHITE;
+// const SECOND_PLAYER = PlayerIndex.BLACK;
+// const JumpMove = LeaperMove;
+// const RunMove = RiderMove;
+// const MergedMove = MoveParallelJoint;
+// const 移動の種類 = {
+//   普通の移動: TInteraction.NORMAL,
+//   コマを取らない移動: TInteraction.NO_CAPTURE,
+//   コマを取る移動: TInteraction.ONLY_CAPTURE,
+// };
+// const MoveKind = TInteraction;
 //# sourceMappingURL=customshogi.js.map
