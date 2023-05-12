@@ -3,6 +3,8 @@
 const 縦のマス数 = 3;
 const 横のマス数 = 3;
 const 持ち駒を使うか = true;
+const 駒が成れる段数 = 3;
+const 壁マスの座標リスト = [];
 
 // 見た目に関する設定
 const 後手の駒を反転させるか = true;
@@ -126,6 +128,28 @@ function showMessage(message) {
   messageDiv.textContent = message;
 }
 
+// 選択肢付きの質問を表示
+async function showQuestion(message, options) {
+  messageDiv.textContent = message;
+  const buttons = options.map((option) => {
+    const button = document.createElement("button");
+    messageDiv.appendChild(button);
+    button.textContent = option;
+    button.style.marginLeft = "5px";
+    return button;
+  });
+  return new Promise((resolve) => {
+    buttons.forEach((button, index) => {
+      button.onclick = () => {
+        resolve(index);
+        while (messageDiv.childElementCount > 0) {
+          messageDiv.removeChild(messageDiv.lastChild);
+        }
+      };
+    });
+  });
+}
+
 // 駒をマスに描画
 // TODO pieces, currentBoard
 function renderCell(x, y) {
@@ -239,3 +263,9 @@ function createCapturedPieceColumn(capturedPieceDiv, player, index) {
     }
   }
 }
+
+async function test1() {
+  const a = await showQuestion("test", ["a", "b"]);
+  console.log(a);
+}
+test1();
