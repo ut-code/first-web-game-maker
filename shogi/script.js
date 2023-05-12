@@ -1,24 +1,28 @@
 // ===========================================
 // ゲームの基本設定
-const height = 3;
-const width = 3;
-const canUseCapturedPiece = true;
+const 縦のマス数 = 3;
+const 横のマス数 = 3;
+const 持ち駒を使うか = true;
 
 // 見た目に関する設定
-const doRotate2pPiece = true;
-const piece1pColor = "black";
-const piece2pColor = "black";
-const defaultCellBgColor = "white";
-const selectableCellBgColor = "yellow";
-const capturedPieceDivBgColor = "white";
-const cellBorder = "1px black solid";
-const capturedPieceDivBorder = "1px black solid";
-const cellHeight = 40;
-const cellWidth = 40;
-const pieceSymbolSize = 24;
+const 後手の駒を反転させるか = true;
+const 先手の駒の色 = "black";
+const 後手の駒の色 = "black";
+const 駒のフォントサイズ = 24;
+
+const マスの色 = "white";
+const 選択可能なマスの色 = "yellow";
+const マスの境界線 = "1px black solid";
+const マスの縦の長さ = 40;
+const マスの横の長さ = 40;
+
+const 先手の持ち駒置き場の色 = "white";
+const 後手の持ち駒置き場の色 = "white";
+const 先手の持ち駒置き場の境界線 = "1px black solid";
+const 後手の持ち駒置き場の境界線 = "1px black solid";
 
 // 盤面の初期設定
-function initialize() {}
+function 初期化処理() {}
 
 // ===========================================
 
@@ -30,7 +34,7 @@ const currentBoard = [
 ];
 const pieces = [{ name: "" }, { name: "歩" }];
 const kari = false;
-const capturedPieces = [[], [{name: "歩", count: 2}]];
+const capturedPieces = [[], [{ name: "歩", count: 2 }]];
 
 const messageDiv = document.getElementById("メッセージ表示");
 const boardTds = boardMatrix();
@@ -38,19 +42,17 @@ const capturedPieceDivs = [
   document.getElementById("先手持ち駒置き場"),
   document.getElementById("後手持ち駒置き場"),
 ];
-initialize();
+初期化処理();
 startGame();
 
 // ===========================================
 // クリックに対する処理
 
-// マスをクリックした時
-function onClickCell(x, y) {
+function マスがクリックされた時(x, y) {
   /* ゲームの状態に応じて下3つのどれかに処理を分ける */
 }
 
-// 盤面の駒を選んだ時
-function handleSelectPiece(x, y) {
+function 盤面の駒が選ばれた時(x, y) {
   /* 駒が動けるマスを探索 */
   if (/* 動けるマスがあるか */ kari) {
     /* 移動元の座標と駒の種類を記録しておく */
@@ -60,21 +62,18 @@ function handleSelectPiece(x, y) {
   }
 }
 
-// 駒の移動先を選んだ時
-function handleMovePiece(x, y) {
+function 駒の移動先が選ばれた時(x, y) {
   /* 駒の移動 */
-  // renderCell(移動元x, 移動元y);
+  // マスの描画(移動元x, 移動元y);
   renderCell(x, y);
 }
 
-// 持ち駒の置き先を選んだ時
-function handlePlacePiece(x, y) {
+function 持ち駒を置くマスが選ばれた時(x, y) {
   /* 駒の設置 */
   renderCell(x, y);
 }
 
-// 持ち駒をクリックした時
-function onClickCapturedPiece(player, index) {
+function 持ち駒がクリックされた時(player, index) {
   if (index < capturedPieces[player].length) {
     /* 駒が置けるマスを探索 */
     if (/* 置けるマスがあるか */ kari) {
@@ -101,8 +100,8 @@ function startTurn(player) {
 function startGame() {
   createBoardTable();
   initCapturedPieceDivs();
-  for (let i = 0; i < height; i++) {
-    for (let j = 0; j < width; j++) {
+  for (let i = 0; i < 縦のマス数; i++) {
+    for (let j = 0; j < 横のマス数; j++) {
       renderCell(i, j);
     }
   }
@@ -113,10 +112,10 @@ function startGame() {
 
 // ボード型の二次元配列を作成
 function boardMatrix(initialValue) {
-  const result = Array(height);
-  for (let i = 0; i < height; i++) {
-    result[i] = Array(width);
-    for (let j = 0; j < width; j++) {
+  const result = Array(縦のマス数);
+  for (let i = 0; i < 縦のマス数; i++) {
+    result[i] = Array(横のマス数);
+    for (let j = 0; j < 横のマス数; j++) {
       result[i][j] = initialValue;
     }
   }
@@ -134,11 +133,11 @@ function renderCell(x, y) {
   let pieceId = currentBoard[x][y];
   const td = boardTds[x][y];
   if (/* TODO 1Pの駒かどうか */ kari) {
-    td.style.color = piece1pColor;
+    td.style.color = 先手の駒の色;
     td.style.transform = "rotate(0deg)";
   } else {
-    td.style.color = piece2pColor;
-    if (doRotate2pPiece) {
+    td.style.color = 後手の駒の色;
+    if (後手の駒を反転させるか) {
       td.style.transform = "rotate(180deg)";
     }
   }
@@ -174,19 +173,19 @@ function createBoardTable() {
   table.style.borderCollapse = "collapse";
   table.style.textAlign = "center";
 
-  for (let i = 0; i < height; i++) {
+  for (let i = 0; i < 縦のマス数; i++) {
     const tr = document.createElement("tr");
     table.appendChild(tr);
-    for (let j = 0; j < width; j++) {
+    for (let j = 0; j < 横のマス数; j++) {
       const td = document.createElement("td");
       tr.appendChild(td);
-      td.style.height = `${cellHeight}px`;
-      td.style.width = `${cellWidth}px`;
-      td.style.fontSize = `${pieceSymbolSize}px`;
-      td.style.backgroundColor = defaultCellBgColor;
-      td.style.border = cellBorder;
+      td.style.height = `${マスの縦の長さ}px`;
+      td.style.width = `${マスの横の長さ}px`;
+      td.style.fontSize = `${駒のフォントサイズ}px`;
+      td.style.backgroundColor = マスの色;
+      td.style.border = マスの境界線;
       td.onclick = () => {
-        onClickCell(i, j);
+        マスがクリックされた時(i, j);
       };
       boardTds[i][j] = td;
     }
@@ -195,13 +194,15 @@ function createBoardTable() {
 
 // 持ち駒置き場を初期化
 function initCapturedPieceDivs() {
-  if (canUseCapturedPiece) {
+  if (持ち駒を使うか) {
+    capturedPieceDivs[0].style.backgroundColor = 先手の持ち駒置き場の色;
+    capturedPieceDivs[0].style.border = 先手の持ち駒置き場の境界線;
+    capturedPieceDivs[1].style.backgroundColor = 後手の持ち駒置き場の色;
+    capturedPieceDivs[1].style.border = 後手の持ち駒置き場の境界線;
     capturedPieceDivs.forEach((capturedPieceDiv, index) => {
-      capturedPieceDiv.style.width = `${cellWidth * 2}px`;
-      capturedPieceDiv.style.backgroundColor = capturedPieceDivBgColor;
-      capturedPieceDiv.style.border = capturedPieceDivBorder;
+      capturedPieceDiv.style.width = `${マスの横の長さ * 2}px`;
       capturedPieceDiv.style.textAlign = "center";
-      for (let i = 0; i < height; i++) {
+      for (let i = 0; i < 縦のマス数; i++) {
         createCapturedPieceColumn(capturedPieceDiv, index, i);
       }
     });
@@ -217,24 +218,24 @@ function createCapturedPieceColumn(capturedPieceDiv, player, index) {
   const div = document.createElement("div");
   capturedPieceDiv.appendChild(div);
   div.onclick = () => {
-    onClickCapturedPiece(player, index);
+    持ち駒がクリックされた時(player, index);
   };
-  div.style.height = `${cellHeight}px`;
+  div.style.height = `${マスの縦の長さ}px`;
   const pieceNameSpan = document.createElement("span");
   div.appendChild(pieceNameSpan);
   const pieceCountSpan = document.createElement("span");
   div.appendChild(pieceCountSpan);
 
-  pieceNameSpan.style.fontSize = `${pieceSymbolSize}px`;
+  pieceNameSpan.style.fontSize = `${駒のフォントサイズ}px`;
   pieceNameSpan.style.display = "inline-block";
-  pieceCountSpan.style.fontSize = `${pieceSymbolSize / 2}px`;
+  pieceCountSpan.style.fontSize = `${駒のフォントサイズ / 1.5}px`;
   if (player === 0) {
-    pieceNameSpan.style.color = piece1pColor;
-    pieceCountSpan.style.color = piece1pColor;
+    pieceNameSpan.style.color = 先手の駒の色;
+    pieceCountSpan.style.color = 先手の駒の色;
   } else {
-    pieceNameSpan.style.color = piece2pColor;
-    pieceCountSpan.style.color = piece2pColor;
-    if (doRotate2pPiece) {
+    pieceNameSpan.style.color = 後手の駒の色;
+    pieceCountSpan.style.color = 後手の駒の色;
+    if (後手の駒を反転させるか) {
       pieceNameSpan.style.transform = "rotate(180deg)";
     }
   }
