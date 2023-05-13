@@ -30,10 +30,7 @@ const 後手の持ち駒置き場の境界線 = "1px black solid";
 
 class King extends IPiece {
   NAME = "King";
-  MOVE = new LeaperMove(
-    [new RelativeCoordinate(1, 0), new RelativeCoordinate(1, 1)],
-    "oct"
-  );
+  MOVE = new LeaperMove([new Vector(1, 0), new Vector(1, 1)], "oct");
   IS_ROYAL = true;
   SYMBOL = "K";
 }
@@ -41,8 +38,8 @@ class Qween extends IPiece {
   NAME = "Qween";
   MOVE = new RiderMove(
     new Map([
-      [new RelativeCoordinate(1, 0), -1],
-      [new RelativeCoordinate(1, 1), -1],
+      [new Vector(1, 0), -1],
+      [new Vector(1, 1), -1],
     ]),
     "oct"
   );
@@ -50,32 +47,24 @@ class Qween extends IPiece {
 }
 class Bishop extends IPiece {
   NAME = "Bishop";
-  MOVE = new RiderMove(new Map([[new RelativeCoordinate(1, 1), -1]]), "fblr");
+  MOVE = new RiderMove(new Map([[new Vector(1, 1), -1]]), "fblr");
   SYMBOL = "B";
 }
 class Rook extends IPiece {
   NAME = "Rook";
-  MOVE = new RiderMove(new Map([[new RelativeCoordinate(1, 0), -1]]), "oct");
+  MOVE = new RiderMove(new Map([[new Vector(1, 0), -1]]), "oct");
   SYMBOL = "R";
 }
 class Knight extends IPiece {
   NAME = "Knight";
-  MOVE = new LeaperMove([new RelativeCoordinate(1, 2)], "oct");
+  MOVE = new LeaperMove([new Vector(1, 2)], "oct");
   SYMBOL = "N";
 }
 class Pawn extends IPiece {
   NAME = "Pawn";
   MOVE = new MoveParallelJoint(
-    new LeaperMove(
-      [new RelativeCoordinate(1, 0)],
-      "none",
-      TInteraction.NO_CAPTURE
-    ),
-    new LeaperMove(
-      [new RelativeCoordinate(1, 1)],
-      "lr",
-      TInteraction.ONLY_CAPTURE
-    )
+    new LeaperMove([new Vector(1, 0)], "none", TInteraction.NO_CAPTURE),
+    new LeaperMove([new Vector(1, 1)], "lr", TInteraction.ONLY_CAPTURE)
   );
   SYMBOL = "P";
   FORCE_PROMOTE = true;
@@ -85,15 +74,11 @@ class Pawn extends IPiece {
   get INITIAL_MOVE() {
     return new MoveParallelJoint(
       new RiderMove(
-        new Map([[new RelativeCoordinate(1, 0), 2]]),
+        new Map([[new Vector(1, 0), 2]]),
         "none",
         TInteraction.NO_CAPTURE
       ),
-      new LeaperMove(
-        [new RelativeCoordinate(1, 1)],
-        "lr",
-        TInteraction.ONLY_CAPTURE
-      )
+      new LeaperMove([new Vector(1, 1)], "lr", TInteraction.ONLY_CAPTURE)
     );
   }
 }
