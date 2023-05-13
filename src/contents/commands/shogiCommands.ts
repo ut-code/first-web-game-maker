@@ -56,11 +56,11 @@ const insertShogiInitialPieceTemplate = () => {
 const shogiCommands: Command[] = [
   {
     name: "insertShogiConfigTemplate",
-    execute: insertShogiConfigTemplate
+    execute: insertShogiConfigTemplate,
   },
   {
     name: "insertShogiStyleTemplate",
-    execute: insertShogiStyleTemplate
+    execute: insertShogiStyleTemplate,
   },
   {
     name: "insertShogiPieceTemplate",
@@ -73,7 +73,7 @@ const shogiCommands: Command[] = [
   },
   {
     name: "insertShogiInitialPieceTemplate",
-    execute: insertShogiInitialPieceTemplate
+    execute: insertShogiInitialPieceTemplate,
   },
 ];
 

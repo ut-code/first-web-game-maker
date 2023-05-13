@@ -22,18 +22,26 @@ const shogiTreeData = new TreeItem(
       command: "first-web-game-maker.insertShogiConfigTemplate",
       title: "",
     }),
-    new TreeItem("見た目の設定テンプレート", vscode.TreeItemCollapsibleState.None, {
-      command: "first-web-game-maker.insertShogiStyleTemplate",
-      title: "",
-    }),
+    new TreeItem(
+      "見た目の設定テンプレート",
+      vscode.TreeItemCollapsibleState.None,
+      {
+        command: "first-web-game-maker.insertShogiStyleTemplate",
+        title: "",
+      }
+    ),
     new TreeItem("駒の種類テンプレート", vscode.TreeItemCollapsibleState.None, {
       command: "first-web-game-maker.insertShogiPieceTemplate",
       title: "",
     }),
-    new TreeItem("駒の初期配置テンプレート", vscode.TreeItemCollapsibleState.None, {
-      command: "first-web-game-maker.insertShogiInitialPieceTemplate",
-      title: "",
-    }),
+    new TreeItem(
+      "駒の初期配置テンプレート",
+      vscode.TreeItemCollapsibleState.None,
+      {
+        command: "first-web-game-maker.insertShogiInitialPieceTemplate",
+        title: "",
+      }
+    ),
   ]
 );
 
