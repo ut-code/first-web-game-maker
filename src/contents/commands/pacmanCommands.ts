@@ -5,6 +5,12 @@ import wall from "./pacmanTemplate/wall";
 import pacmanHtml from "./pacmanTemplate/pacmanHtml";
 import pacmanJs from "./pacmanTemplate/pacmanJs";
 import drawPacman from "./pacmanTemplate/drawPacman";
+import movePacman from "./pacmanTemplate/movePacman";
+import {
+  onKeyDown,
+  goDesignatedDirection,
+  definePacmanPositionAndNextDirection,
+} from "./pacmanTemplate/movePacmanArrow";
 
 const insertWallJsAtTop = () => {
   const activeEditor = vscode.window.activeTextEditor;
@@ -83,6 +89,61 @@ const insertCallDrawPacmanFuncAtCursor = (x: string, y: string) => {
   });
 };
 
+const insertMovePacmanAtCursor = () => {
+  const activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor) {
+    return;
+  }
+  const position = activeEditor.selection.active;
+  activeEditor.edit((edit) => {
+    edit.insert(position, movePacman + "\n");
+  });
+};
+
+const insertCallMovePacmanFuncAtCursor = () => {
+  const activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor) {
+    return;
+  }
+  const position = activeEditor.selection.active;
+  activeEditor.edit((edit) => {
+    edit.insert(position, `movePacman()` + "\n");
+  });
+};
+
+const insertOnKeyDownAtCursor = () => {
+  const activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor) {
+    return;
+  }
+  const position = activeEditor.selection.active;
+  activeEditor.edit((edit) => {
+    edit.insert(position, onKeyDown + "\n");
+  });
+};
+
+const goDesignatedDirectionAtCursor = () => {
+  const activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor) {
+    return;
+  }
+  const position = activeEditor.selection.active;
+  activeEditor.edit((edit) => {
+    edit.insert(position, goDesignatedDirection + "\n");
+  });
+};
+
+const definePacmanPositionAndNextDirectionAtCursor = () => {
+  const activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor) {
+    return;
+  }
+  const position = activeEditor.selection.active;
+  activeEditor.edit((edit) => {
+    edit.insert(position, definePacmanPositionAndNextDirection + "\n");
+  });
+};
+
 const pacmanCommands: Command[] = [
   {
     name: "insertWallJsAtTop",
@@ -130,6 +191,36 @@ const pacmanCommands: Command[] = [
         prompt: "y 座標を半角数字で入力してください。",
       });
       insertCallDrawPacmanFuncAtCursor(inputX || "", inputY || "");
+    },
+  },
+  {
+    name: "insertMovePacmanAtCursor",
+    execute: () => {
+      insertMovePacmanAtCursor();
+    },
+  },
+  {
+    name: "insertCallMovePacmanFuncAtCursor",
+    execute: () => {
+      insertCallMovePacmanFuncAtCursor();
+    },
+  },
+  {
+    name: "insertOnKeyDownAtCursor",
+    execute: () => {
+      insertOnKeyDownAtCursor();
+    },
+  },
+  {
+    name: "goDesignatedDirectionAtCursor",
+    execute: () => {
+      goDesignatedDirectionAtCursor();
+    },
+  },
+  {
+    name: "definePacmanPositionAndNextDirectionAtCursor",
+    execute: () => {
+      definePacmanPositionAndNextDirectionAtCursor();
     },
   },
 ];
