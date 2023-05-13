@@ -73,7 +73,7 @@ const insertParagraphElementAtCursor = (idName: string) => {
   });
 };
 
-const htmlCommands: Command[] = [
+const pwaMakerCommands: Command[] = [
   {
     name: "insertDivElementAtCursor",
     execute: async () => {
@@ -130,4 +130,4 @@ const htmlCommands: Command[] = [
   },
 ];
 
-export default htmlCommands;
+export default pwaMakerCommands;
