@@ -3,7 +3,7 @@ import htmlTreeData from "./contents/treeData/htmlTreeData";
 import sugorokuTreeData from "./contents/treeData/sugorokuTreeData";
 import shogiTreeData from "./contents/treeData/shogiTreeData";
 
-const treeData = [htmlTreeData, sugorokuTreeData, shogiTreeData];
+const treeData = [sugorokuTreeData];
 
 const treeView = toTreeView(treeData);
 

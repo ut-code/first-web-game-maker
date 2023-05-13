@@ -12,18 +12,18 @@ export default function createPanel(context: vscode.ExtensionContext) {
       title: "使い方",
       content: topPageDescription,
     },
-    {
-      title: "構造",
-      content: htmlDescription,
-    },
+    // {
+    //   title: "構造",
+    //   content: htmlDescription,
+    // },
     {
       title: "すごろく",
       content: sugorokuDescription,
     },
-    {
-      title: "将棋",
-      content: shogiDescription,
-    },
+    // {
+    //   title: "将棋",
+    //   content: shogiDescription,
+    // },
   ];
   return toPanel(panelDataList, context);
 }
