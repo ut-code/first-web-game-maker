@@ -6,16 +6,32 @@ const shogiTreeData = new TreeItem(
   vscode.TreeItemCollapsibleState.Expanded,
   undefined,
   [
-    new TreeItem("将棋 (HTML)", vscode.TreeItemCollapsibleState.None, {
+    new TreeItem("index.html", vscode.TreeItemCollapsibleState.None, {
       command: "first-web-game-maker.insertShogiHtmlAtTop",
       title: "",
     }),
-    new TreeItem("将棋 (JavaScript)", vscode.TreeItemCollapsibleState.None, {
-      command: "first-web-game-maker.insertShogiJsAtTop",
+    new TreeItem("script.js", vscode.TreeItemCollapsibleState.None, {
+      command: "first-web-game-maker.insertShogiScriptJsAtTop",
       title: "",
     }),
-    new TreeItem("駒テンプレート", vscode.TreeItemCollapsibleState.None, {
+    new TreeItem("customshogi.js", vscode.TreeItemCollapsibleState.None, {
+      command: "first-web-game-maker.insertShogiCustomShogiAtTop",
+      title: "",
+    }),
+    new TreeItem("基本設定テンプレート", vscode.TreeItemCollapsibleState.None, {
+      command: "first-web-game-maker.insertShogiConfigTemplate",
+      title: "",
+    }),
+    new TreeItem("見た目の設定テンプレート", vscode.TreeItemCollapsibleState.None, {
+      command: "first-web-game-maker.insertShogiStyleTemplate",
+      title: "",
+    }),
+    new TreeItem("駒の種類テンプレート", vscode.TreeItemCollapsibleState.None, {
       command: "first-web-game-maker.insertShogiPieceTemplate",
+      title: "",
+    }),
+    new TreeItem("駒の初期配置テンプレート", vscode.TreeItemCollapsibleState.None, {
+      command: "first-web-game-maker.insertShogiInitialPieceTemplate",
       title: "",
     }),
   ]
