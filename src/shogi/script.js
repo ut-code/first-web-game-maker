@@ -6,6 +6,7 @@ const 持ち駒を使うか = true;
 const 駒が成れる段数 = 1;
 const 壁マスの座標リスト = [new Cell(4, 4)];
 
+// ===========================================
 // 見た目に関する設定
 const 後手の駒を反転させるか = true;
 const 先手の駒の色 = "black";
@@ -25,6 +26,100 @@ const 先手の持ち駒置き場の境界線 = "1px black solid";
 const 後手の持ち駒置き場の境界線 = "1px black solid";
 
 // ===========================================
+// 駒の種類
+
+class King extends IPiece {
+  NAME = "King";
+  MOVE = new LeaperMove(
+    [new RelativeCoordinate(1, 0), new RelativeCoordinate(1, 1)],
+    "oct"
+  );
+  IS_ROYAL = true;
+  SYMBOL = "K";
+}
+class Qween extends IPiece {
+  NAME = "Qween";
+  MOVE = new RiderMove(
+    new Map([
+      [new RelativeCoordinate(1, 0), -1],
+      [new RelativeCoordinate(1, 1), -1],
+    ]),
+    "oct"
+  );
+  SYMBOL = "Q";
+}
+class Bishop extends IPiece {
+  NAME = "Bishop";
+  MOVE = new RiderMove(new Map([[new RelativeCoordinate(1, 1), -1]]), "fblr");
+  SYMBOL = "B";
+}
+class Rook extends IPiece {
+  NAME = "Rook";
+  MOVE = new RiderMove(new Map([[new RelativeCoordinate(1, 0), -1]]), "oct");
+  SYMBOL = "R";
+}
+class Knight extends IPiece {
+  NAME = "Knight";
+  MOVE = new LeaperMove([new RelativeCoordinate(1, 2)], "oct");
+  SYMBOL = "N";
+}
+class Pawn extends IPiece {
+  NAME = "Pawn";
+  MOVE = new MoveParallelJoint(
+    new LeaperMove(
+      [new RelativeCoordinate(1, 0)],
+      "none",
+      TInteraction.NO_CAPTURE
+    ),
+    new LeaperMove(
+      [new RelativeCoordinate(1, 1)],
+      "lr",
+      TInteraction.ONLY_CAPTURE
+    )
+  );
+  SYMBOL = "P";
+  FORCE_PROMOTE = true;
+  constructor() {
+    super(...arguments);
+  }
+  get INITIAL_MOVE() {
+    return new MoveParallelJoint(
+      new RiderMove(
+        new Map([[new RelativeCoordinate(1, 0), 2]]),
+        "none",
+        TInteraction.NO_CAPTURE
+      ),
+      new LeaperMove(
+        [new RelativeCoordinate(1, 1)],
+        "lr",
+        TInteraction.ONLY_CAPTURE
+      )
+    );
+  }
+}
+// Pawn.updatePromotion([
+//   [Qween as PieceType],
+//   [Bishop as PieceType],
+//   [Rook as PieceType],
+//   [Knight as PieceType],
+// ]);
+
+// ===========================================
+// 駒の初期配置
+
+const 初期配置を左右対称にするか = true;
+const 初期配置の敵陣へのコピー = "face";
+const chessInitial = new Map([
+  [new Cell(0, 0), new Rook(PlayerIndex.WHITE)],
+  [new Cell(0, 1), new Knight(PlayerIndex.WHITE)],
+  [new Cell(0, 2), new Bishop(PlayerIndex.WHITE)],
+  [new Cell(0, 3), new King(PlayerIndex.WHITE)],
+  [new Cell(0, 4), new Qween(PlayerIndex.WHITE)],
+  [new Cell(1, 0), new Pawn(PlayerIndex.WHITE)],
+  [new Cell(1, 1), new Pawn(PlayerIndex.WHITE)],
+  [new Cell(1, 2), new Pawn(PlayerIndex.WHITE)],
+  [new Cell(1, 3), new Pawn(PlayerIndex.WHITE)],
+]);
 
 // for test
 const pieces = [{ name: "" }, { name: "歩" }];
@@ -306,17 +401,6 @@ function createCapturedPieceColumn(capturedPieceDiv, player, index) {
   }
 }
 
-const chessInitial = new Map([
-  [new Cell(0, 0), new Rook(PlayerIndex.WHITE)],
-  [new Cell(0, 1), new Knight(PlayerIndex.WHITE)],
-  [new Cell(0, 2), new Bishop(PlayerIndex.WHITE)],
-  [new Cell(0, 3), new King(PlayerIndex.WHITE)],
-  [new Cell(0, 4), new Qween(PlayerIndex.WHITE)],
-  [new Cell(1, 0), new Pawn(PlayerIndex.WHITE)],
-  [new Cell(1, 1), new Pawn(PlayerIndex.WHITE)],
-  [new Cell(1, 2), new Pawn(PlayerIndex.WHITE)],
-  [new Cell(1, 3), new Pawn(PlayerIndex.WHITE)],
-]);
 const playBoard = new MatchBoard(
   {
     initializeBoardVisualization: initializeBoardVisualization,
@@ -333,8 +417,8 @@ const playBoard = new MatchBoard(
   壁マスの座標リスト,
   持ち駒を使うか,
   TPromotionCondition.oppornentField(駒が成れる段数),
-  true,
-  "face"
+  初期配置を左右対称にするか,
+  初期配置の敵陣へのコピー
 );
 
 playBoard.game();
