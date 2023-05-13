@@ -149,8 +149,10 @@ async function selectBoard(options, message, canCancel) {
   }
   // 持ち駒
   if (pieceOption) {
-    // TODO player
     for (let k = 0; k < pieceOption.length; k++) {
+      capturedPieceDivs[player === PlayerIndex.WHITE ? 0 : 1].children[
+        k
+      ].style.backgroundColor = 選択可能なマスの色;
       capturedPieceDivs[player === PlayerIndex.WHITE ? 0 : 1].children[
         k
       ].onclick = () => handleBoardClick(pieceOption[k]);
@@ -179,6 +181,12 @@ function resetCellColor() {
         boardTds[i][j].style.backgroundColor = マスの色;
       }
     }
+  }
+  for (const div of capturedPieceDivs[0].children) {
+    div.style.backgroundColor = 先手の持ち駒置き場の色;
+  }
+  for (const div of capturedPieceDivs[1].children) {
+    div.style.backgroundColor = 後手の持ち駒置き場の色;
   }
 }
 
