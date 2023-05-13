@@ -16,6 +16,7 @@ const マスの色 = "white";
 const 壁マスの色 = "black";
 const 選択可能なマスの色 = "yellow";
 const マスの境界線 = "1px black solid";
+const 壁マスの境界線 = "1px black solid";
 const マスの一辺の長さ = 40;
 
 const 先手の持ち駒置き場の色 = "white";
@@ -24,14 +25,6 @@ const 先手の持ち駒置き場の境界線 = "1px black solid";
 const 後手の持ち駒置き場の境界線 = "1px black solid";
 
 // ===========================================
-
-const mediatorY = document.getElementById("mediator_y");
-const mediatorX = document.getElementById("mediator_x");
-
-function onClickCell(i, j) {
-  mediatorY.textContent = i;
-  mediatorX.textContent = j;
-}
 
 // for test
 const pieces = [{ name: "" }, { name: "歩" }];
@@ -247,11 +240,13 @@ function createBoardTable() {
       td.style.height = `${マスの一辺の長さ}px`;
       td.style.width = `${マスの一辺の長さ}px`;
       td.style.fontSize = `${駒のフォントサイズ}px`;
-      td.style.backgroundColor = マスの色;
-      td.style.border = マスの境界線;
-      td.onclick = () => {
-        onClickCell(i, j);
-      };
+      if (playBoard.board[i][j].isExcluded) {
+        td.style.backgroundColor = 壁マスの色;
+        td.style.border = 壁マスの境界線;
+      } else {
+        td.style.backgroundColor = マスの色;
+        td.style.border = マスの境界線;
+      }
       boardTds[i][j] = td;
     }
   }
@@ -314,26 +309,24 @@ const chessInitial = new Map([
   [new Cell(1, 2), new Pawn(PlayerIndex.WHITE)],
   [new Cell(1, 3), new Pawn(PlayerIndex.WHITE)],
 ]);
-function playBoard() {
-  return new MatchBoard(
-    {
-      initializeBoardVisualization: initializeBoardVisualization,
-      startTurnMessaging: startTurn,
-      showMessage: showMessage,
-      selectBoard: selectBoard,
-      selectPromotion: showQuestion,
-      renderCell: renderCell,
-      renderCapturedPiece: renderCapturedPiece,
-    },
-    縦のマス数,
-    横のマス数,
-    chessInitial,
-    壁マスの座標リスト,
-    持ち駒を使うか,
-    TPromotionCondition.oppornentField(駒が成れる段数),
-    true,
-    "face"
-  );
-}
+const playBoard = new MatchBoard(
+  {
+    initializeBoardVisualization: initializeBoardVisualization,
+    startTurnMessaging: startTurn,
+    showMessage: showMessage,
+    selectBoard: selectBoard,
+    selectPromotion: showQuestion,
+    renderCell: renderCell,
+    renderCapturedPiece: renderCapturedPiece,
+  },
+  縦のマス数,
+  横のマス数,
+  chessInitial,
+  壁マスの座標リスト,
+  持ち駒を使うか,
+  TPromotionCondition.oppornentField(駒が成れる段数),
+  true,
+  "face"
+);
 
-playBoard().game();
+playBoard.game();
