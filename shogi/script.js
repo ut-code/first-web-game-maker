@@ -240,7 +240,7 @@ function createBoardTable() {
       td.style.height = `${マスの一辺の長さ}px`;
       td.style.width = `${マスの一辺の長さ}px`;
       td.style.fontSize = `${駒のフォントサイズ}px`;
-      if (playBoard.board[i][j].isExcluded) {
+      if (playBoard.board[縦のマス数 - i - 1][j].isExcluded) {
         td.style.backgroundColor = 壁マスの色;
         td.style.border = 壁マスの境界線;
       } else {
