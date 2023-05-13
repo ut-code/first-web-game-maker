@@ -1,9 +1,10 @@
+// import customshogi from "./customshogi.js";
 // ===========================================
 // ゲームの基本設定
-const 縦のマス数 = 3;
-const 横のマス数 = 3;
+const 縦のマス数 = 8;
+const 横のマス数 = 8;
 const 持ち駒を使うか = true;
-const 駒が成れる段数 = 3;
+const 駒が成れる段数 = 1;
 const 壁マスの座標リスト = [];
 
 // 見た目に関する設定
@@ -52,8 +53,8 @@ const capturedPieceDivs = [
   document.getElementById("先手持ち駒置き場"),
   document.getElementById("後手持ち駒置き場"),
 ];
-初期化処理();
-startGame();
+// 初期化処理();
+// startGame();
 
 // ===========================================
 // クリックに対する処理
@@ -112,22 +113,6 @@ function initializeBoardVisualization() {
   initCapturedPieceDivs();
 }
 
-// ゲーム開始
-function startGame() {
-  createBoardTable();
-  initCapturedPieceDivs();
-  for (let i = 0; i < 縦のマス数; i++) {
-    for (let j = 0; j < 横のマス数; j++) {
-      let pieceId = currentBoard[j][i];
-      let pieceName = pieces[pieceId].name;
-      renderCell(j, i, 1, pieceName);
-    }
-  }
-  renderCapturedPiece(0, capturedPieces[0]);
-  renderCapturedPiece(1, capturedPieces[0]);
-  startTurn(0);
-}
-
 // ボード型の二次元配列を作成
 function boardMatrix(initialValue) {
   const result = Array(縦のマス数);
@@ -166,44 +151,60 @@ async function showQuestion(options, message) {
     });
   });
 }
+
+let resolveButtonClick = null;
+
+function waitButtonClick() {
+  return new Promise((resolve) => {
+    resolveButtonClick = resolve;
+  });
+}
+
+function handleBoardClick(value) {
+  if (resolveButtonClick !== null) {
+    resolveButtonClick(value);
+    resetCellColor();
+    if (messageDiv.hasChildNodes()) {
+      messageDiv.removeChild(messageDiv.firstChild);
+    }
+  }
+}
+
 // lookup PieceType => 箱: .Symbol
 // マスや持ち駒のクリックによる入力を受付
 // 未完成
 async function selectBoard(options, message, canCancel) {
+  // [number, number][]
   const boardOption = options[0];
+  // PieceType[] | undefined
   const pieceOption = options[1];
+  // Player | undefined
+  const player = options[2];
   showMessage(message);
-  return new Promise((resolve) => {
-    // キャンセルボタン
-    const button = document.createElement("button");
-    if (canCancel) {
-      messageDiv.appendChild(button);
-      button.textContent = "キャンセル";
-      button.onclick = () => handleBoardClick(resolve /* TODO */);
-    }
-    // マス
-    for (let i = 0; i < height; i++) {
-      for (let j = 0; j < width; j++) {
-        if (/* TODO 選択可能か */ kari) {
-          tds[i][j].style.backgroundColor = 選択可能なマスの色;
-          tds[i][j].onclick = () => handleBoardClick(resolve /* TODO */);
-        }
-      }
-    }
-    // 持ち駒
+
+  // とりあえず各ボタンにonClickをセットする
+  // キャンセルボタン
+  const button = document.createElement("button");
+  if (canCancel) {
+    messageDiv.appendChild(button);
+    button.textContent = "キャンセル";
+    button.onclick = handleBoardClick("キャンセル");
+  }
+  // マス
+  for (const [i, j] of boardOption) {
+    tds[i][j].style.backgroundColor = 選択可能なマスの色;
+    tds[i][j].onclick = handleBoardClick([i, j]);
+  }
+  // 持ち駒
+  if (pieceOption) {
     // TODO player
     for (const capturedPieceDiv of capturedPieceDivs[player]) {
-      capturedPieceDiv.onclick = () => handleBoardClick(resolve /* TODO */);
+      capturedPieceDiv.onclick = handleBoardClick();
     }
-  });
-}
-
-function handleBoardClick(resolve, response) {
-  resolve(response);
-  resetCellColor();
-  if (messageDiv.hasChildNodes()) {
-    messageDiv.removeChild(messageDiv.firstChild);
   }
+  // そのあと取り出す
+  const result = await waitButtonClick();
+  resolveButtonClick = null;
 }
 
 function resetCellColor() {
@@ -331,8 +332,12 @@ function createCapturedPieceColumn(capturedPieceDiv, player, index) {
   }
 }
 
-async function test1() {
-  const a = await showQuestion(["a", "b"], "test");
-  console.log(a);
-}
-test1();
+playBoard({
+  initializeBoardVisualization: initializeBoardVisualization,
+  startTurnMessaging: startTurn,
+  showMessage: showMessage,
+  selectBoard: selectBoard,
+  selectPromotion: showQuestion,
+  renderCell: renderCell,
+  renderCapturedPiece: renderCapturedPiece,
+}).game();

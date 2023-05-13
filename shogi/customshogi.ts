@@ -632,8 +632,8 @@ class MatchBoard extends IBoard {
       promotionCondition ??
       TPromotionCondition.oppornentField(Math.floor(this.height / 3));
 
-    this.board = Array(this.height).map(() =>
-      Array(this.width).map(() => new Square())
+    this.board = [...Array(this.height)].map(() =>
+      [...Array(this.width)].map(() => new Square())
     );
     this.pieceStands = new Map<Player, Counter<PieceType>>([
       [PlayerIndex.WHITE, new Counter<PieceType>()],
@@ -701,11 +701,13 @@ class MatchBoard extends IBoard {
       this.square(coord).isExcluded = true;
     }
     for (const [position, piece] of initialPosition) {
+      console.log(position, piece);
       this.#addPieceToBoard(
         piece.constructor as PieceType,
         piece.controller,
         position,
-        true
+        true,
+        "skip"
       );
     }
     this.#movablePieceMapCache = new Map();
@@ -941,6 +943,7 @@ class MatchBoard extends IBoard {
             [
               [...this.#movablePieceMapCache.keys()].map(this.coordToNum),
               [...this.pieceStands.get(this.turnPlayer)!.keys()],
+              this.turnPlayer,
             ],
             "移動させる駒か打つ駒を選んでください。",
             false
@@ -1049,7 +1052,7 @@ interface IOFunctions {
   // NOT done
   selectBoard: <T extends undefined | PieceType>(
     options: T extends PieceType
-      ? [[number, number][], T[]]
+      ? [[number, number][], T[], Player]
       : [[number, number][]],
     message: string,
     cancel: boolean
@@ -1139,28 +1142,29 @@ class Pawn extends IPiece {
       TInteraction.ONLY_CAPTURE
     )
   );
-  // @ts-ignore
-  override INITIAL_MOVE: IMove = new MoveParallelJoint(
-    new RiderMove(
-      new Map([[new RelativeCoordinate(1, 1), 2]]),
-      "none",
-      TInteraction.NO_CAPTURE
-    ),
-    new LeaperMove(
-      [new RelativeCoordinate(1, 1)],
-      "lr",
-      TInteraction.ONLY_CAPTURE
-    )
-  );
+  override get INITIAL_MOVE(): IMove {
+    return new MoveParallelJoint(
+      new RiderMove(
+        new Map([[new RelativeCoordinate(1, 1), 2]]),
+        "none",
+        TInteraction.NO_CAPTURE
+      ),
+      new LeaperMove(
+        [new RelativeCoordinate(1, 1)],
+        "lr",
+        TInteraction.ONLY_CAPTURE
+      )
+    );
+  }
   SYMBOL: string = "P";
   FORCE_PROMOTE: boolean = true;
 }
-Pawn.updatePromotion([
-  [Qween as PieceType],
-  [Bishop as PieceType],
-  [Rook as PieceType],
-  [Knight as PieceType],
-]);
+// Pawn.updatePromotion([
+//   [Qween as PieceType],
+//   [Bishop as PieceType],
+//   [Rook as PieceType],
+//   [Knight as PieceType],
+// ]);
 
 // @ts-ignore
 const chessInitial: Map<AbsoluteCoordinate, RealPiece> = new Map([
@@ -1174,18 +1178,19 @@ const chessInitial: Map<AbsoluteCoordinate, RealPiece> = new Map([
   [new AbsoluteCoordinate(1, 2), new Pawn(PlayerIndex.WHITE)],
   [new AbsoluteCoordinate(1, 3), new Pawn(PlayerIndex.WHITE)],
 ]);
-const playBoard = new MatchBoard(
-  null as any,
-  8,
-  8,
-  chessInitial,
-  [],
-  true,
-  TPromotionCondition.oppornentField(1),
-  true,
-  "face"
-);
-playBoard.game();
+function playBoard(IO: IOFunctions) {
+  return new MatchBoard(
+    IO,
+    8,
+    8,
+    chessInitial,
+    [],
+    true,
+    TPromotionCondition.oppornentField(1),
+    true,
+    "face"
+  );
+}
 
 // const Vector = RelativeCoordinate;
 // const Cell = AbsoluteCoordinate;
@@ -1203,3 +1208,14 @@ playBoard.game();
 //   コマを取る移動: TInteraction.ONLY_CAPTURE,
 // };
 // const MoveKind = TInteraction;
+
+// export default {
+//   MatchBoard,
+//   IPiece,
+//   PlayerIndex,
+//   LeaperMove,
+//   RiderMove,
+//   MoveParallelJoint,
+//   TInteraction,
+//   playBoard,
+// };
