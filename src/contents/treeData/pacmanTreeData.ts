@@ -6,17 +6,35 @@ const pacmanTreeData = new TreeItem(
   vscode.TreeItemCollapsibleState.Expanded,
   undefined,
   [
-    new TreeItem("パックマン (HTML)", vscode.TreeItemCollapsibleState.None, {
-      command: "first-web-game-maker.insertPacmanHtmlAtTop",
-      title: "",
-    }),
+    new TreeItem(
+      "パックマン (HTML)",
+      vscode.TreeItemCollapsibleState.Expanded,
+      undefined,
+      [
+        new TreeItem(
+          "HTML のテンプレート",
+          vscode.TreeItemCollapsibleState.None,
+          {
+            command: "first-web-game-maker.insertHtmlTemplateAtTop",
+            title: "",
+          }
+        ),
+      ]
+    ),
     new TreeItem(
       "パックマン (JavaScript)",
-      vscode.TreeItemCollapsibleState.None,
-      {
-        command: "first-web-game-maker.insertPacmanJsAtTop",
-        title: "",
-      }
+      vscode.TreeItemCollapsibleState.Expanded,
+      undefined,
+      [
+        new TreeItem(
+          "JavaScript のテンプレート",
+          vscode.TreeItemCollapsibleState.None,
+          {
+            command: "first-web-game-maker.insertWallJsAtTop",
+            title: "",
+          }
+        ),
+      ]
     ),
   ]
 );
