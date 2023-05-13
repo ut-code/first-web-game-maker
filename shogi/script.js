@@ -1,4 +1,3 @@
-// import customshogi from "./customshogi.js";
 // ===========================================
 // ゲームの基本設定
 const 縦のマス数 = 8;
@@ -10,7 +9,7 @@ const 壁マスの座標リスト = [];
 // 見た目に関する設定
 const 後手の駒を反転させるか = true;
 const 先手の駒の色 = "black";
-const 後手の駒の色 = "black";
+const 後手の駒の色 = "red";
 const 駒のフォントサイズ = 24;
 
 const マスの色 = "white";
@@ -24,9 +23,6 @@ const 後手の持ち駒置き場の色 = "white";
 const 先手の持ち駒置き場の境界線 = "1px black solid";
 const 後手の持ち駒置き場の境界線 = "1px black solid";
 
-// 盤面の初期設定
-function 初期化処理() {}
-
 // ===========================================
 
 const mediatorY = document.getElementById("mediator_y");
@@ -38,13 +34,7 @@ function onClickCell(i, j) {
 }
 
 // for test
-const currentBoard = [
-  [1, 1, 1],
-  [1, 0, 1],
-  [1, 0, 0],
-];
 const pieces = [{ name: "" }, { name: "歩" }];
-const kari = false;
 const capturedPieces = [[], [{ name: "歩", count: 2 }]];
 
 const messageDiv = document.getElementById("メッセージ表示");
@@ -54,60 +44,23 @@ const capturedPieceDivs = [
   document.getElementById("後手持ち駒置き場"),
 ];
 // 初期化処理();
-// startGame();
-
-// ===========================================
-// クリックに対する処理
-
-function マスがクリックされた時(y, x) {
-  /* ゲームの状態に応じて下3つのどれかに処理を分ける */
-}
-
-function 動かす駒の選択(y, x) {
-  /* 駒が動けるマスを探索 */
-  if (/* 動けるマスがあるか */ kari) {
-    /* 移動元の座標と駒の種類を記録しておく */
-    showMessage("駒を移動させるマスを選んでください。");
-  } else {
-    showMessage("その駒は動かせません。");
-  }
-}
-
-function 駒の移動先の選択(y, x) {
-  /* 駒の移動 */
-  // マスの描画(移動元x, 移動元y);
-  renderCell(y, x);
-}
-
-function 持ち駒を置くマスの選択(y, x) {
-  /* 駒の設置 */
-  renderCell(y, x);
-}
-
-function 持ち駒がクリックされた時(player, index) {
-  if (index < capturedPieces[player].length) {
-    /* 駒が置けるマスを探索 */
-    if (/* 置けるマスがあるか */ kari) {
-      /* 置こうとしている駒の種類を記録 */
-      showMessage("駒を置くマスを選んでください。");
-    } else {
-      showMessage("駒を置けるマスがありません。");
-    }
-  }
-}
 
 // ===========================================
 // ゲーム制御
 
 // 手番の切り替え時の処理
 function startTurn(player) {
-  showMessage("先手の番です。");
+  if (player === 0) {
+    showMessage("先手の番です。");
+  } else {
+    showMessage("後手の番です");
+  }
 }
 
 // ===========================================
 // 基本的に変更不要な処理
 
-// added by Logic section
+// 盤面の初期設定
 function initializeBoardVisualization() {
   createBoardTable();
   initCapturedPieceDivs();
@@ -132,6 +85,12 @@ function showMessage(message) {
 
 // 選択肢付きの質問を表示
 async function showQuestion(options, message) {
+  if (!options.length) {
+    throw new Error("no option");
+  }
+  if (options.length === 1) {
+    return options[0];
+  }
   messageDiv.textContent = message;
   const buttons = options.map((option) => {
     const button = document.createElement("button");
@@ -154,7 +113,7 @@ async function showQuestion(options, message) {
 
 let resolveButtonClick = null;
 
-function waitButtonClick() {
+async function waitButtonClick() {
   return new Promise((resolve) => {
     resolveButtonClick = resolve;
   });
@@ -188,32 +147,33 @@ async function selectBoard(options, message, canCancel) {
   if (canCancel) {
     messageDiv.appendChild(button);
     button.textContent = "キャンセル";
-    button.onclick = handleBoardClick("キャンセル");
+    button.onclick = () => handleBoardClick("キャンセル");
   }
   // マス
   for (const [i, j] of boardOption) {
-    tds[i][j].style.backgroundColor = 選択可能なマスの色;
-    tds[i][j].onclick = handleBoardClick([i, j]);
+    boardTds[i][j].style.backgroundColor = 選択可能なマスの色;
+    boardTds[i][j].onclick = () => handleBoardClick([i, j]);
   }
   // 持ち駒
   if (pieceOption) {
     // TODO player
-    for (const capturedPieceDiv of capturedPieceDivs[player]) {
-      capturedPieceDiv.onclick = handleBoardClick();
+    for (let k = 0; k < pieceOption.length; k++) {
+      capturedPieceDivs[player === PlayerIndex.WHITE ? 0 : 1].children[
+        k
+      ].onclick = () => handleBoardClick(pieceOption[k]);
     }
   }
   // そのあと取り出す
   const result = await waitButtonClick();
   resolveButtonClick = null;
+  return result;
 }
 
 function resetCellColor() {
-  for (let i = 0; i < height; i++) {
-    for (let j = 0; j < width; j++) {
-      if (playBoard.squere(AbsoluteCoordinate(i, j)).isExcluded) {
-        tds[i][j].backgroundColor = 壁マスの色;
-      } else {
-        tds[i][j].backgroundColor = マスの色;
+  for (let i = 0; i < 縦のマス数; i++) {
+    for (let j = 0; j < 横のマス数; j++) {
+      if (boardTds[i][j].style.backgroundColor === 選択可能なマスの色) {
+        boardTds[i][j].style.backgroundColor = マスの色;
       }
     }
   }
@@ -253,6 +213,10 @@ function renderCapturedPiece(player, pieceNameAndNum) {
     capturedPieceDivs[player].children[
       i
     ].children[1].textContent = ` x ${pieceNameAndNum[i].count}`;
+  }
+  for (let i = capturedPiecesLength; i < childrenLength; i++) {
+    capturedPieceDivs[player].children[i].children[0].textContent = "";
+    capturedPieceDivs[player].children[i].children[1].textContent = "";
   }
 }
 
@@ -308,9 +272,6 @@ function initCapturedPieceDivs() {
 function createCapturedPieceColumn(capturedPieceDiv, player, index) {
   const div = document.createElement("div");
   capturedPieceDiv.appendChild(div);
-  div.onclick = () => {
-    持ち駒がクリックされた時(player, index);
-  };
   div.style.height = `${マスの一辺の長さ}px`;
   const pieceNameSpan = document.createElement("span");
   div.appendChild(pieceNameSpan);
@@ -332,7 +293,7 @@ function createCapturedPieceColumn(capturedPieceDiv, player, index) {
   }
 }
 
-playBoard({
+const test1 = playBoard({
   initializeBoardVisualization: initializeBoardVisualization,
   startTurnMessaging: startTurn,
   showMessage: showMessage,
@@ -340,4 +301,5 @@ playBoard({
   selectPromotion: showQuestion,
   renderCell: renderCell,
   renderCapturedPiece: renderCapturedPiece,
-}).game();
+});
+test1.game();

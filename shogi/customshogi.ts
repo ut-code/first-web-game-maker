@@ -22,8 +22,17 @@ class Counter<K> extends DefaultDict<K, number> {
   }
 }
 
+const coordCatalog = new Map<string, Coordinate>();
 class Coordinate {
-  constructor(public readonly y: number, public readonly x: number) {}
+  constructor(public readonly y: number, public readonly x: number) {
+    const key: string = `${this.constructor.name}(${y === -0 ? 0 : y}, ${
+      x === -0 ? 0 : x
+    })`;
+    if (coordCatalog.has(key)) {
+      return coordCatalog.get(key)!;
+    }
+    coordCatalog.set(key, this);
+  }
 
   toString(): string {
     return `${this.constructor.name}${(this.y, this.x)}`;
@@ -210,12 +219,7 @@ class LeaperMove extends IMove {
   ) {
     super();
 
-    this.interaction = TInteraction.NORMAL;
-    if (interaction) {
-      for (const [relation, approachability] of interaction) {
-        this.interaction.set(relation, approachability);
-      }
-    }
+    this.interaction = interaction ?? TInteraction.NORMAL;
 
     this.#coordinates = new Set(coordinates);
     switch (symmetry) {
@@ -302,12 +306,7 @@ class RiderMove extends IMove {
   ) {
     super();
 
-    this.interaction = TInteraction.NORMAL;
-    if (interaction) {
-      for (const [relation, approachability] of interaction) {
-        this.interaction.set(relation, approachability);
-      }
-    }
+    this.interaction = interaction ?? TInteraction.NORMAL;
 
     const adoptDist = (dist1: number, dist2: number) =>
       dist1 < 0 || dist2 < 0 ? -1 : Math.max(dist1, dist2);
@@ -378,7 +377,8 @@ class RiderMove extends IMove {
         maxDist = Math.max(board.height, board.width);
       }
       for (
-        let moveNum = 0, newCoordinate = currentCoordinate;
+        let moveNum = 1,
+          newCoordinate = currentCoordinate.add<AbsoluteCoordinate>(movement);
         moveNum <= maxDist;
         ++moveNum, newCoordinate = newCoordinate.add(movement)
       ) {
@@ -439,10 +439,6 @@ class MoveParallelJoint extends IMove {
   }
 }
 
-// interface IPiece {
-//   new(controller: undefined, isUntouched?: boolean): IPiece,
-//   new(controller: Player, isUntouched?: boolean): RealPiece,
-// }
 abstract class IPiece {
   constructor(
     public controller?: Player,
@@ -477,7 +473,7 @@ abstract class IPiece {
     return new (this as PieceType)(undefined as any).SYMBOL;
   }
 
-  // TODO: 本当に動くのか?
+  // TODO: 動かなかったので要修正
   static updatePromotion(
     promotedPieces: Iterable<[PieceType, string?, string?]>
   ): void {
@@ -778,6 +774,9 @@ class MatchBoard extends IBoard {
       }
     }
     this.square(coord).piece = new kind(controller, asUntouched);
+    if (!this.pieceInBoardIndex.get(controller)!.has(kind)) {
+      this.pieceInBoardIndex.get(controller)!.set(kind, new Set());
+    }
     this.pieceInBoardIndex.get(controller)!.get(kind).add(coord);
   }
 
@@ -917,16 +916,19 @@ class MatchBoard extends IBoard {
   async game(): Promise<void> {
     const converter = <T extends null | PieceType>(r: [number, number] | T) =>
       r instanceof Array ? this.numToCoord(...r) : r;
+    const playerToNum = (p?: Player): 0 | 1 =>
+      p === PlayerIndex.WHITE ? 0 : 1;
     // ゲーム終了までループ
     this.IO.initializeBoardVisualization();
     for (const coord of this.#coordsGenerator) {
+      const piece = this.square(coord).piece;
       this.IO.renderCell(
         ...this.coordToNum(coord),
-        this.turnPlayer === PlayerIndex.WHITE ? 0 : 1,
-        this.square(coord).piece?.SYMBOL ?? ""
+        playerToNum(piece?.controller),
+        piece?.SYMBOL ?? ""
       );
     }
-    while (this.#isGameTerminated[0]) {
+    while (!this.#isGameTerminated[0]) {
       const playLog: PlayLogComplete = {
         state: "defined",
         board: this,
@@ -936,12 +938,14 @@ class MatchBoard extends IBoard {
       } as unknown as PlayLogComplete;
       this.#updateMovablePieceMap();
 
-      this.IO.startTurnMessaging(this.turnPlayer === PlayerIndex.WHITE ? 0 : 1);
+      this.IO.startTurnMessaging(playerToNum(this.turnPlayer));
       Turn: while (true) {
         const target = converter(
           await this.IO.selectBoard(
             [
-              [...this.#movablePieceMapCache.keys()].map(this.coordToNum),
+              [...this.#movablePieceMapCache.keys()].map(
+                this.coordToNum.bind(this)
+              ),
               [...this.pieceStands.get(this.turnPlayer)!.keys()],
               this.turnPlayer,
             ],
@@ -963,7 +967,7 @@ class MatchBoard extends IBoard {
             await this.IO.selectBoard<undefined>(
               [
                 [...this.#currentMovablePieceMap.get(target)!].map(
-                  this.coordToNum
+                  this.coordToNum.bind(this)
                 ),
               ],
               "駒を移動させるマスを選んでください。",
@@ -978,6 +982,7 @@ class MatchBoard extends IBoard {
             const promoteTo = await this.IO.selectPromotion([
               ...new playLog.movingPiece(undefined as unknown as Player)
                 .PROMOTE_DEFAULT,
+              playLog.movingPiece,
             ]);
             if (promoteTo !== playLog.movingPiece) {
               this.#promote(promoteTo, goal, playLog);
@@ -985,20 +990,29 @@ class MatchBoard extends IBoard {
           }
           this.IO.renderCell(
             ...this.coordToNum(goal),
-            this.turnPlayer === PlayerIndex.WHITE ? 0 : 1,
+            playerToNum(this.turnPlayer),
             this.square(goal).piece?.SYMBOL ?? ""
           );
           this.IO.renderCell(
             ...this.coordToNum(target),
-            this.turnPlayer === PlayerIndex.WHITE ? 0 : 1,
+            playerToNum(this.turnPlayer),
             this.square(target).piece?.SYMBOL ?? ""
+          );
+          this.IO.renderCapturedPiece(
+            playerToNum(this.turnPlayer),
+            [...this.pieceStands.get(this.turnPlayer)!.entries()].map(
+              ([kind, num]) => ({
+                name: new kind(undefined as any).SYMBOL,
+                count: num,
+              })
+            )
           );
           break Turn;
         } else {
           // コマを打つ
           const goal = converter(
             await this.IO.selectBoard<undefined>(
-              [[...this.#dropDestination()].map(this.coordToNum)],
+              [[...this.#dropDestination()].map(this.coordToNum.bind(this))],
               "駒を置くマスを選んでください。",
               true
             )
@@ -1009,11 +1023,11 @@ class MatchBoard extends IBoard {
           this.#drop(target, goal, playLog);
           this.IO.renderCell(
             ...this.coordToNum(goal),
-            this.turnPlayer === PlayerIndex.WHITE ? 0 : 1,
+            playerToNum(this.turnPlayer),
             new target(undefined as any).SYMBOL
           );
           this.IO.renderCapturedPiece(
-            this.turnPlayer === PlayerIndex.WHITE ? 0 : 1,
+            playerToNum(this.turnPlayer),
             [...this.pieceStands.get(this.turnPlayer)!.entries()].map(
               ([kind, num]) => ({
                 name: new kind(undefined as any).SYMBOL,
@@ -1117,7 +1131,7 @@ class Rook extends IPiece {
   NAME: string = "Rook";
   MOVE: IMove = new RiderMove(
     new Map([[new RelativeCoordinate(1, 0), -1]]),
-    "fblr"
+    "oct"
   );
   SYMBOL: string = "R";
 }
@@ -1145,7 +1159,7 @@ class Pawn extends IPiece {
   override get INITIAL_MOVE(): IMove {
     return new MoveParallelJoint(
       new RiderMove(
-        new Map([[new RelativeCoordinate(1, 1), 2]]),
+        new Map([[new RelativeCoordinate(1, 0), 2]]),
         "none",
         TInteraction.NO_CAPTURE
       ),

@@ -29,10 +29,16 @@ class Counter extends DefaultDict {
         super(() => 0, iterable);
     }
 }
+const coordCatalog = new Map();
 class Coordinate {
     constructor(y, x) {
         this.y = y;
         this.x = x;
+        const key = `${this.constructor.name}(${y === -0 ? 0 : y}, ${x === -0 ? 0 : x})`;
+        if (coordCatalog.has(key)) {
+            return coordCatalog.get(key);
+        }
+        coordCatalog.set(key, this);
     }
     toString() {
         return `${this.constructor.name}${(this.y, this.x)}`;
@@ -170,12 +176,7 @@ class LeaperMove extends IMove {
     constructor(coordinates, symmetry = "none", interaction) {
         super();
         _LeaperMove_coordinates.set(this, void 0);
-        this.interaction = TInteraction.NORMAL;
-        if (interaction) {
-            for (const [relation, approachability] of interaction) {
-                this.interaction.set(relation, approachability);
-            }
-        }
+        this.interaction = interaction ?? TInteraction.NORMAL;
         __classPrivateFieldSet(this, _LeaperMove_coordinates, new Set(coordinates), "f");
         switch (symmetry) {
             case "oct":
@@ -225,12 +226,7 @@ class RiderMove extends IMove {
     constructor(coordinatesToDist, symmetry = "none", interaction) {
         super();
         _RiderMove_coordinatesToDist.set(this, void 0);
-        this.interaction = TInteraction.NORMAL;
-        if (interaction) {
-            for (const [relation, approachability] of interaction) {
-                this.interaction.set(relation, approachability);
-            }
-        }
+        this.interaction = interaction ?? TInteraction.NORMAL;
         const adoptDist = (dist1, dist2) => dist1 < 0 || dist2 < 0 ? -1 : Math.max(dist1, dist2);
         __classPrivateFieldSet(this, _RiderMove_coordinatesToDist, new DefaultDict(() => 0, coordinatesToDist), "f");
         switch (symmetry) {
@@ -266,7 +262,7 @@ class RiderMove extends IMove {
             if (maxDist < 0) {
                 maxDist = Math.max(board.height, board.width);
             }
-            for (let moveNum = 0, newCoordinate = currentCoordinate; moveNum <= maxDist; ++moveNum, newCoordinate = newCoordinate.add(movement)) {
+            for (let moveNum = 1, newCoordinate = currentCoordinate.add(movement); moveNum <= maxDist; ++moveNum, newCoordinate = newCoordinate.add(movement)) {
                 if (!newCoordinate.isInside(board)) {
                     break;
                 }
@@ -308,10 +304,6 @@ class MoveParallelJoint extends IMove {
         return coords;
     }
 }
-// interface IPiece {
-//   new(controller: undefined, isUntouched?: boolean): IPiece,
-//   new(controller: Player, isUntouched?: boolean): RealPiece,
-// }
 class IPiece {
     constructor(controller, isUntouched = false) {
         this.controller = controller;
@@ -336,7 +328,7 @@ class IPiece {
     static toString() {
         return new this(undefined).SYMBOL;
     }
-    // TODO: 本当に動くのか?
+    // TODO: 動かなかったので要修正
     static updatePromotion(promotedPieces) {
         const original = this;
         const truePromotedPieces = new Set();
@@ -485,12 +477,14 @@ class MatchBoard extends IBoard {
     }
     async game() {
         const converter = (r) => r instanceof Array ? this.numToCoord(...r) : r;
+        const playerToNum = (p) => p === PlayerIndex.WHITE ? 0 : 1;
         // ゲーム終了までループ
         this.IO.initializeBoardVisualization();
         for (const coord of __classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_coordsGenerator_get)) {
-            this.IO.renderCell(...this.coordToNum(coord), this.turnPlayer === PlayerIndex.WHITE ? 0 : 1, this.square(coord).piece?.SYMBOL ?? "");
+            const piece = this.square(coord).piece;
+            this.IO.renderCell(...this.coordToNum(coord), playerToNum(piece?.controller), piece?.SYMBOL ?? "");
         }
-        while (__classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_isGameTerminated_get)[0]) {
+        while (!__classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_isGameTerminated_get)[0]) {
             const playLog = {
                 state: "defined",
                 board: this,
@@ -499,10 +493,10 @@ class MatchBoard extends IBoard {
                 turnPlayer: this.turnPlayer,
             };
             __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_updateMovablePieceMap).call(this);
-            this.IO.startTurnMessaging(this.turnPlayer === PlayerIndex.WHITE ? 0 : 1);
+            this.IO.startTurnMessaging(playerToNum(this.turnPlayer));
             Turn: while (true) {
                 const target = converter(await this.IO.selectBoard([
-                    [...__classPrivateFieldGet(this, _MatchBoard_movablePieceMapCache, "f").keys()].map(this.coordToNum),
+                    [...__classPrivateFieldGet(this, _MatchBoard_movablePieceMapCache, "f").keys()].map(this.coordToNum.bind(this)),
                     [...this.pieceStands.get(this.turnPlayer).keys()],
                     this.turnPlayer,
                 ], "移動させる駒か打つ駒を選んでください。", false));
@@ -513,7 +507,7 @@ class MatchBoard extends IBoard {
                 if (target instanceof AbsoluteCoordinate) {
                     // コマを動かす
                     const goal = converter(await this.IO.selectBoard([
-                        [...__classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_currentMovablePieceMap_get).get(target)].map(this.coordToNum),
+                        [...__classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_currentMovablePieceMap_get).get(target)].map(this.coordToNum.bind(this)),
                     ], "駒を移動させるマスを選んでください。", true));
                     if (goal === null) {
                         continue Turn;
@@ -523,24 +517,29 @@ class MatchBoard extends IBoard {
                         const promoteTo = await this.IO.selectPromotion([
                             ...new playLog.movingPiece(undefined)
                                 .PROMOTE_DEFAULT,
+                            playLog.movingPiece,
                         ]);
                         if (promoteTo !== playLog.movingPiece) {
                             __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_promote).call(this, promoteTo, goal, playLog);
                         }
                     }
-                    this.IO.renderCell(...this.coordToNum(goal), this.turnPlayer === PlayerIndex.WHITE ? 0 : 1, this.square(goal).piece?.SYMBOL ?? "");
-                    this.IO.renderCell(...this.coordToNum(target), this.turnPlayer === PlayerIndex.WHITE ? 0 : 1, this.square(target).piece?.SYMBOL ?? "");
+                    this.IO.renderCell(...this.coordToNum(goal), playerToNum(this.turnPlayer), this.square(goal).piece?.SYMBOL ?? "");
+                    this.IO.renderCell(...this.coordToNum(target), playerToNum(this.turnPlayer), this.square(target).piece?.SYMBOL ?? "");
+                    this.IO.renderCapturedPiece(playerToNum(this.turnPlayer), [...this.pieceStands.get(this.turnPlayer).entries()].map(([kind, num]) => ({
+                        name: new kind(undefined).SYMBOL,
+                        count: num,
+                    })));
                     break Turn;
                 }
                 else {
                     // コマを打つ
-                    const goal = converter(await this.IO.selectBoard([[...__classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_dropDestination).call(this)].map(this.coordToNum)], "駒を置くマスを選んでください。", true));
+                    const goal = converter(await this.IO.selectBoard([[...__classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_dropDestination).call(this)].map(this.coordToNum.bind(this))], "駒を置くマスを選んでください。", true));
                     if (goal === null) {
                         continue Turn;
                     }
                     __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_drop).call(this, target, goal, playLog);
-                    this.IO.renderCell(...this.coordToNum(goal), this.turnPlayer === PlayerIndex.WHITE ? 0 : 1, new target(undefined).SYMBOL);
-                    this.IO.renderCapturedPiece(this.turnPlayer === PlayerIndex.WHITE ? 0 : 1, [...this.pieceStands.get(this.turnPlayer).entries()].map(([kind, num]) => ({
+                    this.IO.renderCell(...this.coordToNum(goal), playerToNum(this.turnPlayer), new target(undefined).SYMBOL);
+                    this.IO.renderCapturedPiece(playerToNum(this.turnPlayer), [...this.pieceStands.get(this.turnPlayer).entries()].map(([kind, num]) => ({
                         name: new kind(undefined).SYMBOL,
                         count: num,
                     })));
@@ -606,6 +605,9 @@ _MatchBoard_movablePieceMapCache = new WeakMap(), _MatchBoard_instances = new We
         }
     }
     this.square(coord).piece = new kind(controller, asUntouched);
+    if (!this.pieceInBoardIndex.get(controller).has(kind)) {
+        this.pieceInBoardIndex.get(controller).set(kind, new Set());
+    }
     this.pieceInBoardIndex.get(controller).get(kind).add(coord);
 }, _MatchBoard_removePieceFromStand = function _MatchBoard_removePieceFromStand(kind, controller) {
     const activePieceStand = this.pieceStands.get(controller);
@@ -731,7 +733,7 @@ class Rook extends IPiece {
     constructor() {
         super(...arguments);
         this.NAME = "Rook";
-        this.MOVE = new RiderMove(new Map([[new RelativeCoordinate(1, 0), -1]]), "fblr");
+        this.MOVE = new RiderMove(new Map([[new RelativeCoordinate(1, 0), -1]]), "oct");
         this.SYMBOL = "R";
     }
 }
@@ -752,7 +754,7 @@ class Pawn extends IPiece {
         this.FORCE_PROMOTE = true;
     }
     get INITIAL_MOVE() {
-        return new MoveParallelJoint(new RiderMove(new Map([[new RelativeCoordinate(1, 1), 2]]), "none", TInteraction.NO_CAPTURE), new LeaperMove([new RelativeCoordinate(1, 1)], "lr", TInteraction.ONLY_CAPTURE));
+        return new MoveParallelJoint(new RiderMove(new Map([[new RelativeCoordinate(1, 0), 2]]), "none", TInteraction.NO_CAPTURE), new LeaperMove([new RelativeCoordinate(1, 1)], "lr", TInteraction.ONLY_CAPTURE));
     }
 }
 // Pawn.updatePromotion([
