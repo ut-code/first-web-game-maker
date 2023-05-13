@@ -45,6 +45,103 @@ const chessInitial = new Map([
 // ===========================================
 // 駒の種類
 
+class King extends IPiece {
+  constructor() {
+    super(...arguments);
+    this.NAME = "King";
+    this.MOVE = new LeaperMove(
+      [new RelativeCoordinate(1, 0), new RelativeCoordinate(1, 1)],
+      "oct"
+    );
+    this.IS_ROYAL = true;
+    this.SYMBOL = "K";
+  }
+}
+class Qween extends IPiece {
+  constructor() {
+    super(...arguments);
+    this.NAME = "Qween";
+    this.MOVE = new RiderMove(
+      new Map([
+        [new RelativeCoordinate(1, 0), -1],
+        [new RelativeCoordinate(1, 1), -1],
+      ]),
+      "oct"
+    );
+    this.SYMBOL = "Q";
+  }
+}
+class Bishop extends IPiece {
+  constructor() {
+    super(...arguments);
+    this.NAME = "Bishop";
+    this.MOVE = new RiderMove(
+      new Map([[new RelativeCoordinate(1, 1), -1]]),
+      "fblr"
+    );
+    this.SYMBOL = "B";
+  }
+}
+class Rook extends IPiece {
+  constructor() {
+    super(...arguments);
+    this.NAME = "Rook";
+    this.MOVE = new RiderMove(
+      new Map([[new RelativeCoordinate(1, 0), -1]]),
+      "oct"
+    );
+    this.SYMBOL = "R";
+  }
+}
+class Knight extends IPiece {
+  constructor() {
+    super(...arguments);
+    this.NAME = "Knight";
+    this.MOVE = new LeaperMove([new RelativeCoordinate(1, 2)], "oct");
+    this.SYMBOL = "N";
+  }
+}
+class Pawn extends IPiece {
+  constructor() {
+    super(...arguments);
+    this.NAME = "Pawn";
+    this.MOVE = new MoveParallelJoint(
+      new LeaperMove(
+        [new RelativeCoordinate(1, 0)],
+        "none",
+        TInteraction.NO_CAPTURE
+      ),
+      new LeaperMove(
+        [new RelativeCoordinate(1, 1)],
+        "lr",
+        TInteraction.ONLY_CAPTURE
+      )
+    );
+    this.SYMBOL = "P";
+    this.FORCE_PROMOTE = true;
+  }
+  get INITIAL_MOVE() {
+    return new MoveParallelJoint(
+      new RiderMove(
+        new Map([[new RelativeCoordinate(1, 0), 2]]),
+        "none",
+        TInteraction.NO_CAPTURE
+      ),
+      new LeaperMove(
+        [new RelativeCoordinate(1, 1)],
+        "lr",
+        TInteraction.ONLY_CAPTURE
+      )
+    );
+  }
+}
+// Pawn.updatePromotion([
+//   [Qween as PieceType],
+//   [Bishop as PieceType],
+//   [Rook as PieceType],
+//   [Knight as PieceType],
+// ]);
+
 // ===========================================
 
 // for test
