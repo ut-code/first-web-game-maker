@@ -322,14 +322,14 @@ class RiderMove extends IMove {
       case "fblr":
         for (const [coord, dist] of [...this.#coordinatesToDist]) {
           this.#coordinatesToDist.set(
-            coord.upsideLeft,
+            coord.yInverted,
             adoptDist(this.#coordinatesToDist.get(coord.yInverted)!, dist)
           );
         }
       case "lr":
         for (const [coord, dist] of [...this.#coordinatesToDist]) {
           this.#coordinatesToDist.set(
-            coord.upsideLeft,
+            coord.xInverted,
             adoptDist(this.#coordinatesToDist.get(coord.xInverted)!, dist)
           );
         }
@@ -673,8 +673,10 @@ class MatchBoard extends IBoard {
       switch (wbSymmetry) {
         case "face":
           accessor = "yInverted";
+          break;
         case "cross":
           accessor = "fullInverted";
+          break;
       }
       const initialPositionAddition = new Map(
         [...initialPosition].map(([position, piece]) => [
@@ -1181,55 +1183,3 @@ class Pawn extends IPiece {
 // ]);
 
 // @ts-ignore
-const chessInitial: Map<AbsoluteCoordinate, RealPiece> = new Map([
-  [new AbsoluteCoordinate(0, 0), new Rook(PlayerIndex.WHITE)],
-  [new AbsoluteCoordinate(0, 1), new Knight(PlayerIndex.WHITE)],
-  [new AbsoluteCoordinate(0, 2), new Bishop(PlayerIndex.WHITE)],
-  [new AbsoluteCoordinate(0, 3), new King(PlayerIndex.WHITE)],
-  [new AbsoluteCoordinate(0, 4), new Qween(PlayerIndex.WHITE)],
-  [new AbsoluteCoordinate(1, 0), new Pawn(PlayerIndex.WHITE)],
-  [new AbsoluteCoordinate(1, 1), new Pawn(PlayerIndex.WHITE)],
-  [new AbsoluteCoordinate(1, 2), new Pawn(PlayerIndex.WHITE)],
-  [new AbsoluteCoordinate(1, 3), new Pawn(PlayerIndex.WHITE)],
-]);
-function playBoard(IO: IOFunctions) {
-  return new MatchBoard(
-    IO,
-    8,
-    8,
-    chessInitial,
-    [],
-    true,
-    TPromotionCondition.oppornentField(1),
-    true,
-    "face"
-  );
-}
-
-// const Vector = RelativeCoordinate;
-// const Cell = AbsoluteCoordinate;
-// const PieceBase = IPiece;
-// const 先手 = PlayerIndex.WHITE;
-// const 後手 = PlayerIndex.BLACK;
-// const FIRST_PLAYER = PlayerIndex.WHITE;
-// const SECOND_PLAYER = PlayerIndex.BLACK;
-// const JumpMove = LeaperMove;
-// const RunMove = RiderMove;
-// const MergedMove = MoveParallelJoint;
-// const 移動の種類 = {
-//   普通の移動: TInteraction.NORMAL,
-//   コマを取らない移動: TInteraction.NO_CAPTURE,
-//   コマを取る移動: TInteraction.ONLY_CAPTURE,
-// };
-// const MoveKind = TInteraction;
-
-// export default {
-//   MatchBoard,
-//   IPiece,
-//   PlayerIndex,
-//   LeaperMove,
-//   RiderMove,
-//   MoveParallelJoint,
-//   TInteraction,
-//   playBoard,
-// };

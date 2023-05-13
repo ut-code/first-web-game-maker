@@ -165,7 +165,17 @@ async function selectBoard(options, message, canCancel) {
   }
   // そのあと取り出す
   const result = await waitButtonClick();
-  resolveButtonClick = null;
+
+  for (let i = 0; i < 縦のマス数; i++) {
+    for (let j = 0; j < 横のマス数; j++) {
+      boardTds[i][j].onclick = () => {};
+    }
+  }
+  for (const div of capturedPieceDivs[player === PlayerIndex.WHITE ? 0 : 1]
+    .children) {
+    div.onclick = () => {};
+  }
+
   return result;
 }
 
@@ -291,6 +301,31 @@ function createCapturedPieceColumn(capturedPieceDiv, player, index) {
       pieceNameSpan.style.transform = "rotate(180deg)";
     }
   }
+}
+
+const chessInitial = new Map([
+  [new AbsoluteCoordinate(0, 0), new Rook(PlayerIndex.WHITE)],
+  [new AbsoluteCoordinate(0, 1), new Knight(PlayerIndex.WHITE)],
+  [new AbsoluteCoordinate(0, 2), new Bishop(PlayerIndex.WHITE)],
+  [new AbsoluteCoordinate(0, 3), new King(PlayerIndex.WHITE)],
+  [new AbsoluteCoordinate(0, 4), new Qween(PlayerIndex.WHITE)],
+  [new AbsoluteCoordinate(1, 0), new Pawn(PlayerIndex.WHITE)],
+  [new AbsoluteCoordinate(1, 1), new Pawn(PlayerIndex.WHITE)],
+  [new AbsoluteCoordinate(1, 2), new Pawn(PlayerIndex.WHITE)],
+  [new AbsoluteCoordinate(1, 3), new Pawn(PlayerIndex.WHITE)],
+]);
+function playBoard(IO) {
+  return new MatchBoard(
+    IO,
+    縦のマス数,
+    横のマス数,
+    chessInitial,
+    [], // AbsoluteCoordinate[]
+    持ち駒を使うか,
+    TPromotionCondition.oppornentField(駒が成れる段数),
+    true,
+    "face"
+  );
 }
 
 const test1 = playBoard({
