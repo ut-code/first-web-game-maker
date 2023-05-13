@@ -30,12 +30,13 @@ const 後手の持ち駒置き場の境界線 = "1px black solid";
 
 class King extends IPiece {
   NAME = "King";
+  SYMBOL = "K";
   MOVE = new LeaperMove([new Vector(1, 0), new Vector(1, 1)], "oct");
   IS_ROYAL = true;
-  SYMBOL = "K";
 }
 class Qween extends IPiece {
   NAME = "Qween";
+  SYMBOL = "Q";
   MOVE = new RiderMove(
     new Map([
       [new Vector(1, 0), -1],
@@ -43,30 +44,29 @@ class Qween extends IPiece {
     ]),
     "oct"
   );
-  SYMBOL = "Q";
 }
 class Bishop extends IPiece {
   NAME = "Bishop";
-  MOVE = new RiderMove(new Map([[new Vector(1, 1), -1]]), "fblr");
   SYMBOL = "B";
+  MOVE = new RiderMove(new Map([[new Vector(1, 1), -1]]), "fblr");
 }
 class Rook extends IPiece {
   NAME = "Rook";
-  MOVE = new RiderMove(new Map([[new Vector(1, 0), -1]]), "oct");
   SYMBOL = "R";
+  MOVE = new RiderMove(new Map([[new Vector(1, 0), -1]]), "oct");
 }
 class Knight extends IPiece {
   NAME = "Knight";
-  MOVE = new LeaperMove([new Vector(1, 2)], "oct");
   SYMBOL = "N";
+  MOVE = new LeaperMove([new Vector(1, 2)], "oct");
 }
 class Pawn extends IPiece {
   NAME = "Pawn";
+  SYMBOL = "P";
   MOVE = new MoveParallelJoint(
     new LeaperMove([new Vector(1, 0)], "none", TInteraction.NO_CAPTURE),
     new LeaperMove([new Vector(1, 1)], "lr", TInteraction.ONLY_CAPTURE)
   );
-  SYMBOL = "P";
   FORCE_PROMOTE = true;
   constructor() {
     super(...arguments);
