@@ -1,4 +1,4 @@
-# First Web App Maker
+# First Web Game Maker
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC.svg?logo=typescript&logoColor=white)](https://github.com/microsoft/TypeScript)
 [![ESLint](https://github.com/ut-code/first-web-game-maker/actions/workflows/eslint.yml/badge.svg)](https://github.com/ut-code/first-web-game-maker/actions/workflows/eslint.yml)
