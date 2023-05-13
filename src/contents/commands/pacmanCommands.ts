@@ -1,5 +1,9 @@
 import * as vscode from "vscode";
 import { type Command } from "../../types/command";
+
+import templateHtmlAll from "./pacmanTemplate/templateHtmlAll";
+import templateJsAll from "./pacmanTemplate/templateJsAll";
+
 import htmlTemplate from "./pacmanTemplate/htmlTemplate";
 import wall from "./pacmanTemplate/wall";
 import pacmanHtml from "./pacmanTemplate/pacmanHtml";
@@ -11,6 +15,28 @@ import {
   goDesignatedDirection,
   definePacmanPositionAndNextDirection,
 } from "./pacmanTemplate/movePacmanArrow";
+
+const insertTemplateHtmlAllAtTop = () => {
+  const activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor) {
+    return;
+  }
+  const position = new vscode.Position(0, 0);
+  activeEditor.edit((edit) => {
+    edit.insert(position, templateHtmlAll + "\n");
+  });
+};
+
+const insertTemplateJsAllAtTop = () => {
+  const activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor) {
+    return;
+  }
+  const position = new vscode.Position(0, 0);
+  activeEditor.edit((edit) => {
+    edit.insert(position, templateJsAll + "\n");
+  });
+};
 
 const insertWallJsAtTop = () => {
   const activeEditor = vscode.window.activeTextEditor;
@@ -221,6 +247,18 @@ const pacmanCommands: Command[] = [
     name: "definePacmanPositionAndNextDirectionAtCursor",
     execute: () => {
       definePacmanPositionAndNextDirectionAtCursor();
+    },
+  },
+  {
+    name: "insertTemplateHtmlAllAtTop",
+    execute: () => {
+      insertTemplateHtmlAllAtTop();
+    },
+  },
+  {
+    name: "insertTemplateJsAllAtTop",
+    execute: () => {
+      insertTemplateJsAllAtTop();
     },
   },
 ];
