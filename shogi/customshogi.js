@@ -766,4 +766,6 @@ class Pawn extends IPiece {
 //   [Knight as PieceType],
 // ]);
 // @ts-ignore
+const Cell = AbsoluteCoordinate;
+const Vector = RelativeCoordinate;
 //# sourceMappingURL=customshogi.js.map

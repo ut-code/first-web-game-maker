@@ -4,7 +4,7 @@ const 縦のマス数 = 8;
 const 横のマス数 = 8;
 const 持ち駒を使うか = true;
 const 駒が成れる段数 = 1;
-const 壁マスの座標リスト = [];
+const 壁マスの座標リスト = [new Cell(4, 4)];
 
 // 見た目に関する設定
 const 後手の駒を反転させるか = true;
@@ -304,23 +304,31 @@ function createCapturedPieceColumn(capturedPieceDiv, player, index) {
 }
 
 const chessInitial = new Map([
-  [new AbsoluteCoordinate(0, 0), new Rook(PlayerIndex.WHITE)],
-  [new AbsoluteCoordinate(0, 1), new Knight(PlayerIndex.WHITE)],
-  [new AbsoluteCoordinate(0, 2), new Bishop(PlayerIndex.WHITE)],
-  [new AbsoluteCoordinate(0, 3), new King(PlayerIndex.WHITE)],
-  [new AbsoluteCoordinate(0, 4), new Qween(PlayerIndex.WHITE)],
-  [new AbsoluteCoordinate(1, 0), new Pawn(PlayerIndex.WHITE)],
-  [new AbsoluteCoordinate(1, 1), new Pawn(PlayerIndex.WHITE)],
-  [new AbsoluteCoordinate(1, 2), new Pawn(PlayerIndex.WHITE)],
-  [new AbsoluteCoordinate(1, 3), new Pawn(PlayerIndex.WHITE)],
+  [new Cell(0, 0), new Rook(PlayerIndex.WHITE)],
+  [new Cell(0, 1), new Knight(PlayerIndex.WHITE)],
+  [new Cell(0, 2), new Bishop(PlayerIndex.WHITE)],
+  [new Cell(0, 3), new King(PlayerIndex.WHITE)],
+  [new Cell(0, 4), new Qween(PlayerIndex.WHITE)],
+  [new Cell(1, 0), new Pawn(PlayerIndex.WHITE)],
+  [new Cell(1, 1), new Pawn(PlayerIndex.WHITE)],
+  [new Cell(1, 2), new Pawn(PlayerIndex.WHITE)],
+  [new Cell(1, 3), new Pawn(PlayerIndex.WHITE)],
 ]);
-function playBoard(IO) {
+function playBoard() {
   return new MatchBoard(
-    IO,
+    {
+      initializeBoardVisualization: initializeBoardVisualization,
+      startTurnMessaging: startTurn,
+      showMessage: showMessage,
+      selectBoard: selectBoard,
+      selectPromotion: showQuestion,
+      renderCell: renderCell,
+      renderCapturedPiece: renderCapturedPiece,
+    },
     縦のマス数,
     横のマス数,
     chessInitial,
-    [], // AbsoluteCoordinate[]
+    壁マスの座標リスト,
     持ち駒を使うか,
     TPromotionCondition.oppornentField(駒が成れる段数),
     true,
@@ -328,13 +336,4 @@ function playBoard(IO) {
   );
 }
 
-const test1 = playBoard({
-  initializeBoardVisualization: initializeBoardVisualization,
-  startTurnMessaging: startTurn,
-  showMessage: showMessage,
-  selectBoard: selectBoard,
-  selectPromotion: showQuestion,
-  renderCell: renderCell,
-  renderCapturedPiece: renderCapturedPiece,
-});
-test1.game();
+playBoard().game();

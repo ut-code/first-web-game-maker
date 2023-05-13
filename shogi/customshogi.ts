@@ -1183,3 +1183,6 @@ class Pawn extends IPiece {
 // ]);
 
 // @ts-ignore
+
+const Cell = AbsoluteCoordinate;
+const Vector = RelativeCoordinate;
