@@ -132,7 +132,7 @@ MOVE = new MergedMove(
 ```js
 const 初期配置を左右対称にするか = true;
 const 初期配置の敵陣へのコピー = "face";
-const chessInitial = new Map([
+const initialPiece = new Map([
   [new Cell(0, 0), new Rook(PlayerIndex.WHITE)],
   [new Cell(0, 1), new Knight(PlayerIndex.WHITE)],
   [new Cell(0, 2), new Bishop(PlayerIndex.WHITE)],

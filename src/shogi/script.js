@@ -1,10 +1,13 @@
+const width = 9;
+const height = 9;
+
 // ===========================================
 // ゲームの基本設定
 const 縦のマス数 = 8;
 const 横のマス数 = 8;
 const 持ち駒を使うか = true;
 const 駒が成れる段数 = 1;
-const 壁マスの座標リスト = [new Cell(4, 4)];
+const 壁マスの座標リスト = [new Cell(4, 3), new Cell(4, 4)];
 
 // ===========================================
 // 見た目に関する設定
@@ -94,7 +97,7 @@ class Pawn extends IPiece {
 
 const 初期配置を左右対称にするか = true;
 const 初期配置の敵陣へのコピー = "face";
-const chessInitial = new Map([
+const initialPiece = new Map([
   [new Cell(0, 0), new Rook(PlayerIndex.WHITE)],
   [new Cell(0, 1), new Knight(PlayerIndex.WHITE)],
   [new Cell(0, 2), new Bishop(PlayerIndex.WHITE)],
@@ -398,7 +401,7 @@ const playBoard = new MatchBoard(
   },
   縦のマス数,
   横のマス数,
-  chessInitial,
+  initialPiece,
   壁マスの座標リスト,
   持ち駒を使うか,
   TPromotionCondition.oppornentField(駒が成れる段数),
