@@ -10,7 +10,7 @@
 
 [日本語版 README はこちら](README.md)
 
-This is an Extension of VS Code to help you create your first web application.
+This is an Extension of VS Code to help you create your first web game.
 
 ## Table of Contents
 
@@ -29,11 +29,11 @@ This is an Extension of VS Code to help you create your first web application.
 
 ## About
 
-This is an Extension of VS Code to help you create your first web application.
+This is an Extension of VS Code to help you create your first web game.
 
 ## Features
 
-None
+This extension provides the template of the sugoroku, which is a Japanese board game.
 
 ## Requirements
 
