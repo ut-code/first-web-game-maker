@@ -664,9 +664,6 @@ class MatchBoard extends IBoard {
         ...initialPositionxInverted,
         ...initialPosition,
       ]);
-      for (const position of [...excludedSquareSet]) {
-        excludedSquareSet.add(position.yInverted.normalizedBy(this));
-      }
     }
     if (wbSymmetry !== "none") {
       let accessor: "yInverted" | "fullInverted";
@@ -691,9 +688,6 @@ class MatchBoard extends IBoard {
         ...initialPositionAddition,
         ...initialPosition,
       ]);
-      for (const position of [...excludedSquareSet]) {
-        excludedSquareSet.add(position[accessor].normalizedBy(this));
-      }
     }
     for (const coord of excludedSquareSet) {
       this.square(coord).isExcluded = true;
