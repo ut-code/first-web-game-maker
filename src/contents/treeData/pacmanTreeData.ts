@@ -34,6 +34,22 @@ const pacmanTreeData = new TreeItem(
             title: "",
           }
         ),
+        new TreeItem(
+          "パックマンを描画する関数を定義",
+          vscode.TreeItemCollapsibleState.None,
+          {
+            command: "first-web-game-maker.insertDrawPacmanAtCursor",
+            title: "",
+          }
+        ),
+        new TreeItem(
+          "パックマンを描画する関数を呼び出し",
+          vscode.TreeItemCollapsibleState.None,
+          {
+            command: "first-web-game-maker.insertCallDrawPacmanFuncAtCursor",
+            title: "",
+          }
+        ),
       ]
     ),
   ]

@@ -4,6 +4,7 @@ import htmlTemplate from "./pacmanTemplate/htmlTemplate";
 import wall from "./pacmanTemplate/wall";
 import pacmanHtml from "./pacmanTemplate/pacmanHtml";
 import pacmanJs from "./pacmanTemplate/pacmanJs";
+import drawPacman from "./pacmanTemplate/drawPacman";
 
 const insertWallJsAtTop = () => {
   const activeEditor = vscode.window.activeTextEditor;
@@ -60,6 +61,28 @@ const insertPacmanJsAtTop = () => {
   });
 };
 
+const insertDrawPacmanAtCursor = () => {
+  const activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor) {
+    return;
+  }
+  const position = activeEditor.selection.active;
+  activeEditor.edit((edit) => {
+    edit.insert(position, drawPacman + "\n");
+  });
+};
+
+const insertCallDrawPacmanFuncAtCursor = (x: string, y: string) => {
+  const activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor) {
+    return;
+  }
+  const position = activeEditor.selection.active;
+  activeEditor.edit((edit) => {
+    edit.insert(position, `drawPacman(${x}, ${y})` + "\n");
+  });
+};
+
 const pacmanCommands: Command[] = [
   {
     name: "insertWallJsAtTop",
@@ -89,6 +112,24 @@ const pacmanCommands: Command[] = [
     name: "insertPacmanJsAtTop",
     execute: () => {
       insertPacmanJsAtTop();
+    },
+  },
+  {
+    name: "insertDrawPacmanAtCursor",
+    execute: () => {
+      insertDrawPacmanAtCursor();
+    },
+  },
+  {
+    name: "insertCallDrawPacmanFuncAtCursor",
+    execute: async () => {
+      const inputX = await vscode.window.showInputBox({
+        prompt: "x 座標を半角数字で入力してください。",
+      });
+      const inputY = await vscode.window.showInputBox({
+        prompt: "y 座標を半角数字で入力してください。",
+      });
+      insertCallDrawPacmanFuncAtCursor(inputX || "", inputY || "");
     },
   },
 ];
