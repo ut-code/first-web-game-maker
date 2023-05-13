@@ -1,8 +1,10 @@
 # First Web Game Maker
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC.svg?logo=typescript&logoColor=white)](https://github.com/microsoft/TypeScript)
-[![ESLint](https://github.com/ut-code/first-web-game-maker/actions/workflows/eslint.yml/badge.svg)](https://github.com/ut-code/first-web-game-maker/actions/workflows/eslint.yml)
+[![Build Test](https://github.com/ut-code/first-web-game-maker/actions/workflows/build-test.yml/badge.svg)](https://github.com/ut-code/first-web-game-maker/actions/workflows/build-test.yml)
 [![Prettier](https://github.com/ut-code/first-web-game-maker/actions/workflows/prettier.yml/badge.svg)](https://github.com/ut-code/first-web-game-maker/actions/workflows/prettier.yml)
+[![ESLint](https://github.com/ut-code/first-web-game-maker/actions/workflows/eslint.yml/badge.svg)](https://github.com/ut-code/first-web-game-maker/actions/workflows/eslint.yml)
+[![version](https://img.shields.io/visual-studio-marketplace/v/utcode.first-web-game-maker)](https://marketplace.visualstudio.com/items?itemName=utcode.first-web-game-maker&ssr=false#overview)
 ![license](https://img.shields.io/badge/license-MIT-informational.svg)
 ![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
 
