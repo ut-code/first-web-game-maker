@@ -58,6 +58,12 @@ None
 
 ## Release Notes
 
+## 0.0.4
+
+Add Shogi template.
+
+Update Pac-Man template.
+
 ## 0.0.3
 
 Add Pac-Man template.
