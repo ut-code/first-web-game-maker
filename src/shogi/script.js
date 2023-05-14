@@ -115,15 +115,15 @@ class Pawn extends IPiece {
 const 初期配置を左右対称にするか = true;
 const 初期配置の敵陣へのコピー = "face";
 const initialPiece = new Map([
-  [new Cell(0, 0), new Rook(PlayerIndex.WHITE)],
-  [new Cell(0, 1), new Knight(PlayerIndex.WHITE)],
-  [new Cell(0, 2), new Bishop(PlayerIndex.WHITE)],
-  [new Cell(0, 3), new King(PlayerIndex.WHITE)],
-  [new Cell(0, 4), new Qween(PlayerIndex.WHITE)],
-  [new Cell(1, 0), new Pawn(PlayerIndex.WHITE)],
-  [new Cell(1, 1), new Pawn(PlayerIndex.WHITE)],
-  [new Cell(1, 2), new Pawn(PlayerIndex.WHITE)],
-  [new Cell(1, 3), new Pawn(PlayerIndex.WHITE)],
+  [new Cell(0, 0), new Rook(players[0])],
+  [new Cell(0, 1), new Knight(players[0])],
+  [new Cell(0, 2), new Bishop(players[0])],
+  [new Cell(0, 3), new King(players[0])],
+  [new Cell(0, 4), new Qween(players[0])],
+  [new Cell(1, 0), new Pawn(players[0])],
+  [new Cell(1, 1), new Pawn(players[0])],
+  [new Cell(1, 2), new Pawn(players[0])],
+  [new Cell(1, 3), new Pawn(players[0])],
 ]);
 
 // ===========================================
@@ -254,10 +254,10 @@ async function selectBoard(options, message, canCancel) {
   // 持ち駒
   if (pieceOption) {
     for (let k = 0; k < pieceOption.length; k++) {
-      capturedPieceDivs[player === PlayerIndex.WHITE ? 0 : 1].children[
+      capturedPieceDivs[player === players[0] ? 0 : 1].children[
         k
       ].style.backgroundColor = 選択可能なマスの色;
-      capturedPieceDivs[player === PlayerIndex.WHITE ? 0 : 1].children[
+      capturedPieceDivs[player === players[0] ? 0 : 1].children[
         k
       ].onclick = () => handleBoardClick(pieceOption[k]);
     }
@@ -270,7 +270,7 @@ async function selectBoard(options, message, canCancel) {
       boardTds[i][j].onclick = () => {};
     }
   }
-  for (const div of capturedPieceDivs[player === PlayerIndex.WHITE ? 0 : 1]
+  for (const div of capturedPieceDivs[player === players[0] ? 0 : 1]
     .children) {
     div.onclick = () => {};
   }

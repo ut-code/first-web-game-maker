@@ -145,19 +145,19 @@ MOVE = new MoveParallelJoint(
 const 初期配置を左右対称にするか = true;
 const 初期配置の敵陣へのコピー = "face";
 const initialPiece = new Map([
-  [new Cell(0, 0), new Rook(PlayerIndex.WHITE)],
-  [new Cell(0, 1), new Knight(PlayerIndex.WHITE)],
-  [new Cell(0, 2), new Bishop(PlayerIndex.WHITE)],
-  [new Cell(0, 3), new King(PlayerIndex.WHITE)],
-  [new Cell(0, 4), new Qween(PlayerIndex.WHITE)],
-  [new Cell(1, 0), new Pawn(PlayerIndex.WHITE)],
-  [new Cell(1, 1), new Pawn(PlayerIndex.WHITE)],
-  [new Cell(1, 2), new Pawn(PlayerIndex.WHITE)],
-  [new Cell(1, 3), new Pawn(PlayerIndex.WHITE)],
+  [new Cell(0, 0), new Rook(players[0])],
+  [new Cell(0, 1), new Knight(players[0])],
+  [new Cell(0, 2), new Bishop(players[0])],
+  [new Cell(0, 3), new King(players[0])],
+  [new Cell(0, 4), new Qween(players[0])],
+  [new Cell(1, 0), new Pawn(players[0])],
+  [new Cell(1, 1), new Pawn(players[0])],
+  [new Cell(1, 2), new Pawn(players[0])],
+  [new Cell(1, 3), new Pawn(players[0])],
 ]);
 \`\`\`
 
-初期配置は、\`[new Cell(座標), new 駒の名前(PlayerIndex.WHITE)]\` という形式のカンマ区切りで指定できます。
+初期配置は、\`[new Cell(座標), new 駒の名前(players[0])]\` という形式のカンマ区切りで指定できます。
 
 \`初期配置を左右対称にするか\` が \`true\` の場合、指定した初期配置が左右対称な位置にもコピーされます。ただし、既に他の駒が指定されているマスにはコピーされません(上の例では \`King\` と \`Queen\` が該当します)。コピーされないようにしたい場合は \`false\` に変更してください。
 
@@ -167,7 +167,7 @@ const initialPiece = new Map([
 - \`cross\` : 指定した初期配置が、盤面の中心について点対称な位置に相手の駒としてコピーされます。
 - \`none\` : コピーされません。
 
-\`none\` を指定した場合、後手の駒も自分で指定する必要があります。後手の駒は、\`WHITE\` を \`BLACK\` に書き換えることで指定できます。
+\`none\` を指定した場合、後手の駒も自分で指定する必要があります。後手の駒は、\`players[0]\` を \`players[1]\` に書き換えることで指定できます。
 
 `;
 
