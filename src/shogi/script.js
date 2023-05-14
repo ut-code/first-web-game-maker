@@ -14,6 +14,8 @@ const 壁マスの座標リスト = [new Cell(4, 3), new Cell(4, 4)];
 const 後手の駒を反転させるか = true;
 const 先手の駒の色 = "black";
 const 後手の駒の色 = "red";
+const 先手の成った駒の色 = "black";
+const 後手の成った駒の色 = "red";
 const 駒のフォントサイズ = 24;
 
 const マスの色 = "white";
@@ -289,14 +291,21 @@ function resetCellColor() {
 }
 
 // 駒をマスに描画
-// TODO pieces, currentBoard
-function renderCell(y, x, player, pieceName) {
+function renderCell(y, x, player, pieceName, isPromoted) {
   const td = boardTds[y][x];
   if (player === 0) {
-    td.style.color = 先手の駒の色;
+    if (isPromoted){
+      td.style.color = 先手の成った駒の色;
+    } else {
+      td.style.color = 先手の駒の色;
+    }
     td.style.transform = "rotate(0deg)";
   } else {
-    td.style.color = 後手の駒の色;
+    if (isPromoted){
+      td.style.color = 後手の成った駒の色;
+    } else {
+      td.style.color = 後手の駒の色;
+    }
     if (後手の駒を反転させるか) {
       td.style.transform = "rotate(180deg)";
     }

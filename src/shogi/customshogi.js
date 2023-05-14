@@ -341,6 +341,9 @@ class IPiece {
         return this.MOVE;
     }
     get PROMOTE_DEFAULT() { return new Set(); }
+    get IS_PROMOTED() {
+        return this.ORIGINAL_PIECE !== this.constructor;
+    }
     static toString() {
         return new this(undefined).SYMBOL;
     }
@@ -479,7 +482,7 @@ class MatchBoard extends IBoard {
         this.IO.initializeBoardVisualization();
         for (const coord of __classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_coordsGenerator_get)) {
             const piece = this.square(coord).piece;
-            this.IO.renderCell(...this.coordToNum(coord), playerToNum(piece?.controller), piece?.SYMBOL ?? "");
+            this.IO.renderCell(...this.coordToNum(coord), playerToNum(piece?.controller), piece?.SYMBOL ?? "", Boolean(piece?.IS_PROMOTED));
         }
         while (!__classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_isGameTerminated_get)[0]) {
             const playLog = {
@@ -510,18 +513,20 @@ class MatchBoard extends IBoard {
                         continue Turn;
                     }
                     __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_move).call(this, target, goal, playLog);
+                    let isPromoted = false;
                     if (this.promotionCondition(playLog)) {
-                        const movingPiece = new playLog.movingPiece(undefined);
+                        const movingPiece = this.square(goal).piece;
                         const promoteTo = await this.IO.selectPromotion([
                             ...movingPiece.PROMOTE_DEFAULT_TRUE,
                             ...movingPiece.FORCE_PROMOTE ? [] : [playLog.movingPiece],
                         ], "どの駒に成るかを選んでください");
                         if (promoteTo !== playLog.movingPiece) {
                             __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_promote).call(this, promoteTo, goal, playLog);
+                            isPromoted = true;
                         }
                     }
-                    this.IO.renderCell(...this.coordToNum(goal), playerToNum(this.turnPlayer), this.square(goal).piece?.SYMBOL ?? "");
-                    this.IO.renderCell(...this.coordToNum(target), playerToNum(this.turnPlayer), this.square(target).piece?.SYMBOL ?? "");
+                    this.IO.renderCell(...this.coordToNum(goal), playerToNum(this.turnPlayer), this.square(goal).piece?.SYMBOL ?? "", isPromoted);
+                    this.IO.renderCell(...this.coordToNum(target), playerToNum(this.turnPlayer), this.square(target).piece?.SYMBOL ?? "", false);
                     this.IO.renderCapturedPiece(playerToNum(this.turnPlayer), [...this.pieceStands.get(this.turnPlayer).entries()].map(([kind, num]) => ({
                         name: new kind(undefined).SYMBOL,
                         count: num,
@@ -535,7 +540,7 @@ class MatchBoard extends IBoard {
                         continue Turn;
                     }
                     __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_drop).call(this, target, goal, playLog);
-                    this.IO.renderCell(...this.coordToNum(goal), playerToNum(this.turnPlayer), new target(undefined).SYMBOL);
+                    this.IO.renderCell(...this.coordToNum(goal), playerToNum(this.turnPlayer), new target(undefined).SYMBOL, false);
                     this.IO.renderCapturedPiece(playerToNum(this.turnPlayer), [...this.pieceStands.get(this.turnPlayer).entries()].map(([kind, num]) => ({
                         name: new kind(undefined).SYMBOL,
                         count: num,

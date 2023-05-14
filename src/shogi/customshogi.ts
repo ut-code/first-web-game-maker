@@ -480,6 +480,9 @@ abstract class IPiece {
   get PROMOTE_DEFAULT(): Set<[PieceType, string?, string?]> {return new Set();}
   FORCE_PROMOTE: boolean = false;
   ORIGINAL_PIECE: PieceType = this.constructor as PieceType;
+  get IS_PROMOTED(): boolean {
+    return this.ORIGINAL_PIECE !== this.constructor as PieceType;
+  }
 
   static toString(): string {
     return new (this as PieceType)(undefined as any).SYMBOL;
@@ -919,7 +922,8 @@ class MatchBoard extends IBoard {
       this.IO.renderCell(
         ...this.coordToNum(coord),
         playerToNum(piece?.controller),
-        piece?.SYMBOL ?? ""
+        piece?.SYMBOL ?? "",
+        Boolean(piece?.IS_PROMOTED)
       );
     }
     while (!this.#isGameTerminated[0]) {
@@ -972,27 +976,31 @@ class MatchBoard extends IBoard {
             continue Turn;
           }
           this.#move(target, goal, playLog);
+          let isPromoted: boolean = false
           if (this.promotionCondition(playLog)) {
-            const movingPiece = new playLog.movingPiece(undefined as unknown as Player);
+            const movingPiece = this.square(goal).piece!;
             const promoteTo = await this.IO.selectPromotion([
               ...movingPiece.PROMOTE_DEFAULT_TRUE,
               ...movingPiece.FORCE_PROMOTE ? [] : [playLog.movingPiece],
-            ] ,
+            ],
             "どの駒に成るかを選んでください"
             );
             if (promoteTo !== playLog.movingPiece) {
               this.#promote(promoteTo, goal, playLog);
+              isPromoted = true
             }
           }
           this.IO.renderCell(
             ...this.coordToNum(goal),
             playerToNum(this.turnPlayer),
-            this.square(goal).piece?.SYMBOL ?? ""
+            this.square(goal).piece?.SYMBOL ?? "",
+            isPromoted
           );
           this.IO.renderCell(
             ...this.coordToNum(target),
             playerToNum(this.turnPlayer),
-            this.square(target).piece?.SYMBOL ?? ""
+            this.square(target).piece?.SYMBOL ?? "",
+            false
           );
           this.IO.renderCapturedPiece(
             playerToNum(this.turnPlayer),
@@ -1020,7 +1028,8 @@ class MatchBoard extends IBoard {
           this.IO.renderCell(
             ...this.coordToNum(goal),
             playerToNum(this.turnPlayer),
-            new target(undefined as any).SYMBOL
+            new target(undefined as any).SYMBOL,
+            false
           );
           this.IO.renderCapturedPiece(
             playerToNum(this.turnPlayer),
@@ -1070,9 +1079,9 @@ interface IOFunctions {
     y: number,
     x: number,
     player: PlayerExpression,
-    pieceName: string | ""
+    pieceName: string | "",
+    isPromoted: boolean
   ) => void;
-  // done
   renderCapturedPiece: (
     player: PlayerExpression,
     pieceNameAndNum: { name: string; count: number }[]
