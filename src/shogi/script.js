@@ -32,14 +32,22 @@ const 後手の持ち駒置き場の境界線 = "1px black solid";
 // 駒の種類
 
 class King extends IPiece {
-  NAME = "King";
-  SYMBOL = "K";
+  get NAME() {
+    return "King";
+  };
+  get SYMBOL() {
+    return "K";
+  };
   MOVE = new LeaperMove([new Vector(1, 0), new Vector(1, 1)], "oct");
   IS_ROYAL = true;
 }
 class Qween extends IPiece {
-  NAME = "Qween";
-  SYMBOL = "Q";
+  get NAME() {
+    return "Qween";
+  };
+  get SYMBOL() {
+    return "Q";
+  };
   MOVE = new RiderMove(
     new Map([
       [new Vector(1, 0), -1],
@@ -49,23 +57,39 @@ class Qween extends IPiece {
   );
 }
 class Bishop extends IPiece {
-  NAME = "Bishop";
-  SYMBOL = "B";
+  get NAME() {
+    return "Bishop";
+  };
+  get SYMBOL() {
+    return "B";
+  };
   MOVE = new RiderMove(new Map([[new Vector(1, 1), -1]]), "fblr");
 }
 class Rook extends IPiece {
-  NAME = "Rook";
-  SYMBOL = "R";
+  get NAME() {
+    return "Rook";
+  };
+  get SYMBOL() {
+    return "R";
+  };
   MOVE = new RiderMove(new Map([[new Vector(1, 0), -1]]), "oct");
 }
 class Knight extends IPiece {
-  NAME = "Knight";
-  SYMBOL = "N";
+  get NAME() {
+    return "Knight";
+  };
+  get SYMBOL() {
+    return "N";
+  };
   MOVE = new LeaperMove([new Vector(1, 2)], "oct");
 }
 class Pawn extends IPiece {
-  NAME = "Pawn";
-  SYMBOL = "P";
+  get NAME() {
+    return "Pawn";
+  };
+  get SYMBOL() {
+    return "P";
+  };
   MOVE = new MoveParallelJoint(
     new LeaperMove([new Vector(1, 0)], "none", TInteraction.NO_CAPTURE),
     new LeaperMove([new Vector(1, 1)], "lr", TInteraction.ONLY_CAPTURE)
@@ -81,7 +105,7 @@ class Pawn extends IPiece {
       new LeaperMove([new Vector(1, 1)], "lr", TInteraction.ONLY_CAPTURE)
     );
   }
-  PROMOTE_DEFAULT = new Set([[Qween], [Bishop], [Rook], [Knight]]);
+  get PROMOTE_DEFAULT() {return new Set([[Qween], [Bishop], [Rook], [Knight]]);}
 }
 
 // ===========================================

@@ -452,9 +452,15 @@ abstract class IPiece {
 
       for (const [piece, name, symbol] of this.PROMOTE_DEFAULT) {
         class _ extends piece {
-          NAME = name ?? `${super.NAME} as promotion of ${super.NAME}`;
-          SYMBOL = symbol ?? super.SYMBOL;
-          PROMOTE_DEFAULT = new Set<[PieceType, string?, string?]>();
+          get NAME() {
+            return name ?? `${super.NAME} as promotion of ${super.NAME}`;
+          }
+          get SYMBOL() {
+            return symbol ?? super.SYMBOL;
+          }
+          get PROMOTE_DEFAULT() {
+            return new Set<[PieceType, string?, string?]>();
+          }
           ORIGINAL_PIECE = original;
         }
         truePromotedPieces.add(_);
@@ -464,16 +470,20 @@ abstract class IPiece {
     this.PROMOTE_DEFAULT_TRUE = PROMOTE_DEFAULT_REAL.get(original)!;
   }
 
-  abstract NAME: string;
-  abstract MOVE: IMove;
+  abstract get NAME(): string;
+  abstract get MOVE(): IMove;
   get INITIAL_MOVE(): IMove {
     return this.MOVE;
   }
   IS_ROYAL: boolean = false;
   abstract SYMBOL: string;
-  PROMOTE_DEFAULT: Set<[PieceType, string?, string?]> = new Set();
+  get PROMOTE_DEFAULT(): Set<[PieceType, string?, string?]> {return new Set();}
   FORCE_PROMOTE: boolean = false;
   ORIGINAL_PIECE: PieceType = this.constructor as PieceType;
+
+  static toString(): string {
+    return new (this as PieceType)(undefined as any).SYMBOL;
+  }
 
   validDestination(
     board: IBoard,
@@ -963,11 +973,13 @@ class MatchBoard extends IBoard {
           }
           this.#move(target, goal, playLog);
           if (this.promotionCondition(playLog)) {
+            const movingPiece = new playLog.movingPiece(undefined as unknown as Player);
             const promoteTo = await this.IO.selectPromotion([
-              ...new playLog.movingPiece(undefined as unknown as Player)
-                .PROMOTE_DEFAULT_TRUE,
-              playLog.movingPiece,
-            ]);
+              ...movingPiece.PROMOTE_DEFAULT_TRUE,
+              ...movingPiece.FORCE_PROMOTE ? [] : [playLog.movingPiece],
+            ] ,
+            "どの駒に成るかを選んでください"
+            );
             if (promoteTo !== playLog.movingPiece) {
               this.#promote(promoteTo, goal, playLog);
             }
@@ -1053,7 +1065,7 @@ interface IOFunctions {
   ) => Promise<
     (T extends PieceType ? PieceType : never) | [number, number] | null
   >;
-  selectPromotion: (options: PieceType[]) => Promise<PieceType>;
+  selectPromotion: (options: PieceType[], message: string) => Promise<PieceType>;
   renderCell: (
     y: number,
     x: number,

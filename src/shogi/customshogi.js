@@ -310,7 +310,6 @@ class IPiece {
         this.controller = controller;
         this.isUntouched = isUntouched;
         this.IS_ROYAL = false;
-        this.PROMOTE_DEFAULT = new Set();
         this.FORCE_PROMOTE = false;
         this.ORIGINAL_PIECE = this.constructor;
         const original = this.constructor;
@@ -320,10 +319,16 @@ class IPiece {
                 class _ extends piece {
                     constructor() {
                         super(...arguments);
-                        this.NAME = name ?? `${super.NAME} as promotion of ${super.NAME}`;
-                        this.SYMBOL = symbol ?? super.SYMBOL;
-                        this.PROMOTE_DEFAULT = new Set();
                         this.ORIGINAL_PIECE = original;
+                    }
+                    get NAME() {
+                        return name ?? `${super.NAME} as promotion of ${super.NAME}`;
+                    }
+                    get SYMBOL() {
+                        return symbol ?? super.SYMBOL;
+                    }
+                    get PROMOTE_DEFAULT() {
+                        return new Set();
                     }
                 }
                 truePromotedPieces.add(_);
@@ -334,6 +339,10 @@ class IPiece {
     }
     get INITIAL_MOVE() {
         return this.MOVE;
+    }
+    get PROMOTE_DEFAULT() { return new Set(); }
+    static toString() {
+        return new this(undefined).SYMBOL;
     }
     validDestination(board, myCoordinate) {
         if (!this.controller) {
@@ -502,11 +511,11 @@ class MatchBoard extends IBoard {
                     }
                     __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_move).call(this, target, goal, playLog);
                     if (this.promotionCondition(playLog)) {
+                        const movingPiece = new playLog.movingPiece(undefined);
                         const promoteTo = await this.IO.selectPromotion([
-                            ...new playLog.movingPiece(undefined)
-                                .PROMOTE_DEFAULT_TRUE,
-                            playLog.movingPiece,
-                        ]);
+                            ...movingPiece.PROMOTE_DEFAULT_TRUE,
+                            ...movingPiece.FORCE_PROMOTE ? [] : [playLog.movingPiece],
+                        ], "どの駒に成るかを選んでください");
                         if (promoteTo !== playLog.movingPiece) {
                             __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_promote).call(this, promoteTo, goal, playLog);
                         }
