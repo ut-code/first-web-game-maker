@@ -1,77 +1,112 @@
 # First Web Game Maker
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC.svg?logo=typescript&logoColor=white)](https://github.com/microsoft/TypeScript)
-[![ESLint](https://github.com/ut-code/first-web-game-maker/actions/workflows/eslint.yml/badge.svg)](https://github.com/ut-code/first-web-game-maker/actions/workflows/eslint.yml)
+[![Build Test](https://github.com/ut-code/first-web-game-maker/actions/workflows/build-test.yml/badge.svg)](https://github.com/ut-code/first-web-game-maker/actions/workflows/build-test.yml)
 [![Prettier](https://github.com/ut-code/first-web-game-maker/actions/workflows/prettier.yml/badge.svg)](https://github.com/ut-code/first-web-game-maker/actions/workflows/prettier.yml)
+[![ESLint](https://github.com/ut-code/first-web-game-maker/actions/workflows/eslint.yml/badge.svg)](https://github.com/ut-code/first-web-game-maker/actions/workflows/eslint.yml)
+[![version](https://img.shields.io/visual-studio-marketplace/v/utcode.first-web-game-maker)](https://marketplace.visualstudio.com/items?itemName=utcode.first-web-game-maker&ssr=false#overview)
 ![license](https://img.shields.io/badge/license-MIT-informational.svg)
 ![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
 
-[English README is here.](README-en.md)
+[日本語版 README はこちら](README-ja.md)
 
-これは、はじめての Web アプリケーションを作るのをサポートするための VS Code 拡張機能です。
+This is an Extension of VS Code to help you create your first web game.
 
-## 目次
+## Table of Contents
 
-- [概要](#概要)
-- [機能](#機能)
-- [要件](#要件)
-- [拡張機能の設定](#拡張機能の設定)
-- [既存の問題](#既存の問題)
-- [リリースノート](#リリースノート)
-- [開発](#開発)
-  - [開発時の要件](#開発時の要件)
-  - [環境構築](#環境構築)
-  - [開発環境の立ち上げ](#開発環境の立ち上げ)
-- [ライセンス](#ライセンス)
-- [貢献](#貢献)
+- [About](#about)
+- [Features](#features)
+- [Requirements](#requirements)
+- [Extension Settings](#extension-settings)
+- [Known Issues](#known-issues)
+- [Release Notes](#release-notes)
+- [Development](#development)
+  - [Dev Requirements](#dev-requirements)
+  - [Installation](#installation)
+  - [Local Development](#local-development)
+- [License](#license)
+- [Contributing](#contributing)
 
-## 概要
+## About
 
-これは、はじめての Web アプリケーションを作るのをサポートするための VS Code 拡張機能です。
+This is an Extension of VS Code to help you create your first web game.
 
-## 機能
+## Features
 
-なし
+This extension provides the template of the sugoroku, which is a Japanese board game.
 
-## 要件
+## Requirements
 
-なし
+None
 
-## 拡張機能の設定
+## Extension Settings
 
-なし
+None
 
-## 既存の問題
+<!-- Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
 
-なし
+For example:
 
-## リリースノート
+This extension contributes the following settings:
 
-なし
+- `myExtension.enable`: Enable/disable this extension.
+- `myExtension.thing`: Set to `blah` to do something. -->
 
-## 開発
+## Known Issues
 
-### 開発時の要件
+None
+
+## Release Notes
+
+## 0.0.3
+
+Add Pac-Man template.
+
+### 0.0.2
+
+Update the description of sugoroku, which is a Japanese board game.
+
+### 0.0.1
+
+Initial release of First Web Game Maker. This extension provides the template of the sugoroku, which is a Japanese board game.
+
+<!-- Users appreciate release notes as you update your extension.
+
+### 1.0.0
+
+Initial release of ...
+
+### 1.0.1
+
+Fixed issue #.
+
+### 1.1.0
+
+Added features X, Y, and Z. -->
+
+## Development
+
+### Dev Requirements
 
 - [VS Code](https://github.com/microsoft/vscode)
 - [npm](https://github.com/npm/cli)
 
-### 環境構築
+### Installation
 
 ```shell
 npm ci
 ```
 
-### 開発環境の立ち上げ
+### Local Development
 
-`F5` を押すことで、開発している拡張機能がインストールされた新しいウインドウが開きます。
+You can open a new window with your extension loaded by pressing `F5`.
 
-## ライセンス
+## License
 
-このソフトウェアは [MIT](LICENSE) ライセンスのもとで公開されています。
+This software is licensed under the [MIT](LICENSE) license.
 
 Copyright © 2023 ut.code();.
 
-## 貢献
+## Contributing
 
-Issue や PR などはいつでも歓迎します。
+Issue or PR is always welcome.
