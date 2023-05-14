@@ -14,18 +14,26 @@ This is an Extension of VS Code to help you create your first web game.
 
 ## Table of Contents
 
-- [About](#about)
-- [Features](#features)
-- [Requirements](#requirements)
-- [Extension Settings](#extension-settings)
-- [Known Issues](#known-issues)
-- [Release Notes](#release-notes)
-- [Development](#development)
-  - [Dev Requirements](#dev-requirements)
-  - [Installation](#installation)
-  - [Local Development](#local-development)
-- [License](#license)
-- [Contributing](#contributing)
+- [First Web Game Maker](#first-web-game-maker)
+  - [Table of Contents](#table-of-contents)
+  - [About](#about)
+  - [Features](#features)
+  - [Requirements](#requirements)
+  - [Extension Settings](#extension-settings)
+  - [Known Issues](#known-issues)
+  - [Release Notes](#release-notes)
+  - [0.0.6](#006)
+  - [0.0.5](#005)
+  - [0.0.4](#004)
+  - [0.0.3](#003)
+    - [0.0.2](#002)
+    - [0.0.1](#001)
+  - [Development](#development)
+    - [Dev Requirements](#dev-requirements)
+    - [Installation](#installation)
+    - [Local Development](#local-development)
+  - [License](#license)
+  - [Contributing](#contributing)
 
 ## About
 
@@ -57,6 +65,11 @@ This extension contributes the following settings:
 None
 
 ## Release Notes
+
+## 0.0.6
+
+Update shogi template.
+Fix shogi behavior.
 
 ## 0.0.5
 
