@@ -137,17 +137,24 @@ const capturedPieceDivs = [
   document.getElementById("先手持ち駒置き場"),
   document.getElementById("後手持ち駒置き場"),
 ];
-// 初期化処理();
-
 // ===========================================
 // ゲーム制御
 
-// 手番の切り替え時の処理
+// 手番プレイヤーを表示
 function startTurn(player) {
   if (player === 0) {
     showMessage("先手の番です。");
   } else {
     showMessage("後手の番です");
+  }
+}
+
+// 勝者を表示
+function showWinner(player) {
+  if (player === 0) {
+    showMessage("ゲーム終了: 先手の勝ちです。");
+  } else {
+    showMessage("ゲーム終了: 後手の勝ちです");
   }
 }
 
@@ -417,7 +424,7 @@ const playBoard = new MatchBoard(
   {
     initializeBoardVisualization: initializeBoardVisualization,
     startTurnMessaging: startTurn,
-    showMessage: showMessage,
+    showWinner: showWinner,
     selectBoard: selectBoard,
     selectPromotion: showQuestion,
     renderCell: renderCell,

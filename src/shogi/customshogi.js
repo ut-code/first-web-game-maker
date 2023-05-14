@@ -10,7 +10,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
-var _AbsoluteCoordinate_instances, _AbsoluteCoordinate_normalizer, _LeaperMove_coordinates, _RiderMove_coordinatesToDist, _MatchBoard_instances, _MatchBoard_movablePieceMapCache, _MatchBoard_coordsGenerator_get, _MatchBoard_isGameTerminated_get, _MatchBoard_addPieceToStand, _MatchBoard_addPieceToBoard, _MatchBoard_removePieceFromStand, _MatchBoard_removePieceFromBoard, _MatchBoard_moveDestinationFrom, _MatchBoard_dropDestination, _MatchBoard_updateMovablePieceMap, _MatchBoard_currentMovablePieceMap_get, _MatchBoard_move, _MatchBoard_drop, _MatchBoard_promote;
+var _AbsoluteCoordinate_instances, _AbsoluteCoordinate_normalizer, _LeaperMove_coordinates, _RiderMove_coordinatesToDist, _MatchBoard_instances, _MatchBoard_movablePieceMapCache, _MatchBoard_coordsGenerator_get, _MatchBoard_isGameTerminated_get, _MatchBoard_addPieceToStand, _MatchBoard_addPieceToBoard, _MatchBoard_removePieceFromStand, _MatchBoard_removePieceFromBoard, _MatchBoard_moveDestinationFrom, _MatchBoard_dropDestination, _MatchBoard_updateMovablePieceMap, _MatchBoard_currentMovablePieceMap_get, _MatchBoard_move, _MatchBoard_drop, _MatchBoard_promote, _MatchBoard_coordToNum, _MatchBoard_numToCoord;
 class DefaultDict extends Map {
     constructor(defaultFactory, iterable) {
         super(iterable);
@@ -469,21 +469,15 @@ class MatchBoard extends IBoard {
         __classPrivateFieldSet(this, _MatchBoard_movablePieceMapCache, new Map(), "f");
         __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_updateMovablePieceMap).call(this);
     }
-    coordToNum(coord) {
-        return [this.height - coord.y - 1, coord.x];
-    }
-    numToCoord(y, x) {
-        return new AbsoluteCoordinate(this.height - y - 1, x);
-    }
     async game() {
-        const converter = (r) => r instanceof Array ? this.numToCoord(...r) : r;
+        const converter = (r) => r instanceof Array ? __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_numToCoord).call(this, ...r) : r;
         const playerToNum = (p) => p === PlayerIndex.WHITE ? 0 : 1;
-        // ゲーム終了までループ
         this.IO.initializeBoardVisualization();
         for (const coord of __classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_coordsGenerator_get)) {
             const piece = this.square(coord).piece;
-            this.IO.renderCell(...this.coordToNum(coord), playerToNum(piece?.controller), piece?.SYMBOL ?? "", Boolean(piece?.IS_PROMOTED));
+            this.IO.renderCell(...__classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_coordToNum).call(this, coord), playerToNum(piece?.controller), piece?.SYMBOL ?? "", Boolean(piece?.IS_PROMOTED));
         }
+        // ゲーム終了までループ
         while (!__classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_isGameTerminated_get)[0]) {
             const playLog = {
                 state: "defined",
@@ -496,18 +490,18 @@ class MatchBoard extends IBoard {
             this.IO.startTurnMessaging(playerToNum(this.turnPlayer));
             Turn: while (true) {
                 const target = converter(await this.IO.selectBoard([
-                    [...__classPrivateFieldGet(this, _MatchBoard_movablePieceMapCache, "f").keys()].map(this.coordToNum.bind(this)),
+                    [...__classPrivateFieldGet(this, _MatchBoard_movablePieceMapCache, "f").keys()].map(__classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_coordToNum).bind(this)),
                     [...this.pieceStands.get(this.turnPlayer).keys()],
                     this.turnPlayer,
                 ], "移動させる駒か打つ駒を選んでください。", false));
                 if (target === null) {
-                    this.IO.showMessage(`Game end: the winner is ${String(PlayerIndex.nextPlayer(this.turnPlayer))}`);
+                    this.IO.showWinner(playerToNum(PlayerIndex.nextPlayer(this.turnPlayer)));
                     return;
                 }
                 if (target instanceof AbsoluteCoordinate) {
                     // コマを動かす
                     const goal = converter(await this.IO.selectBoard([
-                        [...__classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_currentMovablePieceMap_get).get(target)].map(this.coordToNum.bind(this)),
+                        [...__classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_currentMovablePieceMap_get).get(target)].map(__classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_coordToNum).bind(this)),
                     ], "駒を移動させるマスを選んでください。", true));
                     if (goal === null) {
                         continue Turn;
@@ -525,8 +519,8 @@ class MatchBoard extends IBoard {
                             isPromoted = true;
                         }
                     }
-                    this.IO.renderCell(...this.coordToNum(goal), playerToNum(this.turnPlayer), this.square(goal).piece?.SYMBOL ?? "", isPromoted);
-                    this.IO.renderCell(...this.coordToNum(target), playerToNum(this.turnPlayer), this.square(target).piece?.SYMBOL ?? "", false);
+                    this.IO.renderCell(...__classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_coordToNum).call(this, goal), playerToNum(this.turnPlayer), this.square(goal).piece?.SYMBOL ?? "", isPromoted);
+                    this.IO.renderCell(...__classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_coordToNum).call(this, target), playerToNum(this.turnPlayer), this.square(target).piece?.SYMBOL ?? "", false);
                     this.IO.renderCapturedPiece(playerToNum(this.turnPlayer), [...this.pieceStands.get(this.turnPlayer).entries()].map(([kind, num]) => ({
                         name: new kind(undefined).SYMBOL,
                         count: num,
@@ -535,12 +529,12 @@ class MatchBoard extends IBoard {
                 }
                 else {
                     // コマを打つ
-                    const goal = converter(await this.IO.selectBoard([[...__classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_dropDestination).call(this)].map(this.coordToNum.bind(this))], "駒を置くマスを選んでください。", true));
+                    const goal = converter(await this.IO.selectBoard([[...__classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_dropDestination).call(this)].map(__classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_coordToNum).bind(this))], "駒を置くマスを選んでください。", true));
                     if (goal === null) {
                         continue Turn;
                     }
                     __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_drop).call(this, target, goal, playLog);
-                    this.IO.renderCell(...this.coordToNum(goal), playerToNum(this.turnPlayer), new target(undefined).SYMBOL, false);
+                    this.IO.renderCell(...__classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_coordToNum).call(this, goal), playerToNum(this.turnPlayer), new target(undefined).SYMBOL, false);
                     this.IO.renderCapturedPiece(playerToNum(this.turnPlayer), [...this.pieceStands.get(this.turnPlayer).entries()].map(([kind, num]) => ({
                         name: new kind(undefined).SYMBOL,
                         count: num,
@@ -553,7 +547,7 @@ class MatchBoard extends IBoard {
                 this.chessTurnCount += 1;
             }
         }
-        this.IO.showMessage(`Game end: the winner is ${String(__classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_isGameTerminated_get)[1])}`);
+        this.IO.showWinner(playerToNum(__classPrivateFieldGet(this, _MatchBoard_instances, "a", _MatchBoard_isGameTerminated_get)[1]));
         return;
     }
 }
@@ -693,6 +687,10 @@ _MatchBoard_movablePieceMapCache = new WeakMap(), _MatchBoard_instances = new We
     __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_removePieceFromBoard).call(this, coord);
     __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_addPieceToBoard).call(this, kind, piece.controller, coord);
     log.promoteTo = kind;
+}, _MatchBoard_coordToNum = function _MatchBoard_coordToNum(coord) {
+    return [this.height - coord.y - 1, coord.x];
+}, _MatchBoard_numToCoord = function _MatchBoard_numToCoord(y, x) {
+    return new AbsoluteCoordinate(this.height - y - 1, x);
 };
 const players = {
     0: PlayerIndex.WHITE,
