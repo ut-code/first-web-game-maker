@@ -221,7 +221,6 @@ function handleBoardClick(value) {
   }
 }
 
-// lookup PieceType => 箱: .Symbol
 // マスや持ち駒のクリックによる入力を受付
 // 未完成
 async function selectBoard(options, message, canCancel) {
@@ -239,7 +238,7 @@ async function selectBoard(options, message, canCancel) {
   if (canCancel) {
     messageDiv.appendChild(button);
     button.textContent = "キャンセル";
-    button.onclick = () => handleBoardClick("キャンセル");
+    button.onclick = () => handleBoardClick(null);
   }
   // マス
   for (const [i, j] of boardOption) {
