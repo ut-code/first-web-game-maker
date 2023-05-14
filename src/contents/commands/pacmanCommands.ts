@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
 import { type Command } from "../../types/command";
+import * as path from "path";
+import * as fs from "fs";
 
 import templateHtmlAll from "./pacmanTemplate/templateHtmlAll";
 import templateJsAll from "./pacmanTemplate/templateJsAll";
@@ -15,6 +17,16 @@ import {
   goDesignatedDirection,
   definePacmanPositionAndNextDirection,
 } from "./pacmanTemplate/movePacmanArrow";
+import {
+  pacmanNorth,
+  pacmanSouth,
+  pacmanEast,
+  pacmanWest,
+  ghostEast,
+  ghostNorth,
+  ghostSouth,
+  ghostWest,
+} from "./pacmanTemplate/pacmanImages";
 
 const insertTemplateHtmlAllAtTop = () => {
   const activeEditor = vscode.window.activeTextEditor;
@@ -170,6 +182,42 @@ const definePacmanPositionAndNextDirectionAtCursor = () => {
   });
 };
 
+const loadPacmanImage = () => {
+  const images = [
+    pacmanEast,
+    pacmanNorth,
+    pacmanSouth,
+    pacmanWest,
+    ghostEast,
+    ghostNorth,
+    ghostSouth,
+    ghostWest,
+  ];
+  const names = [
+    "pacmanEast",
+    "pacmanNorth",
+    "pacmanSouth",
+    "pacmanWest",
+    "ghostEast",
+    "ghostNorth",
+    "ghostSouth",
+    "ghostWest",
+  ];
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+  if (workspaceFolders) {
+    const workspacePath = workspaceFolders[0].uri.fsPath;
+    for (let i = 0; i < images.length; i++) {
+      fs.writeFileSync(
+        path.join(workspacePath, `${names[i]}.svg`),
+        images[i],
+        "utf-8"
+      );
+    }
+  } else {
+    console.error("No workspace folder found!");
+  }
+};
+
 const pacmanCommands: Command[] = [
   {
     name: "insertWallJsAtTop",
@@ -259,6 +307,12 @@ const pacmanCommands: Command[] = [
     name: "insertTemplateJsAllAtTop",
     execute: () => {
       insertTemplateJsAllAtTop();
+    },
+  },
+  {
+    name: "loadPacmanImage",
+    execute: () => {
+      loadPacmanImage();
     },
   },
 ];

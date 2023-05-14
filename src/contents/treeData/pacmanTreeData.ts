@@ -18,6 +18,14 @@ const pacmanTreeData = new TreeItem(
         title: "",
       }
     ),
+    new TreeItem(
+      "パックマンの画像をロード",
+      vscode.TreeItemCollapsibleState.None,
+      {
+        command: "first-web-game-maker.loadPacmanImage",
+        title: "",
+      }
+    ),
   ]
 
   // [
