@@ -9,7 +9,7 @@ const insertShogiScriptJsAtTop = () => {
   }
   const position = new vscode.Position(0, 0);
   activeEditor.edit((edit) => {
-    edit.insert(position, shogiScriptJs + "\n");
+    edit.insert(position, shogiScriptJs);
   });
 };
 

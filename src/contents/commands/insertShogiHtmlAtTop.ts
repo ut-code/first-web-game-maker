@@ -9,7 +9,7 @@ const insertShogiHtmlAtTop = () => {
   }
   const position = new vscode.Position(0, 0);
   activeEditor.edit((edit) => {
-    edit.insert(position, shogiHtml + "\n");
+    edit.insert(position, shogiHtml);
   });
 };
 

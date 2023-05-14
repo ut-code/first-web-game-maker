@@ -127,37 +127,24 @@ const initialPiece = new Map([
 ]);
 
 // ===========================================
-// ここは変更不要
+// 勝者を表示
+function showWinner(player) {
+  if (player === 0) {
+    showMessage("ゲーム終了: 先手の勝ちです。");
+  } else {
+    showMessage("ゲーム終了: 後手の勝ちです。");
+  }
+}
+
+// ===========================================
+// 以下の部分は、基本的に変更不要です
+
 const messageDiv = document.getElementById("メッセージ表示");
 const boardTds = boardMatrix();
 const capturedPieceDivs = [
   document.getElementById("先手持ち駒置き場"),
   document.getElementById("後手持ち駒置き場"),
 ];
-
-// ===========================================
-// ゲーム制御
-
-// 手番プレイヤーを表示
-function startTurn(player) {
-  if (player === 0) {
-    showMessage("先手の番です。");
-  } else {
-    showMessage("後手の番です");
-  }
-}
-
-// 勝者を表示
-function showWinner(player) {
-  if (player === 0) {
-    showMessage("ゲーム終了: 先手の勝ちです。");
-  } else {
-    showMessage("ゲーム終了: 後手の勝ちです");
-  }
-}
-
-// ===========================================
-// 以下の部分は、基本的に変更不要です
 
 // 盤面の初期設定
 function initializeBoardVisualization() {
@@ -208,6 +195,15 @@ async function showQuestion(options, message) {
       };
     });
   });
+}
+
+// 手番プレイヤーを表示
+function startTurn(player) {
+  if (player === 0) {
+    showMessage("先手の番です。");
+  } else {
+    showMessage("後手の番です");
+  }
 }
 
 let resolveButtonClick = null;

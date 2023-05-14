@@ -15,7 +15,7 @@ const shogiTreeData = new TreeItem(
       title: "",
     }),
     new TreeItem("customshogi.js", vscode.TreeItemCollapsibleState.None, {
-      command: "first-web-game-maker.insertShogiCustomShogiAtTop",
+      command: "first-web-game-maker.insertShogiCustomShogiJsAtTop",
       title: "",
     }),
     new TreeItem("基本設定テンプレート", vscode.TreeItemCollapsibleState.None, {

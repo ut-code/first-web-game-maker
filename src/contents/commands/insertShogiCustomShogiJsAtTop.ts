@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { type Command } from "../../types/command";
-import shogiScriptJs from "./shogiTemplate/shogiScriptJs";
+import shogiCustomShogiJs from "./shogiTemplate/shogiCustomShogiJs";
 
 const insertShogiCustomShogiJsAtTop = () => {
   const activeEditor = vscode.window.activeTextEditor;
@@ -9,7 +9,7 @@ const insertShogiCustomShogiJsAtTop = () => {
   }
   const position = new vscode.Position(0, 0);
   activeEditor.edit((edit) => {
-    edit.insert(position, shogiScriptJs + "\n");
+    edit.insert(position, shogiCustomShogiJs);
   });
 };
 
