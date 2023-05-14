@@ -14,7 +14,6 @@ const commands: Command[] = [
   deleteAfterCursorCommand,
 
   ...pacmanCommands,
-  ...htmlCommands,
   ...insertSugorokuCommands,
   insertShogiHtmlAtTopCommand,
   insertShogiJsAtTopCommand,
