@@ -1,8 +1,9 @@
 import toTreeView from "./utils/toTreeView";
+import pacmanTreeData from "./contents/treeData/pacmanTreeData";
 import sugorokuTreeData from "./contents/treeData/sugorokuTreeData";
 import shogiTreeData from "./contents/treeData/shogiTreeData";
 
-const treeData = [sugorokuTreeData];
+const treeData = [sugorokuTreeData, pacmanTreeData];
 
 const treeView = toTreeView(treeData);
 
