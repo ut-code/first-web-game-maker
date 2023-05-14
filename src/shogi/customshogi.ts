@@ -387,7 +387,7 @@ class RiderMove extends IMove {
         }
         const targetSquare = board.square(newCoordinate);
         if (targetSquare.isExcluded) {
-          continue;
+          break;
         }
         const relation: RelationType = PlayerIndex.relation(
           controller,

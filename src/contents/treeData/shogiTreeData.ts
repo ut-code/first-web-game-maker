@@ -35,7 +35,15 @@ const shogiTreeData = new TreeItem(
       title: "",
     }),
     new TreeItem(
-      "駒の初期配置テンプレート",
+      "駒の初期配置テンプレート(チェス)",
+      vscode.TreeItemCollapsibleState.None,
+      {
+        command: "first-web-game-maker.insertShogiInitialChessPieceTemplate",
+        title: "",
+      }
+    ),
+    new TreeItem(
+      "駒の初期配置テンプレート(将棋)",
       vscode.TreeItemCollapsibleState.None,
       {
         command: "first-web-game-maker.insertShogiInitialPieceTemplate",
