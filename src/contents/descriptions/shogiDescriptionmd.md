@@ -68,10 +68,10 @@ id とテンプレートの種類の対応は次の通りです。
 class King extends IPiece {
   get NAME() {
     return "King";
-  };
+  }
   get SYMBOL() {
     return "K";
-  };
+  }
   MOVE = new LeaperMove([new Vector(1, 0), new Vector(1, 1)], "oct");
   IS_ROYAL = true;
 }
@@ -83,7 +83,7 @@ class King extends IPiece {
 - `IS_ROYAL` : `true` を設定すると、将棋の王将やチェスのキングのように、取られると負ける駒になります。省略した場合は `false` となります。
 - `INITIAL_MOVE`: チェスのポーンのように、最初の 1 回だけ適用される駒の動きを設定できます。書き方が特殊なので、ポーンのテンプレートを参考にしてください。
 - `PROMOTE_DEFAULT` : どの駒に成ることができるか設定できます。複数設定するとプレイヤーに選択させることができます。次の入力例は、チェスのポーンの場合です。
-  
+
   ```js
   get PROMOTE_DEFAULT() {
     return new Set([[Qween], [Bishop], [Rook], [Knight]]);

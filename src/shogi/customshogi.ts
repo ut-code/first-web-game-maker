@@ -442,12 +442,9 @@ class MoveParallelJoint extends IMove {
 const PROMOTE_DEFAULT_REAL = new Map<PieceType, Set<PieceType>>();
 abstract class IPiece {
   readonly PROMOTE_DEFAULT_TRUE: Set<PieceType>;
-  constructor(
-    public controller?: Player,
-    public isUntouched: boolean = false
-  ) {
+  constructor(public controller?: Player, public isUntouched: boolean = false) {
     const original = this.constructor as PieceType;
-    if (!(PROMOTE_DEFAULT_REAL.has(original))) {
+    if (!PROMOTE_DEFAULT_REAL.has(original)) {
       const truePromotedPieces = new Set<PieceType>();
 
       for (const [piece, name, symbol] of this.PROMOTE_DEFAULT) {
@@ -477,11 +474,13 @@ abstract class IPiece {
   }
   IS_ROYAL: boolean = false;
   abstract SYMBOL: string;
-  get PROMOTE_DEFAULT(): Set<[PieceType, string?, string?]> {return new Set();}
+  get PROMOTE_DEFAULT(): Set<[PieceType, string?, string?]> {
+    return new Set();
+  }
   FORCE_PROMOTE: boolean = false;
   ORIGINAL_PIECE: PieceType = this.constructor as PieceType;
   get IS_PROMOTED(): boolean {
-    return this.ORIGINAL_PIECE !== this.constructor as PieceType;
+    return this.ORIGINAL_PIECE !== (this.constructor as PieceType);
   }
 
   static toString(): string {
@@ -952,7 +951,9 @@ class MatchBoard extends IBoard {
           )
         );
         if (target === null) {
-          this.IO.showWinner(playerToNum(PlayerIndex.nextPlayer(this.turnPlayer)));
+          this.IO.showWinner(
+            playerToNum(PlayerIndex.nextPlayer(this.turnPlayer))
+          );
           return;
         }
         if (target instanceof AbsoluteCoordinate) {
@@ -972,18 +973,19 @@ class MatchBoard extends IBoard {
             continue Turn;
           }
           this.#move(target, goal, playLog);
-          let isPromoted: boolean = false
+          let isPromoted: boolean = false;
           if (this.promotionCondition(playLog)) {
             const movingPiece = this.square(goal).piece!;
-            const promoteTo = await this.IO.selectPromotion([
-              ...movingPiece.PROMOTE_DEFAULT_TRUE,
-              ...movingPiece.FORCE_PROMOTE ? [] : [playLog.movingPiece],
-            ],
-            "どの駒に成るかを選んでください"
+            const promoteTo = await this.IO.selectPromotion(
+              [
+                ...movingPiece.PROMOTE_DEFAULT_TRUE,
+                ...(movingPiece.FORCE_PROMOTE ? [] : [playLog.movingPiece]),
+              ],
+              "どの駒に成るかを選んでください"
             );
             if (promoteTo !== playLog.movingPiece) {
               this.#promote(promoteTo, goal, playLog);
-              isPromoted = true
+              isPromoted = true;
             }
           }
           this.IO.renderCell(
@@ -1068,7 +1070,10 @@ interface IOFunctions {
   ) => Promise<
     (T extends PieceType ? PieceType : never) | [number, number] | null
   >;
-  selectPromotion: (options: PieceType[], message: string) => Promise<PieceType>;
+  selectPromotion: (
+    options: PieceType[],
+    message: string
+  ) => Promise<PieceType>;
   renderCell: (
     y: number,
     x: number,

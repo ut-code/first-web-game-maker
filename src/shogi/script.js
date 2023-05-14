@@ -253,9 +253,8 @@ async function selectBoard(options, message, canCancel) {
       capturedPieceDivs[player === players[0] ? 0 : 1].children[
         k
       ].style.backgroundColor = 選択可能なマスの色;
-      capturedPieceDivs[player === players[0] ? 0 : 1].children[
-        k
-      ].onclick = () => handleBoardClick(pieceOption[k]);
+      capturedPieceDivs[player === players[0] ? 0 : 1].children[k].onclick =
+        () => handleBoardClick(pieceOption[k]);
     }
   }
   // そのあと取り出す
@@ -266,8 +265,7 @@ async function selectBoard(options, message, canCancel) {
       boardTds[i][j].onclick = () => {};
     }
   }
-  for (const div of capturedPieceDivs[player === players[0] ? 0 : 1]
-    .children) {
+  for (const div of capturedPieceDivs[player === players[0] ? 0 : 1].children) {
     div.onclick = () => {};
   }
 
@@ -294,14 +292,14 @@ function resetCellColor() {
 function renderCell(y, x, player, pieceName, isPromoted) {
   const td = boardTds[y][x];
   if (player === 0) {
-    if (isPromoted){
+    if (isPromoted) {
       td.style.color = 先手の成った駒の色;
     } else {
       td.style.color = 先手の駒の色;
     }
     td.style.transform = "rotate(0deg)";
   } else {
-    if (isPromoted){
+    if (isPromoted) {
       td.style.color = 後手の成った駒の色;
     } else {
       td.style.color = 後手の駒の色;
