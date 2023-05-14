@@ -58,6 +58,10 @@ None
 
 ## Release Notes
 
+## 0.0.3
+
+Add Pac-Man template.
+
 ### 0.0.2
 
 Update the description of sugoroku, which is a Japanese board game.
