@@ -4,7 +4,7 @@ import toPanel from "./utils/toPanel";
 import shogiDescription from "./contents/descriptions/shogiDescription";
 import sugorokuDescription from "./contents/descriptions/sugorokuDescription";
 import topPageDescription from "./contents/descriptions/topPageDescription";
-import pacmanDescription from "./contents/descriptions/pacmanDescription"
+import pacmanDescription from "./contents/descriptions/pacmanDescription";
 
 export default function createPanel(context: vscode.ExtensionContext) {
   const panelDataList: PanelData[] = [
