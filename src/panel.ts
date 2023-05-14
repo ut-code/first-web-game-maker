@@ -1,21 +1,29 @@
 import * as vscode from "vscode";
-import convertMarkdownToHtml from "./utils/convertMarkdownToHtml";
+import { type PanelData } from "./types/panelData";
+import toPanel from "./utils/toPanel";
+import shogiDescription from "./contents/descriptions/shogiDescription";
+import sugorokuDescription from "./contents/descriptions/sugorokuDescription";
+import topPageDescription from "./contents/descriptions/topPageDescription";
+import pacmanDescription from "./contents/descriptions/pacmanDescription"
 
-const panel = vscode.window.createWebviewPanel(
-  "first-web-game-maker",
-  "First Web Game Maker",
-  vscode.ViewColumn.Two,
-  {
-    enableScripts: true,
-  }
-);
-
-// panel.webview.html = convertMarkdownToHtml(
-//   "./contents/descriptions/htmlDescription.md"
-// );
-
-panel.webview.html = convertMarkdownToHtml(
-  "./contents/descriptions/pacmanDescription.md"
-);
-
-export default panel;
+export default function createPanel(context: vscode.ExtensionContext) {
+  const panelDataList: PanelData[] = [
+    {
+      title: "使い方",
+      content: topPageDescription,
+    },
+    {
+      title: "すごろく",
+      content: sugorokuDescription,
+    },
+    // {
+    //   title: "将棋",
+    //   content: shogiDescription,
+    // },
+    {
+      title: "パックマン",
+      content: pacmanDescription,
+    },
+  ];
+  return toPanel(panelDataList, context);
+}

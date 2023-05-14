@@ -2,7 +2,8 @@
   "name": "first-web-game-maker",
   "displayName": "First Web Game Maker",
   "description": "First Web Game Maker",
-  "version": "0.0.1",
+  "publisher": "utcode",
+  "version": "0.0.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ut-code/first-web-game-maker.git"
@@ -57,7 +58,9 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
-    "format": "npx prettier --write ."
+    "format": "npx prettier --write .",
+    "format:check": "npx prettier --check .",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",
@@ -70,6 +73,8 @@
     "@vscode/test-electron": "^2.2.3",
     "eslint": "^8.34.0",
     "glob": "^8.1.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.2",
     "mocha": "^10.2.0",
     "prettier": "2.8.4",
     "typescript": "^4.9.5"
@@ -77,5 +82,8 @@
   "dependencies": {
     "highlight.js": "^11.7.0",
     "markdown-it": "^13.0.1"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
   }
 }

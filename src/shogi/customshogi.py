@@ -199,46 +199,40 @@ class RelativeCoordinate(Coordinate):
         return type(self)(-self.x, -self.y)
 
 
-class Controller2P(Enum):
+class Player(Enum):
     """駒・ターンのコントローラーを示す
 
-    INDEPENDENT: その他(未使用)
     WHITE: 先手
     BLACK: 後手
 
     行列演算`@`によって、(左辺)から見た(右辺)の素性を示す`Relation2P`を返す
     """
-    INDEPENDENT = auto()
     WHITE = auto()
     BLACK = auto()
 
-    def __matmul__(self, __value: Optional[Controller2P]) -> Relation:
-        if self is Controller2P.INDEPENDENT:
-            raise NotImplementedError("moving independent piece is not implemented yet")
+    def __matmul__(self, __value: Optional[Player]) -> Relation:
         if __value is None:
             return Relation.TO_BLANK
-        if not isinstance(__value, Controller2P):
+        if not isinstance(__value, Player):
             raise TypeError
-        if __value is Controller2P.INDEPENDENT:
-            raise NotImplementedError("moving independent piece is not implemented yet")
         if self is __value:
             return Relation.FRIEND
         return Relation.ENEMY
 
     def __str__(self) -> str:
-        if self is Controller2P.WHITE:
+        if self is Player.WHITE:
             return 'White'
-        if self is Controller2P.BLACK:
+        if self is Player.BLACK:
             return 'Black'
-        return 'independent'
+        raise NotImplementedError
 
     def next_player(self):
         """ターン順で次のプレイヤー"""
-        if self is Controller2P.WHITE:
-            return Controller2P.BLACK
-        if self is Controller2P.BLACK:
-            return Controller2P.WHITE
-        raise NotImplementedError("next turn of absent")
+        if self is Player.WHITE:
+            return Player.BLACK
+        if self is Player.BLACK:
+            return Player.WHITE
+        raise NotImplementedError
 
 
 class Relation(Enum):
@@ -323,44 +317,22 @@ class TInteraction:
 
 class IMove(ABC):
     """駒の動きの静的な定義の表現のインタフェース"""
-    def __add__(self, __o: object) -> MoveParallelJoint:
+    def __add__(self, __o: IMove) -> MoveParallelJoint:
         if not isinstance(__o, IMove):
             raise TypeError
         return MoveParallelJoint(self, __o)
 
     @abstractmethod
-    def coordinates_in_controller(self, controller: Controller2P) -> Any:
-        """駒がそのコントローラーの下で動ける方向を示す"""
-
-    @abstractmethod
     def valid_destination(
             self,
             board: IBoard,
-            controller: Controller2P,
+            controller: Player,
             current_coordinate: AbsoluteCoordinate,
         ) -> set[AbsoluteCoordinate]:
         """諸々から、有効な移動先を返す"""
 
 
-class IElementalMove(ABC):
-    """IMoveDefinitionの子のうち、他のIMoveの合成ではないもののインタフェース"""
-    interaction: dict[Relation, Approachability]
-
-    # FIXME: 協調的多重継承
-    def __init__(self, interaction: Mapping[Relation, Approachability] = ...) -> None:
-        self.interaction = TInteraction.NORMAL
-        if interaction is not ...:
-            self.interaction.update(interaction)
-
-    def approachability(
-            self,
-            relation: Relation,
-        ) -> Approachability:
-        """移動先のマスの駒のコントローラーを参照し、そこに対する挙動を返す"""
-        return self.interaction[relation]
-
-
-class LeaperMove(IMove, IElementalMove):
+class LeaperMove(IMove):
     """Leaper(跳び駒)の動きの実装"""
     def __init__(
             self,
@@ -369,7 +341,9 @@ class LeaperMove(IMove, IElementalMove):
             symmetry: Literal['none', 'lr', 'fblr', 'oct'] = 'none',
             interaction: Mapping[Relation, Approachability] = ...,
         ) -> None:
-        super().__init__(interaction)
+        self.interaction = TInteraction.NORMAL
+        if interaction is not ...:
+            self.interaction.update(interaction)
 
         self.__coordinates: set[RelativeCoordinate] = set(coordinates)
         if symmetry in ('lr', 'fblr', 'oct'):
@@ -402,17 +376,18 @@ class LeaperMove(IMove, IElementalMove):
             interaction=interaction,
         )
 
-    def coordinates_in_controller(self, controller: Controller2P) -> set[RelativeCoordinate]:
-        if controller is Controller2P.WHITE:
+    def coordinates_in_controller(self, controller: Player) -> set[RelativeCoordinate]:
+        """駒がそのコントローラーの下で動ける方向を示す"""
+        if controller is Player.WHITE:
             return self.__coordinates
-        if controller is Controller2P.BLACK:
+        if controller is Player.BLACK:
             return {-coordinate for coordinate in self.__coordinates}
         return set()
 
     def valid_destination(
             self,
             board: IBoard,
-            controller: Controller2P,
+            controller: Player,
             current_coordinate: AbsoluteCoordinate,
         ) -> set[AbsoluteCoordinate]:
         destinations: set[AbsoluteCoordinate] = set()
@@ -427,12 +402,12 @@ class LeaperMove(IMove, IElementalMove):
                 relation = controller @ target_square.piece.controller
             else:
                 relation = Relation.TO_BLANK
-            if self.approachability(relation).can_land:
+            if self.interaction[relation].can_land:
                 destinations.add(new_coordinate)
         return destinations
 
 
-class RiderMove(IMove, IElementalMove):
+class RiderMove(IMove):
     """Rider(走り駒)の動きの実装"""
     def __init__(
             self,
@@ -441,16 +416,18 @@ class RiderMove(IMove, IElementalMove):
             symmetry: Literal['none', 'lr', 'fblr', 'oct'] = 'none',
             interaction: Mapping[Relation, Approachability] = ...,
         ) -> None:
-        super().__init__(interaction)
+        self.interaction = TInteraction.NORMAL
+        if interaction is not ...:
+            self.interaction.update(interaction)
 
         self.__coordinate_to_dist: dict[RelativeCoordinate, int] \
             = defaultdict(int, coordinate_to_dist)
         if symmetry in ('lr', 'fblr', 'oct'):
-            def adopt_dist(dist_a: int, dist_b: int):
+            def adopt_dist(dist1: int, dist2: int):
                 """同じ方向に移動できる回数を示す2つの値について、他方を包含するものを返す"""
-                if dist_a < 0 or dist_b < 0:
+                if dist1 < 0 or dist2 < 0:
                     return -1
-                return max(dist_a, dist_b)
+                return max(dist1, dist2)
             for coord, dist in set(self.__coordinate_to_dist.items()):
                 self.__coordinate_to_dist[coord.x_inverted] \
                     = adopt_dist(self.__coordinate_to_dist[coord.x_inverted], dist)
@@ -486,17 +463,18 @@ class RiderMove(IMove, IElementalMove):
             interaction=interaction,
         )
 
-    def coordinates_in_controller(self, controller: Controller2P) -> dict[RelativeCoordinate, int]:
-        if controller is Controller2P.WHITE:
+    def coordinates_in_controller(self, controller: Player) -> dict[RelativeCoordinate, int]:
+        """駒がそのコントローラーの下で動ける方向を示す"""
+        if controller is Player.WHITE:
             return self.__coordinate_to_dist
-        if controller is Controller2P.BLACK:
+        if controller is Player.BLACK:
             return {-coordinate: dist for coordinate, dist in self.__coordinate_to_dist.items()}
         return {}
 
     def valid_destination(
             self,
             board: IBoard,
-            controller: Controller2P,
+            controller: Player,
             current_coordinate: AbsoluteCoordinate,
         ) -> set[AbsoluteCoordinate]:
         destinations: set[AbsoluteCoordinate] = set()
@@ -515,9 +493,9 @@ class RiderMove(IMove, IElementalMove):
                     relation = controller @ target_square.piece.controller
                 else:
                     relation = Relation.TO_BLANK
-                if self.approachability(relation).can_land:
+                if self.interaction[relation].can_land:
                     destinations.add(new_coordinate)
-                if not self.approachability(relation).can_go_over:
+                if not self.interaction[relation].can_go_over:
                     break
         return destinations
 
@@ -527,7 +505,7 @@ class MoveParallelJoint(IMove):
     def __init__(self, *move: IMove) -> None:
         self.move = move
 
-    def __add__(self, __o: object) -> MoveParallelJoint:
+    def __add__(self, __o: IMove) -> MoveParallelJoint:
         if not isinstance(__o, IMove):
             raise TypeError
         if isinstance(__o, MoveParallelJoint):
@@ -536,16 +514,10 @@ class MoveParallelJoint(IMove):
 
     __radd__ = __add__
 
-    def coordinates_in_controller(self, controller: Controller2P) -> set[RelativeCoordinate]:
-        return set().union(
-            *(move_element.coordinates_in_controller(controller)
-              for move_element in self.move)
-        )
-
     def valid_destination(
             self,
             board: IBoard,
-            controller: Controller2P,
+            controller: Player,
             current_coordinate: AbsoluteCoordinate
         ) -> set[AbsoluteCoordinate]:
         return set().union(
@@ -564,15 +536,15 @@ class IntroduceClassConstant(type):
         **kwds: Any,
     ) -> None:
         super().__init__(__name, __bases, __dict, **kwds)
-        cls.__yet_can_assign: dict[str, bool] = {__key: True for __key in cls.ONE_OFF_ASSIGN}
-        cls._print_is_can_assign = lambda: cls.__yet_can_assign
+        cls.__name_assignable: dict[str, bool] = {__key: True for __key in cls.ONE_OFF_ASSIGN}
+        cls._print_assignability = lambda: cls.__name_assignable
         """再代入が1回のみ可能なクラス定数について、その一覧を、まだ代入可能かを返す"""
 
     def __setattr__(cls, __name: str, __value: Any) -> None:
         if __name == __name.upper():
-            if __name not in cls.ONE_OFF_ASSIGN or not cls.__yet_can_assign[__name]:
+            if __name not in cls.ONE_OFF_ASSIGN or not cls.__name_assignable[__name]:
                 raise AttributeError(f"cannot reassign to constant {__name}")
-            cls.__yet_can_assign[__name] = False
+            cls.__name_assignable[__name] = False
         return super().__setattr__(__name, __value)
 
     ONE_OFF_ASSIGN: set[str] = set()
@@ -604,7 +576,7 @@ class IPiece(StrictVarHelper):
 
     def __init__(
             self,
-            controller: Controller2P,
+            controller: Player,
             *,
             is_untouched: bool = False,
         ) -> None:
@@ -622,9 +594,9 @@ class IPiece(StrictVarHelper):
         """プレイヤーによって大文字, 小文字の表示を変えるようにしたSYMBOL
         盤面の表示に使う
         """
-        if self.controller is Controller2P.WHITE:
+        if self.controller is Player.WHITE:
             return self.SYMBOL.upper()
-        if self.controller is Controller2P.BLACK:
+        if self.controller is Player.BLACK:
             return self.SYMBOL.lower()
         return f"\033[33m{self.SYMBOL}\033[0m"  # とりあえず黄色にしている
 
@@ -721,7 +693,7 @@ class PlayLogUnit:
     board: ClassVar[IBoard] = ...
     total_step_count: int = ...
     chess_turn_count: int = ...
-    turn_player: Controller2P = ...
+    turn_player: Player = ...
     before_coord: Optional[AbsoluteCoordinate] = ...
     after_coord: AbsoluteCoordinate = ...
     moving_piece: type[IPiece] = ...
@@ -742,8 +714,8 @@ class IBoard(ABC):
     height: int
     width: int
     board: list[list[Square]]
-    piece_in_board_index: dict[Controller2P, dict[type[IPiece], set[AbsoluteCoordinate]]]
-    piece_stands: dict[Controller2P, Counter[type[IPiece]]]
+    piece_in_board_index: dict[Player, dict[type[IPiece], set[AbsoluteCoordinate]]]
+    piece_stands: dict[Player, Counter[type[IPiece]]]
 
     def __getitem__(self, __key: AbsoluteCoordinate) -> Square:
         return self.board[__key.y][__key.x]
@@ -753,15 +725,15 @@ class IBoard(ABC):
     def balance_of(
             self,
             coord: AbsoluteCoordinate,
-            controller: Controller2P,
+            controller: Player,
         ) -> tuple[AbsoluteCoordinate, AbsoluteCoordinate]:
         """(下/左からの距離(0始まり), 上/右からの距離(-1始まり))"""
-        if controller is Controller2P.WHITE:
+        if controller is Player.WHITE:
             return (
                 coord.normalized_by(self, negative=False),
                 coord.normalized_by(self, negative=True),
             )
-        if controller is Controller2P.BLACK:
+        if controller is Player.BLACK:
             return (
                 (-coord).normalized_by(self, negative=False),
                 (-coord).normalized_by(self, negative=True),
@@ -837,7 +809,7 @@ class MatchBoard(IBoard):
         PlayLogUnit.board = self
         # ターン数のカウント
         self.chess_turn_count = 0
-        self.turn_player = Controller2P.WHITE
+        self.turn_player = Player.WHITE
         # 盤の状態の設定
         self.can_use_captured_piece = can_use_captured_piece
         self.promotion_condition = promotion_condition
@@ -848,12 +820,13 @@ class MatchBoard(IBoard):
             self.promotion_condition = TPromotionCondition.oppornent_field(self.height//3)
         # 駒がない状態の盤面を生成
         self.board = [[Square(None) for _ in range(self.width)] for _ in range(self.height)]
-        self.piece_stands = {Controller2P.WHITE: Counter(), Controller2P.BLACK: Counter()}
+        self.piece_stands = {Player.WHITE: Counter(), Player.BLACK: Counter()}
         self.piece_in_board_index = {
-            Controller2P.WHITE: defaultdict(set),
-            Controller2P.BLACK: defaultdict(set),
+            Player.WHITE: defaultdict(set),
+            Player.BLACK: defaultdict(set),
         }
         # initial_piecesを元に盤面に駒を置いていく
+        # TODO: pieceが元と同じオブジェクト(add_piece_to_boardなどを介さずに変更しようとすると問題になる)
         excluded_square = {position.normalized_by(self) for position in excluded_square}
         if lr_symmetry:
             initial_position_x_inverted = {
@@ -889,7 +862,7 @@ class MatchBoard(IBoard):
         """座標の一覧のイテレータ"""
         return (AbsoluteCoordinate(h, w) for h in range(self.height) for w in range(self.width))
 
-    def visualize_piece_stand(self, player: Controller2P) -> None:
+    def visualize_piece_stand(self, player: Player) -> None:
         """コンソールに駒台を表示する"""
         print(f"{str(player)}'s piece stand: ", end='')
         print(', '.join(f"{piece.SYMBOL}-{num}"
@@ -902,7 +875,7 @@ class MatchBoard(IBoard):
         horizontal_sep = '='*(h_digit-1) + '=‡'*(self.width+1)
         column_indicator = '\\'*h_digit + '|' + '|'.join(chr(97+w) for w in range(self.width)) + '|'
         print()
-        self.visualize_piece_stand(Controller2P.BLACK)
+        self.visualize_piece_stand(Player.BLACK)
         print(horizontal_line)
         print(column_indicator)
         print(horizontal_sep)
@@ -915,13 +888,13 @@ class MatchBoard(IBoard):
                 + '|'
             )
             print(horizontal_line)
-        self.visualize_piece_stand(Controller2P.WHITE)
+        self.visualize_piece_stand(Player.WHITE)
         print()
 
-    def is_game_terminated(self) -> tuple[bool, Optional[Controller2P]]:
+    def is_game_terminated(self) -> tuple[bool, Optional[Player]]:
         """(ゲームが終了したかの真偽値, 勝者)"""
-        remaining_player: set[Controller2P] = {
-            player for player in (Controller2P.WHITE, Controller2P.BLACK)
+        remaining_player: set[Player] = {
+            player for player in (Player.WHITE, Player.BLACK)
             if any(v for (k, v) in self.piece_in_board_index[player].items() if k.IS_ROYAL)
         }
         if len(remaining_player) > 1:
@@ -930,22 +903,24 @@ class MatchBoard(IBoard):
             return (True, remaining_player.pop())
         return (True, None)
 
-    def add_piece_to_stand(self, kind: type[IPiece], controller: Controller2P) -> None:
+    def add_piece_to_stand(self, kind: type[IPiece], controller: Player) -> None:
         """駒台に駒を置く"""
         self.piece_stands[controller][kind] += 1
 
     def add_piece_to_board(
             self,
             kind: type[IPiece],
-            controller: Controller2P,
+            controller: Player,
             coord: AbsoluteCoordinate,
             *,
             as_untouched: bool = False,
             collision: Literal['raise', 'overwrite', 'skip'] = 'raise',
         ) -> None:
         """盤面に駒を置く"""
-        if self[coord].is_excluded and collision != 'skip':
-            raise ValueError("cannot set a piece to excluded square")
+        if self[coord].is_excluded:
+            if collision != 'skip':
+                raise ValueError("cannot set a piece to excluded square")
+            return
         if self[coord].piece is not None:
             if collision == 'raise':
                 raise ValueError(f"piece is already in {coord}")
@@ -954,7 +929,7 @@ class MatchBoard(IBoard):
         self[coord].piece = kind(controller, is_untouched=as_untouched)
         self.piece_in_board_index[controller][kind].add(coord)
 
-    def remove_piece_from_stand(self, kind: type[IPiece], controller: Controller2P):
+    def remove_piece_from_stand(self, kind: type[IPiece], controller: Player):
         """駒台から駒を取り除く"""
         active_piece_stand = self.piece_stands[controller]
         if active_piece_stand[kind] == 0:
@@ -987,16 +962,14 @@ class MatchBoard(IBoard):
 
     def movable_piece_mapping(self) -> dict[AbsoluteCoordinate, set[AbsoluteCoordinate]]:
         """ターンプレイヤーの駒のうち、動かせるものについて、dict[今いる位置, set[移動可能な位置]]を返す"""
-        dominating_coord = {
-            k for i in self.piece_in_board_index[self.turn_player].values() for k in i
-        }
-        dominating_piece_mapping = {
+        turn_player_piece_to_movable_coords = {
             depart_coord: self.move_destination_from(depart_coord)
-            for depart_coord in dominating_coord
+            for turn_player_piece_coords in self.piece_in_board_index[self.turn_player].values()
+            for depart_coord in turn_player_piece_coords
         }
         return {
             depart_coord: destination_coords for depart_coord, destination_coords
-            in dominating_piece_mapping.items() if destination_coords
+            in turn_player_piece_to_movable_coords.items() if destination_coords
         }
 
     def move(
@@ -1041,14 +1014,12 @@ class MatchBoard(IBoard):
         # どちらかのプレイヤーが王駒を全て失うまで対局を続ける
         while not self.is_game_terminated()[0]:
             self.show_to_console()
-            movable_piece_mapping = self.movable_piece_mapping()
             play_log_of_this_turn = PlayLogUnit(
                 total_step_count=len(self.play_log),
                 chess_turn_count=self.chess_turn_count,
                 turn_player=self.turn_player,
             )
             # TODO: ループロジック見直し: whileをどう使う?
-            # TODO: ステイルメイト対応?
             while True:
                 # 駒を動かすか打つかを選択する
                 # TODO: merge
@@ -1070,6 +1041,7 @@ class MatchBoard(IBoard):
                     mode = 'move'
                 # 先の選択に従い、実際の処理を行う
                 if mode == 'move':
+                    movable_piece_mapping = self.movable_piece_mapping()
                     before_coord = select_by_user(
                         (movable_piece_mapping, self.square_referer_to_str),
                         message="select your piece to move by coordinate:"
@@ -1109,7 +1081,7 @@ class MatchBoard(IBoard):
                         self.drop(drop_piece, drop_coord, log=play_log_of_this_turn)
                         break
             self.turn_player = self.turn_player.next_player()
-            if self.turn_player == Controller2P.WHITE:
+            if self.turn_player == Player.WHITE:
                 self.chess_turn_count += 1
         self.show_to_console()
         print(f"Game end: the winner is {self.is_game_terminated()[1]}")
@@ -1246,12 +1218,12 @@ Pawn.PROMOTE_DEFAULT = {kind.as_promotion_of(Pawn) for kind in (Qween, Bishop, R
 
 if __name__ == '__main__':
     initial_piece_position: dict[AbsoluteCoordinate, IPiece] = {
-        AbsoluteCoordinate(0, 3): King(Controller2P.WHITE),
-        AbsoluteCoordinate(0, 4): Qween(Controller2P.WHITE),
-        AbsoluteCoordinate(0, 0): Rook(Controller2P.WHITE),
-        AbsoluteCoordinate(0, 2): Bishop(Controller2P.WHITE),
-        AbsoluteCoordinate(0, 1): Knight(Controller2P.WHITE),
-        **{AbsoluteCoordinate(1, n): Pawn(Controller2P.WHITE) for n in range(4)},
+        AbsoluteCoordinate(0, 3): King(Player.WHITE),
+        AbsoluteCoordinate(0, 4): Qween(Player.WHITE),
+        AbsoluteCoordinate(0, 0): Rook(Player.WHITE),
+        AbsoluteCoordinate(0, 2): Bishop(Player.WHITE),
+        AbsoluteCoordinate(0, 1): Knight(Player.WHITE),
+        **{AbsoluteCoordinate(1, n): Pawn(Player.WHITE) for n in range(4)},
     }
     play_board = MatchBoard(
         height=6, # 8,
