@@ -39,22 +39,22 @@ const eatenCookieSpan = document.getElementById("eaten-cookie");
 const createdCookieSpan = document.getElementById("created-cookie");
 
 const pacmanEastImage = new Image();
-pacmanEastImage.src = "./img/pacman_east.svg";
+pacmanEastImage.src = "./pacmanEast.svg";
 const pacmanWestImage = new Image();
-pacmanWestImage.src = "./img/pacman_west.svg";
+pacmanWestImage.src = "./pacmanWest.svg";
 const pacmanNorthImage = new Image();
-pacmanNorthImage.src = "./img/pacman_north_temp.svg";
+pacmanNorthImage.src = "./pacmanNorth.svg";
 const pacmanSouthImage = new Image();
-pacmanSouthImage.src = "./img/pacman_south_temp.svg";
+pacmanSouthImage.src = "./pacmanSouth.svg";
 
 const ghostEastImage = new Image();
-ghostEastImage.src = "./img/ghost_east.svg";
+ghostEastImage.src = "./ghostEast.svg";
 const ghostWestImage = new Image();
-ghostWestImage.src = "./img/ghost_west.svg";
+ghostWestImage.src = "./ghostWest.svg";
 const ghostNorthImage = new Image();
-ghostNorthImage.src = "./img/ghost_north.svg";
+ghostNorthImage.src = "./ghostNorth.svg";
 const ghostSouthImage = new Image();
-ghostSouthImage.src = "./img/ghost_south.svg";
+ghostSouthImage.src = "./ghostSouth.svg";
 
 // canvas領域を定義
 const canvas = document.getElementById("canvas");

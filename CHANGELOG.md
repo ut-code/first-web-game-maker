@@ -4,6 +4,10 @@ All notable changes to the "first-web-game-maker" extension will be documented i
 
 <!-- Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file. -->
 
+## [0.0.5] - 2023-05-14
+
+- Fix Pac-Man template
+
 ## [0.0.4] - 2023-05-14
 
 - Add shogi template
