@@ -480,6 +480,9 @@ abstract class IPiece {
   get PROMOTE_DEFAULT(): Set<[PieceType, string?, string?]> {return new Set();}
   FORCE_PROMOTE: boolean = false;
   ORIGINAL_PIECE: PieceType = this.constructor as PieceType;
+  get IS_PROMOTED(): boolean {
+    return this.ORIGINAL_PIECE !== this.constructor as PieceType;
+  }
 
   static toString(): string {
     return new (this as PieceType)(undefined as any).SYMBOL;
@@ -899,29 +902,30 @@ class MatchBoard extends IBoard {
     log.promoteTo = kind;
   }
 
-  coordToNum(coord: AbsoluteCoordinate): [number, number] {
+  #coordToNum(coord: AbsoluteCoordinate): [number, number] {
     return [this.height - coord.y - 1, coord.x];
   }
 
-  numToCoord(y: number, x: number): AbsoluteCoordinate {
+  #numToCoord(y: number, x: number): AbsoluteCoordinate {
     return new AbsoluteCoordinate(this.height - y - 1, x);
   }
 
   async game(): Promise<void> {
     const converter = <T extends null | PieceType>(r: [number, number] | T) =>
-      r instanceof Array ? this.numToCoord(...r) : r;
+      r instanceof Array ? this.#numToCoord(...r) : r;
     const playerToNum = (p?: Player): 0 | 1 =>
       p === PlayerIndex.WHITE ? 0 : 1;
-    // ゲーム終了までループ
     this.IO.initializeBoardVisualization();
     for (const coord of this.#coordsGenerator) {
       const piece = this.square(coord).piece;
       this.IO.renderCell(
-        ...this.coordToNum(coord),
+        ...this.#coordToNum(coord),
         playerToNum(piece?.controller),
-        piece?.SYMBOL ?? ""
+        piece?.SYMBOL ?? "",
+        Boolean(piece?.IS_PROMOTED)
       );
     }
+    // ゲーム終了までループ
     while (!this.#isGameTerminated[0]) {
       const playLog: PlayLogComplete = {
         state: "defined",
@@ -938,7 +942,7 @@ class MatchBoard extends IBoard {
           await this.IO.selectBoard(
             [
               [...this.#movablePieceMapCache.keys()].map(
-                this.coordToNum.bind(this)
+                this.#coordToNum.bind(this)
               ),
               [...this.pieceStands.get(this.turnPlayer)!.keys()],
               this.turnPlayer,
@@ -948,11 +952,7 @@ class MatchBoard extends IBoard {
           )
         );
         if (target === null) {
-          this.IO.showMessage(
-            `Game end: the winner is ${String(
-              PlayerIndex.nextPlayer(this.turnPlayer)
-            )}`
-          );
+          this.IO.showWinner(playerToNum(PlayerIndex.nextPlayer(this.turnPlayer)));
           return;
         }
         if (target instanceof AbsoluteCoordinate) {
@@ -961,7 +961,7 @@ class MatchBoard extends IBoard {
             await this.IO.selectBoard<undefined>(
               [
                 [...this.#currentMovablePieceMap.get(target)!].map(
-                  this.coordToNum.bind(this)
+                  this.#coordToNum.bind(this)
                 ),
               ],
               "駒を移動させるマスを選んでください。",
@@ -972,27 +972,31 @@ class MatchBoard extends IBoard {
             continue Turn;
           }
           this.#move(target, goal, playLog);
+          let isPromoted: boolean = false
           if (this.promotionCondition(playLog)) {
-            const movingPiece = new playLog.movingPiece(undefined as unknown as Player);
+            const movingPiece = this.square(goal).piece!;
             const promoteTo = await this.IO.selectPromotion([
               ...movingPiece.PROMOTE_DEFAULT_TRUE,
               ...movingPiece.FORCE_PROMOTE ? [] : [playLog.movingPiece],
-            ] ,
+            ],
             "どの駒に成るかを選んでください"
             );
             if (promoteTo !== playLog.movingPiece) {
               this.#promote(promoteTo, goal, playLog);
+              isPromoted = true
             }
           }
           this.IO.renderCell(
-            ...this.coordToNum(goal),
+            ...this.#coordToNum(goal),
             playerToNum(this.turnPlayer),
-            this.square(goal).piece?.SYMBOL ?? ""
+            this.square(goal).piece?.SYMBOL ?? "",
+            isPromoted
           );
           this.IO.renderCell(
-            ...this.coordToNum(target),
+            ...this.#coordToNum(target),
             playerToNum(this.turnPlayer),
-            this.square(target).piece?.SYMBOL ?? ""
+            this.square(target).piece?.SYMBOL ?? "",
+            false
           );
           this.IO.renderCapturedPiece(
             playerToNum(this.turnPlayer),
@@ -1008,7 +1012,7 @@ class MatchBoard extends IBoard {
           // コマを打つ
           const goal = converter(
             await this.IO.selectBoard<undefined>(
-              [[...this.#dropDestination()].map(this.coordToNum.bind(this))],
+              [[...this.#dropDestination()].map(this.#coordToNum.bind(this))],
               "駒を置くマスを選んでください。",
               true
             )
@@ -1018,9 +1022,10 @@ class MatchBoard extends IBoard {
           }
           this.#drop(target, goal, playLog);
           this.IO.renderCell(
-            ...this.coordToNum(goal),
+            ...this.#coordToNum(goal),
             playerToNum(this.turnPlayer),
-            new target(undefined as any).SYMBOL
+            new target(undefined as any).SYMBOL,
+            false
           );
           this.IO.renderCapturedPiece(
             playerToNum(this.turnPlayer),
@@ -1039,9 +1044,7 @@ class MatchBoard extends IBoard {
         this.chessTurnCount += 1;
       }
     }
-    this.IO.showMessage(
-      `Game end: the winner is ${String(this.#isGameTerminated[1])}`
-    );
+    this.IO.showWinner(playerToNum(this.#isGameTerminated[1]));
     return;
   }
 }
@@ -1055,7 +1058,7 @@ type PlayerExpression = keyof typeof players;
 interface IOFunctions {
   initializeBoardVisualization: () => void;
   startTurnMessaging: (player: PlayerExpression) => void;
-  showMessage: (message: string) => void;
+  showWinner: (player: PlayerExpression) => void;
   selectBoard: <T extends undefined | PieceType>(
     options: T extends PieceType
       ? [[number, number][], T[], Player]
@@ -1070,9 +1073,9 @@ interface IOFunctions {
     y: number,
     x: number,
     player: PlayerExpression,
-    pieceName: string | ""
+    pieceName: string | "",
+    isPromoted: boolean
   ) => void;
-  // done
   renderCapturedPiece: (
     player: PlayerExpression,
     pieceNameAndNum: { name: string; count: number }[]

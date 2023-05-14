@@ -14,6 +14,8 @@ const 壁マスの座標リスト = [new Cell(4, 3), new Cell(4, 4)];
 const 後手の駒を反転させるか = true;
 const 先手の駒の色 = "black";
 const 後手の駒の色 = "red";
+const 先手の成った駒の色 = "black";
+const 後手の成った駒の色 = "red";
 const 駒のフォントサイズ = 24;
 
 const マスの色 = "white";
@@ -137,17 +139,24 @@ const capturedPieceDivs = [
   document.getElementById("先手持ち駒置き場"),
   document.getElementById("後手持ち駒置き場"),
 ];
-// 初期化処理();
-
 // ===========================================
 // ゲーム制御
 
-// 手番の切り替え時の処理
+// 手番プレイヤーを表示
 function startTurn(player) {
   if (player === 0) {
     showMessage("先手の番です。");
   } else {
     showMessage("後手の番です");
+  }
+}
+
+// 勝者を表示
+function showWinner(player) {
+  if (player === 0) {
+    showMessage("ゲーム終了: 先手の勝ちです。");
+  } else {
+    showMessage("ゲーム終了: 後手の勝ちです");
   }
 }
 
@@ -223,7 +232,6 @@ function handleBoardClick(value) {
   }
 }
 
-// lookup PieceType => 箱: .Symbol
 // マスや持ち駒のクリックによる入力を受付
 // 未完成
 async function selectBoard(options, message, canCancel) {
@@ -241,7 +249,7 @@ async function selectBoard(options, message, canCancel) {
   if (canCancel) {
     messageDiv.appendChild(button);
     button.textContent = "キャンセル";
-    button.onclick = () => handleBoardClick("キャンセル");
+    button.onclick = () => handleBoardClick(null);
   }
   // マス
   for (const [i, j] of boardOption) {
@@ -292,14 +300,21 @@ function resetCellColor() {
 }
 
 // 駒をマスに描画
-// TODO pieces, currentBoard
-function renderCell(y, x, player, pieceName) {
+function renderCell(y, x, player, pieceName, isPromoted) {
   const td = boardTds[y][x];
   if (player === 0) {
-    td.style.color = 先手の駒の色;
+    if (isPromoted){
+      td.style.color = 先手の成った駒の色;
+    } else {
+      td.style.color = 先手の駒の色;
+    }
     td.style.transform = "rotate(0deg)";
   } else {
-    td.style.color = 後手の駒の色;
+    if (isPromoted){
+      td.style.color = 後手の成った駒の色;
+    } else {
+      td.style.color = 後手の駒の色;
+    }
     if (後手の駒を反転させるか) {
       td.style.transform = "rotate(180deg)";
     }
@@ -411,7 +426,7 @@ const playBoard = new MatchBoard(
   {
     initializeBoardVisualization: initializeBoardVisualization,
     startTurnMessaging: startTurn,
-    showMessage: showMessage,
+    showWinner: showWinner,
     selectBoard: selectBoard,
     selectPromotion: showQuestion,
     renderCell: renderCell,
