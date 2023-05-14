@@ -119,7 +119,7 @@ class King extends IPiece {
 上で説明した 2 つの動きを組み合わせることも可能です。次の例は、将棋の竜王の動きです。
 
 ```js
-MOVE = new MergedMove(
+MOVE = new MoveParallelJoint(
   new RiderMove(new Map([[new Vector(1, 0), -1]]), "oct"),
   new LeaperMove([new Vector(1, 1)], "fblr")
 );

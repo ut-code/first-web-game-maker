@@ -71,9 +71,6 @@ class Pawn extends IPiece {
     new LeaperMove([new Vector(1, 1)], "lr", TInteraction.ONLY_CAPTURE)
   );
   FORCE_PROMOTE = true;
-  constructor() {
-    super(...arguments);
-  }
   get INITIAL_MOVE() {
     return new MoveParallelJoint(
       new RiderMove(
@@ -84,13 +81,8 @@ class Pawn extends IPiece {
       new LeaperMove([new Vector(1, 1)], "lr", TInteraction.ONLY_CAPTURE)
     );
   }
+  PROMOTE_DEFAULT = new Set([[Qween], [Bishop], [Rook], [Knight]]);
 }
-// Pawn.updatePromotion([
-//   [Qween as PieceType],
-//   [Bishop as PieceType],
-//   [Rook as PieceType],
-//   [Knight as PieceType],
-// ]);
 
 // ===========================================
 // 駒の初期配置

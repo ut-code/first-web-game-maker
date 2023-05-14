@@ -439,11 +439,30 @@ class MoveParallelJoint extends IMove {
   }
 }
 
+const PROMOTE_DEFAULT_REAL = new Map<PieceType, Set<PieceType>>();
 abstract class IPiece {
+  readonly PROMOTE_DEFAULT_TRUE: Set<PieceType>;
   constructor(
     public controller?: Player,
     public isUntouched: boolean = false
-  ) {}
+  ) {
+    const original = this.constructor as PieceType;
+    if (!(PROMOTE_DEFAULT_REAL.has(original))) {
+      const truePromotedPieces = new Set<PieceType>();
+
+      for (const [piece, name, symbol] of this.PROMOTE_DEFAULT) {
+        class _ extends piece {
+          NAME = name ?? `${super.NAME} as promotion of ${super.NAME}`;
+          SYMBOL = symbol ?? super.SYMBOL;
+          PROMOTE_DEFAULT = new Set<[PieceType, string?, string?]>();
+          ORIGINAL_PIECE = original;
+        }
+        truePromotedPieces.add(_);
+      }
+      PROMOTE_DEFAULT_REAL.set(original, truePromotedPieces);
+    }
+    this.PROMOTE_DEFAULT_TRUE = PROMOTE_DEFAULT_REAL.get(original)!;
+  }
 
   abstract NAME: string;
   abstract MOVE: IMove;
@@ -452,7 +471,7 @@ abstract class IPiece {
   }
   IS_ROYAL: boolean = false;
   abstract SYMBOL: string;
-  PROMOTE_DEFAULT: Set<PieceType> = new Set();
+  PROMOTE_DEFAULT: Set<[PieceType, string?, string?]> = new Set();
   FORCE_PROMOTE: boolean = false;
   ORIGINAL_PIECE: PieceType = this.constructor as PieceType;
 
@@ -467,37 +486,6 @@ abstract class IPiece {
       ? this.INITIAL_MOVE
       : this.MOVE;
     return referentMove.validDestination(board, this.controller, myCoordinate);
-  }
-
-  static toString(): string {
-    return new (this as PieceType)(undefined as any).SYMBOL;
-  }
-
-  // TODO: 動かなかったので要修正
-  static updatePromotion(
-    promotedPieces: Iterable<[PieceType, string?, string?]>
-  ): void {
-    const original = this as PieceType;
-    const truePromotedPieces = new Set<PieceType>();
-    for (const [piece, name, symbol] of promotedPieces) {
-      class _ extends piece {
-        NAME = name ?? super.NAME;
-        SYMBOL = symbol ?? super.SYMBOL;
-        PROMOTE_DEFAULT = new Set<PieceType>();
-        ORIGINAL_PIECE = original;
-      }
-      truePromotedPieces.add(_);
-    }
-    original.prototype.constructor = function (
-      controller?: Player,
-      isUntouched: boolean = false
-    ) {
-      (original.prototype.constructor as Function).bind(this, [
-        controller,
-        isUntouched,
-      ]);
-      this.PROMOTE_DEFAULT = truePromotedPieces;
-    };
   }
 }
 type PieceType = Pick<typeof IPiece, keyof typeof IPiece> &
@@ -977,7 +965,7 @@ class MatchBoard extends IBoard {
           if (this.promotionCondition(playLog)) {
             const promoteTo = await this.IO.selectPromotion([
               ...new playLog.movingPiece(undefined as unknown as Player)
-                .PROMOTE_DEFAULT,
+                .PROMOTE_DEFAULT_TRUE,
               playLog.movingPiece,
             ]);
             if (promoteTo !== playLog.movingPiece) {
@@ -1053,13 +1041,9 @@ const players = {
 
 type PlayerExpression = keyof typeof players;
 interface IOFunctions {
-  // done
   initializeBoardVisualization: () => void;
-  // done
   startTurnMessaging: (player: PlayerExpression) => void;
-  // done
   showMessage: (message: string) => void;
-  // NOT done
   selectBoard: <T extends undefined | PieceType>(
     options: T extends PieceType
       ? [[number, number][], T[], Player]
@@ -1069,9 +1053,7 @@ interface IOFunctions {
   ) => Promise<
     (T extends PieceType ? PieceType : never) | [number, number] | null
   >;
-  // done(showQuestion)
   selectPromotion: (options: PieceType[]) => Promise<PieceType>;
-  // done
   renderCell: (
     y: number,
     x: number,
@@ -1084,99 +1066,6 @@ interface IOFunctions {
     pieceNameAndNum: { name: string; count: number }[]
   ) => void;
 }
-
-// 1. start/piece (駒台/盤面)
-// 2. goal (盤面/キャンセル)
-// 3. promote (駒の種類)
-
-// 1. AbsoluteCoordinate, IPiece | null
-// 2. PieceType, Player, number
-
-class King extends IPiece {
-  NAME: string = "King";
-  MOVE: IMove = new LeaperMove(
-    [new RelativeCoordinate(1, 0), new RelativeCoordinate(1, 1)],
-    "oct"
-  );
-  IS_ROYAL: boolean = true;
-  SYMBOL: string = "K";
-}
-
-class Qween extends IPiece {
-  NAME: string = "Qween";
-  MOVE: IMove = new RiderMove(
-    new Map([
-      [new RelativeCoordinate(1, 0), -1],
-      [new RelativeCoordinate(1, 1), -1],
-    ]),
-    "oct"
-  );
-  SYMBOL: string = "Q";
-}
-
-class Bishop extends IPiece {
-  NAME: string = "Bishop";
-  MOVE: IMove = new RiderMove(
-    new Map([[new RelativeCoordinate(1, 1), -1]]),
-    "fblr"
-  );
-  SYMBOL: string = "B";
-}
-
-class Rook extends IPiece {
-  NAME: string = "Rook";
-  MOVE: IMove = new RiderMove(
-    new Map([[new RelativeCoordinate(1, 0), -1]]),
-    "oct"
-  );
-  SYMBOL: string = "R";
-}
-
-class Knight extends IPiece {
-  NAME: string = "Knight";
-  MOVE: IMove = new LeaperMove([new RelativeCoordinate(1, 2)], "oct");
-  SYMBOL: string = "N";
-}
-
-class Pawn extends IPiece {
-  NAME: string = "Pawn";
-  MOVE: IMove = new MoveParallelJoint(
-    new LeaperMove(
-      [new RelativeCoordinate(1, 0)],
-      "none",
-      TInteraction.NO_CAPTURE
-    ),
-    new LeaperMove(
-      [new RelativeCoordinate(1, 1)],
-      "lr",
-      TInteraction.ONLY_CAPTURE
-    )
-  );
-  override get INITIAL_MOVE(): IMove {
-    return new MoveParallelJoint(
-      new RiderMove(
-        new Map([[new RelativeCoordinate(1, 0), 2]]),
-        "none",
-        TInteraction.NO_CAPTURE
-      ),
-      new LeaperMove(
-        [new RelativeCoordinate(1, 1)],
-        "lr",
-        TInteraction.ONLY_CAPTURE
-      )
-    );
-  }
-  SYMBOL: string = "P";
-  FORCE_PROMOTE: boolean = true;
-}
-// Pawn.updatePromotion([
-//   [Qween as PieceType],
-//   [Bishop as PieceType],
-//   [Rook as PieceType],
-//   [Knight as PieceType],
-// ]);
-
-// @ts-ignore
 
 const Cell = AbsoluteCoordinate;
 const Vector = RelativeCoordinate;
