@@ -3,6 +3,8 @@ const shogiStyleTemplate = `// ===========================================
 const 後手の駒を反転させるか = true;
 const 先手の駒の色 = "black";
 const 後手の駒の色 = "red";
+const 先手の成った駒の色 = "black";
+const 後手の成った駒の色 = "red";
 const 駒のフォントサイズ = 24;
 
 const マスの色 = "white";

@@ -12,7 +12,7 @@ const insertShogiConfigTemplate = () => {
   }
   const position = activeEditor.selection.active;
   activeEditor.edit((edit) => {
-    edit.insert(position, shogiConfigTemplate + "\n");
+    edit.insert(position, shogiConfigTemplate);
   });
 };
 
@@ -23,7 +23,7 @@ const insertShogiStyleTemplate = () => {
   }
   const position = activeEditor.selection.active;
   activeEditor.edit((edit) => {
-    edit.insert(position, shogiStyleTemplate + "\n");
+    edit.insert(position, shogiStyleTemplate);
   });
 };
 
@@ -38,7 +38,7 @@ const insertShogiPieceTemplate = (input: string) => {
     index = 0;
   }
   activeEditor.edit((edit) => {
-    edit.insert(position, shogiPieceTemplates[index] + "\n");
+    edit.insert(position, shogiPieceTemplates[index]);
   });
 };
 
@@ -49,7 +49,7 @@ const insertShogiInitialPieceTemplate = () => {
   }
   const position = activeEditor.selection.active;
   activeEditor.edit((edit) => {
-    edit.insert(position, shogiInitialPieceTemplate + "\n");
+    edit.insert(position, shogiInitialPieceTemplate);
   });
 };
 
