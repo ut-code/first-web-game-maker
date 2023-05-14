@@ -67,8 +67,12 @@ id とテンプレートの種類の対応は次の通りです。
 
 \`\`\`js
 class King extends IPiece {
-  NAME = "King";
-  SYMBOL = "K";
+  get NAME() {
+    return "King";
+  };
+  get SYMBOL() {
+    return "K";
+  };
   MOVE = new LeaperMove([new Vector(1, 0), new Vector(1, 1)], "oct");
   IS_ROYAL = true;
 }
@@ -79,6 +83,13 @@ class King extends IPiece {
 - \`MOVE\` : 駒の動きの設定です。詳細は次の項をご覧ください。
 - \`IS_ROYAL\` : \`true\` を設定すると、将棋の王将やチェスのキングのように、取られると負ける駒になります。省略した場合は \`false\` となります。
 - \`INITIAL_MOVE\`: チェスのポーンのように、最初の 1 回だけ適用される駒の動きを設定できます。書き方が特殊なので、ポーンのテンプレートを参考にしてください。
+- \`PROMOTE_DEFAULT\` : どの駒に成ることができるか設定できます。複数設定するとプレイヤーに選択させることができます。次の入力例は、チェスのポーンの場合です。
+  
+  \`\`\`js
+  get PROMOTE_DEFAULT() {
+    return new Set([[Qween], [Bishop], [Rook], [Knight]]);
+  }
+  \`\`\`
 
 ### 駒の動きの設定
 
@@ -146,7 +157,7 @@ const initialPiece = new Map([
 ]);
 \`\`\`
 
-初期配置は、\`[new Cell(座標), new 駒の名前(PlayerIndex.WHITE)]\`　という形式のカンマ区切りで指定できます。
+初期配置は、\`[new Cell(座標), new 駒の名前(PlayerIndex.WHITE)]\` という形式のカンマ区切りで指定できます。
 
 \`初期配置を左右対称にするか\` が \`true\` の場合、指定した初期配置が左右対称な位置にもコピーされます。ただし、既に他の駒が指定されているマスにはコピーされません(上の例では \`King\` と \`Queen\` が該当します)。コピーされないようにしたい場合は \`false\` に変更してください。
 
