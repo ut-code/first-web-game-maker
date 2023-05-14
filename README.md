@@ -58,6 +58,10 @@ None
 
 ## Release Notes
 
+### 0.0.2
+
+Update the description of sugoroku, which is a Japanese board game.
+
 ### 0.0.1
 
 Initial release of First Web Game Maker. This extension provides the template of the sugoroku, which is a Japanese board game.
