@@ -1,4 +1,4 @@
-// ===========================================
+const shogiScriptJs = `// ===========================================
 // ゲームの基本設定
 const 縦のマス数 = 8;
 const 横のマス数 = 8;
@@ -253,8 +253,9 @@ async function selectBoard(options, message, canCancel) {
       capturedPieceDivs[player === players[0] ? 0 : 1].children[
         k
       ].style.backgroundColor = 選択可能なマスの色;
-      capturedPieceDivs[player === players[0] ? 0 : 1].children[k].onclick =
-        () => handleBoardClick(pieceOption[k]);
+      capturedPieceDivs[player === players[0] ? 0 : 1].children[
+        k
+      ].onclick = () => handleBoardClick(pieceOption[k]);
     }
   }
   // そのあと取り出す
@@ -265,7 +266,8 @@ async function selectBoard(options, message, canCancel) {
       boardTds[i][j].onclick = () => {};
     }
   }
-  for (const div of capturedPieceDivs[player === players[0] ? 0 : 1].children) {
+  for (const div of capturedPieceDivs[player === players[0] ? 0 : 1]
+    .children) {
     div.onclick = () => {};
   }
 
@@ -292,14 +294,14 @@ function resetCellColor() {
 function renderCell(y, x, player, pieceName, isPromoted) {
   const td = boardTds[y][x];
   if (player === 0) {
-    if (isPromoted) {
+    if (isPromoted){
       td.style.color = 先手の成った駒の色;
     } else {
       td.style.color = 先手の駒の色;
     }
     td.style.transform = "rotate(0deg)";
   } else {
-    if (isPromoted) {
+    if (isPromoted){
       td.style.color = 後手の成った駒の色;
     } else {
       td.style.color = 後手の駒の色;
@@ -327,7 +329,7 @@ function renderCapturedPiece(player, pieceNameAndNum) {
       pieceNameAndNum[i].name;
     capturedPieceDivs[player].children[
       i
-    ].children[1].textContent = ` x ${pieceNameAndNum[i].count}`;
+    ].children[1].textContent = \` x \${pieceNameAndNum[i].count}\`;
   }
   for (let i = capturedPiecesLength; i < childrenLength; i++) {
     capturedPieceDivs[player].children[i].children[0].textContent = "";
@@ -349,9 +351,9 @@ function createBoardTable() {
     for (let j = 0; j < 横のマス数; j++) {
       const td = document.createElement("td");
       tr.appendChild(td);
-      td.style.height = `${マスの一辺の長さ}px`;
-      td.style.width = `${マスの一辺の長さ}px`;
-      td.style.fontSize = `${駒のフォントサイズ}px`;
+      td.style.height = \`\${マスの一辺の長さ}px\`;
+      td.style.width = \`\${マスの一辺の長さ}px\`;
+      td.style.fontSize = \`\${駒のフォントサイズ}px\`;
       if (playBoard.board[縦のマス数 - i - 1][j].isExcluded) {
         td.style.backgroundColor = 壁マスの色;
         td.style.border = 壁マスの境界線;
@@ -372,7 +374,7 @@ function initCapturedPieceDivs() {
     capturedPieceDivs[1].style.backgroundColor = 後手の持ち駒置き場の色;
     capturedPieceDivs[1].style.border = 後手の持ち駒置き場の境界線;
     capturedPieceDivs.forEach((capturedPieceDiv, index) => {
-      capturedPieceDiv.style.width = `${マスの一辺の長さ * 2}px`;
+      capturedPieceDiv.style.width = \`\${マスの一辺の長さ * 2}px\`;
       capturedPieceDiv.style.textAlign = "center";
       for (let i = 0; i < 縦のマス数; i++) {
         createCapturedPieceColumn(capturedPieceDiv, index, i);
@@ -389,15 +391,15 @@ function initCapturedPieceDivs() {
 function createCapturedPieceColumn(capturedPieceDiv, player, index) {
   const div = document.createElement("div");
   capturedPieceDiv.appendChild(div);
-  div.style.height = `${マスの一辺の長さ}px`;
+  div.style.height = \`\${マスの一辺の長さ}px\`;
   const pieceNameSpan = document.createElement("span");
   div.appendChild(pieceNameSpan);
   const pieceCountSpan = document.createElement("span");
   div.appendChild(pieceCountSpan);
 
-  pieceNameSpan.style.fontSize = `${駒のフォントサイズ}px`;
+  pieceNameSpan.style.fontSize = \`\${駒のフォントサイズ}px\`;
   pieceNameSpan.style.display = "inline-block";
-  pieceCountSpan.style.fontSize = `${駒のフォントサイズ / 1.5}px`;
+  pieceCountSpan.style.fontSize = \`\${駒のフォントサイズ / 1.5}px\`;
   if (player === 0) {
     pieceNameSpan.style.color = 先手の駒の色;
     pieceCountSpan.style.color = 先手の駒の色;
@@ -431,3 +433,6 @@ const playBoard = new MatchBoard(
 );
 
 playBoard.game();
+`;
+
+export default shogiScriptJs;

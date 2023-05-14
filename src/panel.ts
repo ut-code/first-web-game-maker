@@ -16,10 +16,10 @@ export default function createPanel(context: vscode.ExtensionContext) {
       title: "すごろく",
       content: sugorokuDescription,
     },
-    // {
-    //   title: "将棋",
-    //   content: shogiDescription,
-    // },
+    {
+      title: "将棋",
+      content: shogiDescription,
+    },
     {
       title: "パックマン",
       content: pacmanDescription,

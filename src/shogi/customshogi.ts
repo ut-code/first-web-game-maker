@@ -439,22 +439,53 @@ class MoveParallelJoint extends IMove {
   }
 }
 
+const PROMOTE_DEFAULT_REAL = new Map<PieceType, Set<PieceType>>();
 abstract class IPiece {
-  constructor(
-    public controller?: Player,
-    public isUntouched: boolean = false
-  ) {}
+  readonly PROMOTE_DEFAULT_TRUE: Set<PieceType>;
+  constructor(public controller?: Player, public isUntouched: boolean = false) {
+    const original = this.constructor as PieceType;
+    if (!PROMOTE_DEFAULT_REAL.has(original)) {
+      const truePromotedPieces = new Set<PieceType>();
 
-  abstract NAME: string;
-  abstract MOVE: IMove;
+      for (const [piece, name, symbol] of this.PROMOTE_DEFAULT) {
+        class _ extends piece {
+          get NAME() {
+            return name ?? `${super.NAME} as promotion of ${super.NAME}`;
+          }
+          get SYMBOL() {
+            return symbol ?? super.SYMBOL;
+          }
+          get PROMOTE_DEFAULT() {
+            return new Set<[PieceType, string?, string?]>();
+          }
+          ORIGINAL_PIECE = original;
+        }
+        truePromotedPieces.add(_);
+      }
+      PROMOTE_DEFAULT_REAL.set(original, truePromotedPieces);
+    }
+    this.PROMOTE_DEFAULT_TRUE = PROMOTE_DEFAULT_REAL.get(original)!;
+  }
+
+  abstract get NAME(): string;
+  abstract get MOVE(): IMove;
   get INITIAL_MOVE(): IMove {
     return this.MOVE;
   }
   IS_ROYAL: boolean = false;
   abstract SYMBOL: string;
-  PROMOTE_DEFAULT: Set<PieceType> = new Set();
+  get PROMOTE_DEFAULT(): Set<[PieceType, string?, string?]> {
+    return new Set();
+  }
   FORCE_PROMOTE: boolean = false;
   ORIGINAL_PIECE: PieceType = this.constructor as PieceType;
+  get IS_PROMOTED(): boolean {
+    return this.ORIGINAL_PIECE !== (this.constructor as PieceType);
+  }
+
+  static toString(): string {
+    return new (this as PieceType)(undefined as any).SYMBOL;
+  }
 
   validDestination(
     board: IBoard,
@@ -467,37 +498,6 @@ abstract class IPiece {
       ? this.INITIAL_MOVE
       : this.MOVE;
     return referentMove.validDestination(board, this.controller, myCoordinate);
-  }
-
-  static toString(): string {
-    return new (this as PieceType)(undefined as any).SYMBOL;
-  }
-
-  // TODO: 動かなかったので要修正
-  static updatePromotion(
-    promotedPieces: Iterable<[PieceType, string?, string?]>
-  ): void {
-    const original = this as PieceType;
-    const truePromotedPieces = new Set<PieceType>();
-    for (const [piece, name, symbol] of promotedPieces) {
-      class _ extends piece {
-        NAME = name ?? super.NAME;
-        SYMBOL = symbol ?? super.SYMBOL;
-        PROMOTE_DEFAULT = new Set<PieceType>();
-        ORIGINAL_PIECE = original;
-      }
-      truePromotedPieces.add(_);
-    }
-    original.prototype.constructor = function (
-      controller?: Player,
-      isUntouched: boolean = false
-    ) {
-      (original.prototype.constructor as Function).bind(this, [
-        controller,
-        isUntouched,
-      ]);
-      this.PROMOTE_DEFAULT = truePromotedPieces;
-    };
   }
 }
 type PieceType = Pick<typeof IPiece, keyof typeof IPiece> &
@@ -901,29 +901,30 @@ class MatchBoard extends IBoard {
     log.promoteTo = kind;
   }
 
-  coordToNum(coord: AbsoluteCoordinate): [number, number] {
+  #coordToNum(coord: AbsoluteCoordinate): [number, number] {
     return [this.height - coord.y - 1, coord.x];
   }
 
-  numToCoord(y: number, x: number): AbsoluteCoordinate {
+  #numToCoord(y: number, x: number): AbsoluteCoordinate {
     return new AbsoluteCoordinate(this.height - y - 1, x);
   }
 
   async game(): Promise<void> {
     const converter = <T extends null | PieceType>(r: [number, number] | T) =>
-      r instanceof Array ? this.numToCoord(...r) : r;
+      r instanceof Array ? this.#numToCoord(...r) : r;
     const playerToNum = (p?: Player): 0 | 1 =>
       p === PlayerIndex.WHITE ? 0 : 1;
-    // ゲーム終了までループ
     this.IO.initializeBoardVisualization();
     for (const coord of this.#coordsGenerator) {
       const piece = this.square(coord).piece;
       this.IO.renderCell(
-        ...this.coordToNum(coord),
+        ...this.#coordToNum(coord),
         playerToNum(piece?.controller),
-        piece?.SYMBOL ?? ""
+        piece?.SYMBOL ?? "",
+        Boolean(piece?.IS_PROMOTED)
       );
     }
+    // ゲーム終了までループ
     while (!this.#isGameTerminated[0]) {
       const playLog: PlayLogComplete = {
         state: "defined",
@@ -940,7 +941,7 @@ class MatchBoard extends IBoard {
           await this.IO.selectBoard(
             [
               [...this.#movablePieceMapCache.keys()].map(
-                this.coordToNum.bind(this)
+                this.#coordToNum.bind(this)
               ),
               [...this.pieceStands.get(this.turnPlayer)!.keys()],
               this.turnPlayer,
@@ -950,10 +951,8 @@ class MatchBoard extends IBoard {
           )
         );
         if (target === null) {
-          this.IO.showMessage(
-            `Game end: the winner is ${String(
-              PlayerIndex.nextPlayer(this.turnPlayer)
-            )}`
+          this.IO.showWinner(
+            playerToNum(PlayerIndex.nextPlayer(this.turnPlayer))
           );
           return;
         }
@@ -963,7 +962,7 @@ class MatchBoard extends IBoard {
             await this.IO.selectBoard<undefined>(
               [
                 [...this.#currentMovablePieceMap.get(target)!].map(
-                  this.coordToNum.bind(this)
+                  this.#coordToNum.bind(this)
                 ),
               ],
               "駒を移動させるマスを選んでください。",
@@ -974,25 +973,32 @@ class MatchBoard extends IBoard {
             continue Turn;
           }
           this.#move(target, goal, playLog);
+          let isPromoted: boolean = false;
           if (this.promotionCondition(playLog)) {
-            const promoteTo = await this.IO.selectPromotion([
-              ...new playLog.movingPiece(undefined as unknown as Player)
-                .PROMOTE_DEFAULT,
-              playLog.movingPiece,
-            ]);
+            const movingPiece = this.square(goal).piece!;
+            const promoteTo = await this.IO.selectPromotion(
+              [
+                ...movingPiece.PROMOTE_DEFAULT_TRUE,
+                ...(movingPiece.FORCE_PROMOTE ? [] : [playLog.movingPiece]),
+              ],
+              "どの駒に成るかを選んでください"
+            );
             if (promoteTo !== playLog.movingPiece) {
               this.#promote(promoteTo, goal, playLog);
+              isPromoted = true;
             }
           }
           this.IO.renderCell(
-            ...this.coordToNum(goal),
+            ...this.#coordToNum(goal),
             playerToNum(this.turnPlayer),
-            this.square(goal).piece?.SYMBOL ?? ""
+            this.square(goal).piece?.SYMBOL ?? "",
+            isPromoted
           );
           this.IO.renderCell(
-            ...this.coordToNum(target),
+            ...this.#coordToNum(target),
             playerToNum(this.turnPlayer),
-            this.square(target).piece?.SYMBOL ?? ""
+            this.square(target).piece?.SYMBOL ?? "",
+            false
           );
           this.IO.renderCapturedPiece(
             playerToNum(this.turnPlayer),
@@ -1008,7 +1014,7 @@ class MatchBoard extends IBoard {
           // コマを打つ
           const goal = converter(
             await this.IO.selectBoard<undefined>(
-              [[...this.#dropDestination()].map(this.coordToNum.bind(this))],
+              [[...this.#dropDestination()].map(this.#coordToNum.bind(this))],
               "駒を置くマスを選んでください。",
               true
             )
@@ -1018,9 +1024,10 @@ class MatchBoard extends IBoard {
           }
           this.#drop(target, goal, playLog);
           this.IO.renderCell(
-            ...this.coordToNum(goal),
+            ...this.#coordToNum(goal),
             playerToNum(this.turnPlayer),
-            new target(undefined as any).SYMBOL
+            new target(undefined as any).SYMBOL,
+            false
           );
           this.IO.renderCapturedPiece(
             playerToNum(this.turnPlayer),
@@ -1039,9 +1046,7 @@ class MatchBoard extends IBoard {
         this.chessTurnCount += 1;
       }
     }
-    this.IO.showMessage(
-      `Game end: the winner is ${String(this.#isGameTerminated[1])}`
-    );
+    this.IO.showWinner(playerToNum(this.#isGameTerminated[1]));
     return;
   }
 }
@@ -1053,13 +1058,9 @@ const players = {
 
 type PlayerExpression = keyof typeof players;
 interface IOFunctions {
-  // done
   initializeBoardVisualization: () => void;
-  // done
   startTurnMessaging: (player: PlayerExpression) => void;
-  // done
-  showMessage: (message: string) => void;
-  // NOT done
+  showWinner: (player: PlayerExpression) => void;
   selectBoard: <T extends undefined | PieceType>(
     options: T extends PieceType
       ? [[number, number][], T[], Player]
@@ -1069,114 +1070,22 @@ interface IOFunctions {
   ) => Promise<
     (T extends PieceType ? PieceType : never) | [number, number] | null
   >;
-  // done(showQuestion)
-  selectPromotion: (options: PieceType[]) => Promise<PieceType>;
-  // done
+  selectPromotion: (
+    options: PieceType[],
+    message: string
+  ) => Promise<PieceType>;
   renderCell: (
     y: number,
     x: number,
     player: PlayerExpression,
-    pieceName: string | ""
+    pieceName: string | "",
+    isPromoted: boolean
   ) => void;
-  // done
   renderCapturedPiece: (
     player: PlayerExpression,
     pieceNameAndNum: { name: string; count: number }[]
   ) => void;
 }
-
-// 1. start/piece (駒台/盤面)
-// 2. goal (盤面/キャンセル)
-// 3. promote (駒の種類)
-
-// 1. AbsoluteCoordinate, IPiece | null
-// 2. PieceType, Player, number
-
-class King extends IPiece {
-  NAME: string = "King";
-  MOVE: IMove = new LeaperMove(
-    [new RelativeCoordinate(1, 0), new RelativeCoordinate(1, 1)],
-    "oct"
-  );
-  IS_ROYAL: boolean = true;
-  SYMBOL: string = "K";
-}
-
-class Qween extends IPiece {
-  NAME: string = "Qween";
-  MOVE: IMove = new RiderMove(
-    new Map([
-      [new RelativeCoordinate(1, 0), -1],
-      [new RelativeCoordinate(1, 1), -1],
-    ]),
-    "oct"
-  );
-  SYMBOL: string = "Q";
-}
-
-class Bishop extends IPiece {
-  NAME: string = "Bishop";
-  MOVE: IMove = new RiderMove(
-    new Map([[new RelativeCoordinate(1, 1), -1]]),
-    "fblr"
-  );
-  SYMBOL: string = "B";
-}
-
-class Rook extends IPiece {
-  NAME: string = "Rook";
-  MOVE: IMove = new RiderMove(
-    new Map([[new RelativeCoordinate(1, 0), -1]]),
-    "oct"
-  );
-  SYMBOL: string = "R";
-}
-
-class Knight extends IPiece {
-  NAME: string = "Knight";
-  MOVE: IMove = new LeaperMove([new RelativeCoordinate(1, 2)], "oct");
-  SYMBOL: string = "N";
-}
-
-class Pawn extends IPiece {
-  NAME: string = "Pawn";
-  MOVE: IMove = new MoveParallelJoint(
-    new LeaperMove(
-      [new RelativeCoordinate(1, 0)],
-      "none",
-      TInteraction.NO_CAPTURE
-    ),
-    new LeaperMove(
-      [new RelativeCoordinate(1, 1)],
-      "lr",
-      TInteraction.ONLY_CAPTURE
-    )
-  );
-  override get INITIAL_MOVE(): IMove {
-    return new MoveParallelJoint(
-      new RiderMove(
-        new Map([[new RelativeCoordinate(1, 0), 2]]),
-        "none",
-        TInteraction.NO_CAPTURE
-      ),
-      new LeaperMove(
-        [new RelativeCoordinate(1, 1)],
-        "lr",
-        TInteraction.ONLY_CAPTURE
-      )
-    );
-  }
-  SYMBOL: string = "P";
-  FORCE_PROMOTE: boolean = true;
-}
-// Pawn.updatePromotion([
-//   [Qween as PieceType],
-//   [Bishop as PieceType],
-//   [Rook as PieceType],
-//   [Knight as PieceType],
-// ]);
-
-// @ts-ignore
 
 const Cell = AbsoluteCoordinate;
 const Vector = RelativeCoordinate;
