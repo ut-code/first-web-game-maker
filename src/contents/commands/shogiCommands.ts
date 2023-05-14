@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { type Command } from "../../types/command";
 import shogiPieceTemplates from "./shogiTemplate/shogiPieceTemplates";
 import shogiInitialPieceTemplate from "./shogiTemplate/shogiInitialPieceTemplate";
+import shogiInitialChessPieceTemplate from "./shogiTemplate/shogiInitialChessPieceTemplate";
 import shogiConfigTemplate from "./shogiTemplate/shogiConfigTemplate";
 import shogiStyleTemplate from "./shogiTemplate/shogiStyleTemplate";
 
@@ -53,6 +54,17 @@ const insertShogiInitialPieceTemplate = () => {
   });
 };
 
+const insertShogiInitialChessPieceTemplate = () => {
+  const activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor) {
+    return;
+  }
+  const position = activeEditor.selection.active;
+  activeEditor.edit((edit) => {
+    edit.insert(position, shogiInitialChessPieceTemplate);
+  });
+};
+
 const shogiCommands: Command[] = [
   {
     name: "insertShogiConfigTemplate",
@@ -70,6 +82,10 @@ const shogiCommands: Command[] = [
       });
       insertShogiPieceTemplate(input || "");
     },
+  },
+  {
+    name: "insertShogiInitialChessPieceTemplate",
+    execute: insertShogiInitialChessPieceTemplate,
   },
   {
     name: "insertShogiInitialPieceTemplate",
