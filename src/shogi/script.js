@@ -1,6 +1,3 @@
-const width = 9;
-const height = 9;
-
 // ===========================================
 // ゲームの基本設定
 const 縦のマス数 = 8;
@@ -129,16 +126,15 @@ const initialPiece = new Map([
   [new Cell(1, 3), new Pawn(PlayerIndex.WHITE)],
 ]);
 
-// for test
-const pieces = [{ name: "" }, { name: "歩" }];
-const capturedPieces = [[], [{ name: "歩", count: 2 }]];
-
+// ===========================================
+// ここは変更不要
 const messageDiv = document.getElementById("メッセージ表示");
 const boardTds = boardMatrix();
 const capturedPieceDivs = [
   document.getElementById("先手持ち駒置き場"),
   document.getElementById("後手持ち駒置き場"),
 ];
+
 // ===========================================
 // ゲーム制御
 
@@ -161,7 +157,7 @@ function showWinner(player) {
 }
 
 // ===========================================
-// 基本的に変更不要な処理
+// 以下の部分は、基本的に変更不要です
 
 // 盤面の初期設定
 function initializeBoardVisualization() {
@@ -205,7 +201,7 @@ async function showQuestion(options, message) {
   return new Promise((resolve) => {
     buttons.forEach((button, index) => {
       button.onclick = () => {
-        resolve(options[index]); // 必要であれば修正してください
+        resolve(options[index]);
         while (messageDiv.childElementCount > 0) {
           messageDiv.removeChild(messageDiv.lastChild);
         }
@@ -233,7 +229,6 @@ function handleBoardClick(value) {
 }
 
 // マスや持ち駒のクリックによる入力を受付
-// 未完成
 async function selectBoard(options, message, canCancel) {
   // [number, number][]
   const boardOption = options[0];
@@ -323,7 +318,6 @@ function renderCell(y, x, player, pieceName, isPromoted) {
 }
 
 // 持ち駒を描画
-// TODO capturedPieces, pieces
 function renderCapturedPiece(player, pieceNameAndNum) {
   const childrenLength = capturedPieceDivs[player].children.length;
   const capturedPiecesLength = pieceNameAndNum.length;
