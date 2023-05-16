@@ -315,6 +315,7 @@ class IPiece {
         const original = this.constructor;
         if (!PROMOTE_DEFAULT_REAL.has(original)) {
             const truePromotedPieces = new Set();
+            const originalConcretePiece = this;
             for (const [piece, name, symbol] of this.PROMOTE_DEFAULT) {
                 class _ extends piece {
                     constructor() {
@@ -322,7 +323,8 @@ class IPiece {
                         this.ORIGINAL_PIECE = original;
                     }
                     get NAME() {
-                        return name ?? \`\${super.NAME} as promotion of \${super.NAME}\`;
+                        return (name ??
+                            \`\${new piece(undefined).NAME} as promotion of \${originalConcretePiece.NAME}\`);
                     }
                     get SYMBOL() {
                         return symbol ?? super.SYMBOL;

@@ -446,11 +446,16 @@ abstract class IPiece {
     const original = this.constructor as PieceType;
     if (!PROMOTE_DEFAULT_REAL.has(original)) {
       const truePromotedPieces = new Set<PieceType>();
-
+      const originalConcretePiece = this;
       for (const [piece, name, symbol] of this.PROMOTE_DEFAULT) {
         class _ extends piece {
           get NAME() {
-            return name ?? `${super.NAME} as promotion of ${super.NAME}`;
+            return (
+              name ??
+              `${
+                new piece(undefined as unknown as Player).NAME
+              } as promotion of ${originalConcretePiece.NAME}`
+            );
           }
           get SYMBOL() {
             return symbol ?? super.SYMBOL;
@@ -1101,10 +1106,11 @@ const Vector = RelativeCoordinate;
 //   駒を取ったとき: TPromotionCondition.capturedPiece,
 // }
 // TODO
-// 駒を取ったときに成れるようにする
-// 駒の説明(名称, 動き)がクリックまたはホバーで右に出てくるようにする
-// 中将棋の獅子などの二段移動の実装
 // 二歩など、駒を打つ場所の条件の実装
+// 駒を取ったときに成れるようにする
 // 成り駒の名前/表示名機能のドキュメントへの追加
 // 成り条件個別設定
+// 駒の説明(名称, 動き)がクリックまたはホバーで右に出てくるようにする
+// 中将棋の獅子などの二段移動の実装
+// AbstractPieceType
 // 他、ドキュメントを参照のこと
