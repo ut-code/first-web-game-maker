@@ -31,22 +31,10 @@ const 後手の持ち駒置き場の境界線 = "1px black solid";
 // 駒の種類
 
 class King extends IPiece {
-  get NAME() {
-    return "King";
-  }
-  get SYMBOL() {
-    return "K";
-  }
   MOVE = new LeaperMove([new Vector(1, 0), new Vector(1, 1)], "oct");
   IS_ROYAL = true;
 }
 class Qween extends IPiece {
-  get NAME() {
-    return "Qween";
-  }
-  get SYMBOL() {
-    return "Q";
-  }
   MOVE = new RiderMove(
     new Map([
       [new Vector(1, 0), -1],
@@ -56,39 +44,18 @@ class Qween extends IPiece {
   );
 }
 class Bishop extends IPiece {
-  get NAME() {
-    return "Bishop";
-  }
-  get SYMBOL() {
-    return "B";
-  }
   MOVE = new RiderMove(new Map([[new Vector(1, 1), -1]]), "fblr");
 }
 class Rook extends IPiece {
-  get NAME() {
-    return "Rook";
-  }
-  get SYMBOL() {
-    return "R";
-  }
   MOVE = new RiderMove(new Map([[new Vector(1, 0), -1]]), "oct");
 }
 class Knight extends IPiece {
-  get NAME() {
-    return "Knight";
-  }
   get SYMBOL() {
     return "N";
   }
   MOVE = new LeaperMove([new Vector(1, 2)], "oct");
 }
 class Pawn extends IPiece {
-  get NAME() {
-    return "Pawn";
-  }
-  get SYMBOL() {
-    return "P";
-  }
   MOVE = new MoveParallelJoint(
     new LeaperMove([new Vector(1, 0)], "none", TInteraction.NO_CAPTURE),
     new LeaperMove([new Vector(1, 1)], "lr", TInteraction.ONLY_CAPTURE)

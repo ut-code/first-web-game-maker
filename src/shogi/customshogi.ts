@@ -467,13 +467,17 @@ abstract class IPiece {
     this.PROMOTE_DEFAULT_TRUE = PROMOTE_DEFAULT_REAL.get(original)!;
   }
 
-  abstract get NAME(): string;
+  get NAME(): string {
+    return this.constructor.name;
+  }
   abstract get MOVE(): IMove;
   get INITIAL_MOVE(): IMove {
     return this.MOVE;
   }
   IS_ROYAL: boolean = false;
-  abstract SYMBOL: string;
+  get SYMBOL(): string {
+    return this.NAME[0];
+  }
   get PROMOTE_DEFAULT(): Set<[PieceType, string?, string?]> {
     return new Set();
   }
@@ -484,7 +488,7 @@ abstract class IPiece {
   }
 
   static toString(): string {
-    return new (this as PieceType)(undefined as any).SYMBOL;
+    return new (this as PieceType)(undefined as unknown as Player).SYMBOL;
   }
 
   validDestination(
@@ -973,7 +977,6 @@ class MatchBoard extends IBoard {
             continue Turn;
           }
           this.#move(target, goal, playLog);
-          let isPromoted: boolean = false;
           if (this.promotionCondition(playLog)) {
             const movingPiece = this.square(goal).piece!;
             const promoteTo = await this.IO.selectPromotion(
@@ -985,14 +988,13 @@ class MatchBoard extends IBoard {
             );
             if (promoteTo !== playLog.movingPiece) {
               this.#promote(promoteTo, goal, playLog);
-              isPromoted = true;
             }
           }
           this.IO.renderCell(
             ...this.#coordToNum(goal),
             playerToNum(this.turnPlayer),
             this.square(goal).piece?.SYMBOL ?? "",
-            isPromoted
+            this.square(goal).piece!.IS_PROMOTED
           );
           this.IO.renderCell(
             ...this.#coordToNum(target),
@@ -1004,7 +1006,7 @@ class MatchBoard extends IBoard {
             playerToNum(this.turnPlayer),
             [...this.pieceStands.get(this.turnPlayer)!.entries()].map(
               ([kind, num]) => ({
-                name: new kind(undefined as any).SYMBOL,
+                name: new kind(undefined as unknown as Player).SYMBOL,
                 count: num,
               })
             )
@@ -1026,14 +1028,14 @@ class MatchBoard extends IBoard {
           this.IO.renderCell(
             ...this.#coordToNum(goal),
             playerToNum(this.turnPlayer),
-            new target(undefined as any).SYMBOL,
+            new target(undefined as unknown as Player).SYMBOL,
             false
           );
           this.IO.renderCapturedPiece(
             playerToNum(this.turnPlayer),
             [...this.pieceStands.get(this.turnPlayer)!.entries()].map(
               ([kind, num]) => ({
-                name: new kind(undefined as any).SYMBOL,
+                name: new kind(undefined as unknown as Player).SYMBOL,
                 count: num,
               })
             )
@@ -1089,3 +1091,20 @@ interface IOFunctions {
 
 const Cell = AbsoluteCoordinate;
 const Vector = RelativeCoordinate;
+// const 駒の動く状況 = {
+//   普通: TInteraction.NORMAL,
+//   取らないとき: TInteraction.NO_CAPTURE,
+//   取るとき: TInteraction.ONLY_CAPTURE,
+// } as const;
+// const 成る条件 = {
+//   敵陣に入ったとき: TPromotionCondition.oppornentField,
+//   駒を取ったとき: TPromotionCondition.capturedPiece,
+// }
+// TODO
+// 駒を取ったときに成れるようにする
+// 駒の説明(名称, 動き)がクリックまたはホバーで右に出てくるようにする
+// 中将棋の獅子などの二段移動の実装
+// 二歩など、駒を打つ場所の条件の実装
+// 成り駒の名前/表示名機能のドキュメントへの追加
+// 成り条件個別設定
+// 他、ドキュメントを参照のこと

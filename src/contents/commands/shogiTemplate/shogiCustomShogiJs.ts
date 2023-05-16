@@ -1,13 +1,13 @@
 const shogiCustomShogiJs = `"use strict";
 var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
-    if (kind === "a" && !f) {throw new TypeError("Private accessor was defined without a getter");}
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) {throw new TypeError("Cannot read private member from an object whose class did not declare it");}
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
-    if (kind === "m") {throw new TypeError("Private method is not writable");}
-    if (kind === "a" && !f) {throw new TypeError("Private accessor was defined without a setter");}
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) {throw new TypeError("Cannot write private member to an object whose class did not declare it");}
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
 var _AbsoluteCoordinate_instances, _AbsoluteCoordinate_normalizer, _LeaperMove_coordinates, _RiderMove_coordinatesToDist, _MatchBoard_instances, _MatchBoard_movablePieceMapCache, _MatchBoard_coordsGenerator_get, _MatchBoard_isGameTerminated_get, _MatchBoard_addPieceToStand, _MatchBoard_addPieceToBoard, _MatchBoard_removePieceFromStand, _MatchBoard_removePieceFromBoard, _MatchBoard_moveDestinationFrom, _MatchBoard_dropDestination, _MatchBoard_updateMovablePieceMap, _MatchBoard_currentMovablePieceMap_get, _MatchBoard_move, _MatchBoard_drop, _MatchBoard_promote, _MatchBoard_coordToNum, _MatchBoard_numToCoord;
@@ -313,7 +313,7 @@ class IPiece {
         this.FORCE_PROMOTE = false;
         this.ORIGINAL_PIECE = this.constructor;
         const original = this.constructor;
-        if (!(PROMOTE_DEFAULT_REAL.has(original))) {
+        if (!PROMOTE_DEFAULT_REAL.has(original)) {
             const truePromotedPieces = new Set();
             for (const [piece, name, symbol] of this.PROMOTE_DEFAULT) {
                 class _ extends piece {
@@ -337,10 +337,18 @@ class IPiece {
         }
         this.PROMOTE_DEFAULT_TRUE = PROMOTE_DEFAULT_REAL.get(original);
     }
+    get NAME() {
+        return this.constructor.name;
+    }
     get INITIAL_MOVE() {
         return this.MOVE;
     }
-    get PROMOTE_DEFAULT() { return new Set(); }
+    get SYMBOL() {
+        return this.NAME[0];
+    }
+    get PROMOTE_DEFAULT() {
+        return new Set();
+    }
     get IS_PROMOTED() {
         return this.ORIGINAL_PIECE !== this.constructor;
     }
@@ -507,19 +515,17 @@ class MatchBoard extends IBoard {
                         continue Turn;
                     }
                     __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_move).call(this, target, goal, playLog);
-                    let isPromoted = false;
                     if (this.promotionCondition(playLog)) {
                         const movingPiece = this.square(goal).piece;
                         const promoteTo = await this.IO.selectPromotion([
                             ...movingPiece.PROMOTE_DEFAULT_TRUE,
-                            ...movingPiece.FORCE_PROMOTE ? [] : [playLog.movingPiece],
+                            ...(movingPiece.FORCE_PROMOTE ? [] : [playLog.movingPiece]),
                         ], "どの駒に成るかを選んでください");
                         if (promoteTo !== playLog.movingPiece) {
                             __classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_promote).call(this, promoteTo, goal, playLog);
-                            isPromoted = true;
                         }
                     }
-                    this.IO.renderCell(...__classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_coordToNum).call(this, goal), playerToNum(this.turnPlayer), this.square(goal).piece?.SYMBOL ?? "", isPromoted);
+                    this.IO.renderCell(...__classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_coordToNum).call(this, goal), playerToNum(this.turnPlayer), this.square(goal).piece?.SYMBOL ?? "", this.square(goal).piece.IS_PROMOTED);
                     this.IO.renderCell(...__classPrivateFieldGet(this, _MatchBoard_instances, "m", _MatchBoard_coordToNum).call(this, target), playerToNum(this.turnPlayer), this.square(target).piece?.SYMBOL ?? "", false);
                     this.IO.renderCapturedPiece(playerToNum(this.turnPlayer), [...this.pieceStands.get(this.turnPlayer).entries()].map(([kind, num]) => ({
                         name: new kind(undefined).SYMBOL,
